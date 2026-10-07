@@ -1,0 +1,149 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 360" role="img" aria-label="RO water purifier filling 20 litre water jars">
+  <defs>
+    <!-- 20 L bubble-top jar: cyan, glossy -->
+    <linearGradient id="jarBody" x1="0" x2="1">
+      <stop offset="0" stop-color="#38bdf8"/>
+      <stop offset="0.22" stop-color="#bae6fd"/>
+      <stop offset="0.5" stop-color="#38bdf8"/>
+      <stop offset="1" stop-color="#0369a1"/>
+    </linearGradient>
+    <linearGradient id="jarCap" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#3b82f6"/>
+      <stop offset="1" stop-color="#1e3a8a"/>
+    </linearGradient>
+    <linearGradient id="cabinet" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#dbe4ef"/>
+    </linearGradient>
+    <linearGradient id="cabinetSide" x1="0" x2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0"/>
+      <stop offset="1" stop-color="#94a3b8" stop-opacity="0.35"/>
+    </linearGradient>
+    <!-- three RO stages: sediment (white), carbon (dark), membrane (blue) -->
+    <linearGradient id="fSediment" x1="0" x2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.5" stop-color="#f1f5f9"/>
+      <stop offset="1" stop-color="#cbd5e1"/>
+    </linearGradient>
+    <linearGradient id="fCarbon" x1="0" x2="1">
+      <stop offset="0" stop-color="#64748b"/>
+      <stop offset="0.45" stop-color="#475569"/>
+      <stop offset="1" stop-color="#1e293b"/>
+    </linearGradient>
+    <linearGradient id="fMembrane" x1="0" x2="1">
+      <stop offset="0" stop-color="#93c5fd"/>
+      <stop offset="0.45" stop-color="#3b82f6"/>
+      <stop offset="1" stop-color="#1d4ed8"/>
+    </linearGradient>
+    <linearGradient id="stream" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#e0f2fe"/>
+      <stop offset="1" stop-color="#7dd3fc" stop-opacity="0.7"/>
+    </linearGradient>
+    <radialGradient id="ground" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#0f172a" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#0f172a" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="halo" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="6" stdDeviation="7" flood-color="#0f172a" flood-opacity="0.22"/>
+    </filter>
+
+    <symbol id="jar" viewBox="0 0 100 150">
+      <rect x="37" y="0" width="26" height="13" rx="4" fill="url(#jarCap)"/>
+      <rect x="39" y="10" width="22" height="3" fill="#1e3a8a" opacity="0.5"/>
+      <rect x="41" y="12" width="18" height="12" fill="#7dd3fc"/>
+      <path d="M41 23 C41 33 8 34 6 49 L6 132 C6 144 14 148 26 148 L74 148 C86 148 94 144 94 132 L94 49 C92 34 59 33 59 23 Z"
+            fill="url(#jarBody)" stroke="#075985" stroke-opacity="0.35" stroke-width="1.5"/>
+      <!-- ribs -->
+      <path d="M7 62 Q50 70 93 62" fill="none" stroke="#0369a1" stroke-opacity="0.3" stroke-width="2"/>
+      <path d="M7 60 Q50 68 93 60" fill="none" stroke="#ffffff" stroke-opacity="0.45" stroke-width="2"/>
+      <path d="M7 118 Q50 126 93 118" fill="none" stroke="#0369a1" stroke-opacity="0.3" stroke-width="2"/>
+      <path d="M7 116 Q50 124 93 116" fill="none" stroke="#ffffff" stroke-opacity="0.45" stroke-width="2"/>
+      <!-- label with a drop -->
+      <rect x="22" y="78" width="56" height="26" rx="6" fill="#ffffff" opacity="0.92"/>
+      <path d="M50 83 C46 89 43.5 92 43.5 95 A6.5 6.5 0 0 0 56.5 95 C56.5 92 54 89 50 83 Z" fill="#0ea5e9"/>
+      <!-- gloss -->
+      <path d="M14 54 C11 76 11 110 14 132" fill="none" stroke="#ffffff" stroke-opacity="0.75" stroke-width="5" stroke-linecap="round"/>
+      <path d="M22 40 C26 37 32 35 37 34" fill="none" stroke="#ffffff" stroke-opacity="0.6" stroke-width="3" stroke-linecap="round"/>
+    </symbol>
+
+    <symbol id="spark" viewBox="0 0 20 20">
+      <path d="M10 0 C11 7 13 9 20 10 C13 11 11 13 10 20 C9 13 7 11 0 10 C7 9 9 7 10 0 Z" fill="#ffffff"/>
+    </symbol>
+    <symbol id="drop" viewBox="0 0 20 28">
+      <path d="M10 0 C4 9 0 14 0 18 A10 10 0 0 0 20 18 C20 14 16 9 10 0 Z" fill="#e0f2fe"/>
+      <path d="M6 17 A4 4 0 0 0 9 22" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+    </symbol>
+  </defs>
+
+  <!-- soft light behind the scene -->
+  <circle cx="280" cy="190" r="170" fill="url(#halo)"/>
+  <ellipse cx="262" cy="332" rx="235" ry="18" fill="url(#ground)"/>
+
+  <!-- ── RO + UV purifier ── -->
+  <g filter="url(#soft)">
+    <rect x="48" y="112" width="134" height="214" rx="16" fill="url(#cabinet)" stroke="#cbd5e1"/>
+    <rect x="150" y="112" width="32" height="214" rx="16" fill="url(#cabinetSide)"/>
+    <rect x="42" y="90" width="146" height="32" rx="13" fill="#ffffff" stroke="#e2e8f0"/>
+    <rect x="66" y="98" width="66" height="16" rx="5" fill="#0f172a"/>
+    <text x="99" y="110" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="10" font-weight="700" fill="#22d3ee" letter-spacing="1">RO+UV</text>
+    <circle cx="150" cy="106" r="4" fill="#22c55e"/>
+    <circle cx="164" cy="106" r="4" fill="#38bdf8"/>
+
+    <!-- window with the three filter stages -->
+    <rect x="60" y="134" width="110" height="122" rx="11" fill="#e0f2fe" stroke="#bae6fd" stroke-width="1.5"/>
+    <path d="M83 140 V136 M115 140 V136 M147 140 V136 M83 136 H147" fill="none" stroke="#94a3b8" stroke-width="3" stroke-linecap="round"/>
+    <g>
+      <rect x="71" y="142" width="24" height="104" rx="11" fill="url(#fSediment)" stroke="#94a3b8" stroke-opacity="0.6"/>
+      <rect x="103" y="142" width="24" height="104" rx="11" fill="url(#fCarbon)"/>
+      <rect x="135" y="142" width="24" height="104" rx="11" fill="url(#fMembrane)"/>
+      <rect x="71" y="152" width="24" height="5" fill="#0f172a" opacity="0.12"/>
+      <rect x="103" y="152" width="24" height="5" fill="#000000" opacity="0.25"/>
+      <rect x="135" y="152" width="24" height="5" fill="#1e3a8a" opacity="0.35"/>
+      <rect x="71" y="230" width="24" height="5" fill="#0f172a" opacity="0.12"/>
+      <rect x="103" y="230" width="24" height="5" fill="#000000" opacity="0.25"/>
+      <rect x="135" y="230" width="24" height="5" fill="#1e3a8a" opacity="0.35"/>
+      <path d="M77 164 V222 M109 164 V222 M141 164 V222" stroke="#ffffff" stroke-opacity="0.55" stroke-width="3" stroke-linecap="round"/>
+    </g>
+
+    <!-- tap -->
+    <path d="M182 172 H212 A12 12 0 0 1 224 184 V196" fill="none" stroke="#94a3b8" stroke-width="9" stroke-linecap="round"/>
+    <path d="M182 172 H212 A12 12 0 0 1 224 184 V196" fill="none" stroke="#e2e8f0" stroke-width="3" stroke-linecap="round"/>
+    <rect x="215" y="194" width="18" height="9" rx="3" fill="#64748b"/>
+    <rect x="196" y="160" width="16" height="7" rx="3" fill="#2563eb"/>
+
+    <!-- vents + feet -->
+    <path d="M78 278 H152 M78 290 H152 M78 302 H152" stroke="#cbd5e1" stroke-width="3" stroke-linecap="round"/>
+    <rect x="60" y="322" width="22" height="8" rx="3" fill="#94a3b8"/>
+    <rect x="148" y="322" width="22" height="8" rx="3" fill="#94a3b8"/>
+  </g>
+
+  <!-- water pouring into the jar -->
+  <rect x="220.5" y="203" width="7" height="27" rx="3.5" fill="url(#stream)"/>
+  <use href="#drop" x="236" y="208" width="8" height="11" opacity="0.9"/>
+  <use href="#drop" x="206" y="214" width="6" height="8" opacity="0.8"/>
+
+  <!-- jar being filled -->
+  <g filter="url(#soft)">
+    <use href="#jar" x="189" y="224" width="70" height="105"/>
+  </g>
+
+  <!-- stack of filled jars -->
+  <g filter="url(#soft)">
+    <use href="#jar" x="333" y="98" width="82" height="123"/>
+    <use href="#jar" x="290" y="208" width="82" height="123"/>
+    <use href="#jar" x="376" y="208" width="82" height="123"/>
+  </g>
+
+  <!-- sparkles and drops -->
+  <use href="#spark" x="300" y="70" width="18" height="18"/>
+  <use href="#spark" x="452" y="150" width="14" height="14" opacity="0.9"/>
+  <use href="#spark" x="30" y="70" width="12" height="12" opacity="0.8"/>
+  <use href="#spark" x="250" y="132" width="10" height="10" opacity="0.7"/>
+  <use href="#drop" x="460" y="96" width="12" height="17" opacity="0.85"/>
+  <use href="#drop" x="12" y="190" width="10" height="14" opacity="0.7"/>
+  <use href="#drop" x="268" y="88" width="9" height="13" opacity="0.75"/>
+</svg>

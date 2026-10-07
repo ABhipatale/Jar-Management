@@ -75,7 +75,6 @@ export function applyBranding(b = getBranding()) {
   document.title = `${brandName(b)} – ${t('common.jarMgmt')}`;
   setHead('link[rel="manifest"]', link('manifest'), 'href', b.manifest_url);
   setHead('link[rel="apple-touch-icon"]', link('apple-touch-icon'), 'href', b.icons?.['apple-touch']);
-  setHead('link[rel="icon"]', link('icon'), 'href', b.icons?.['icon-192']);
   setHead('meta[name="apple-mobile-web-app-title"]', meta('apple-mobile-web-app-title'), 'content', b.short_name);
   setHead('meta[name="description"]', meta('description'), 'content', `${brandName(b)} – ${t('common.jarMgmt')}`);
 }

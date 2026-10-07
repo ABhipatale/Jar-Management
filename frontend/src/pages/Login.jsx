@@ -94,31 +94,30 @@ export default function Login() {
           <LangChips />
         </div>
 
-        <div className="relative flex flex-col items-center px-6 pb-20 pt-6 text-center lg:flex-1 lg:items-start lg:justify-center lg:px-12 lg:pb-12 lg:text-left xl:px-16">
-          <div className="login-logo grid h-24 w-24 animate-pop-in place-items-center rounded-[28px] bg-white p-2.5 lg:h-20 lg:w-20 lg:rounded-3xl">
+        <div className="relative flex flex-col items-center px-6 pb-16 pt-2 text-center lg:flex-1 lg:items-start lg:justify-center lg:px-12 lg:pb-12 lg:text-left xl:px-16">
+          <div className="login-logo grid h-[72px] w-[72px] animate-pop-in place-items-center rounded-[22px] bg-white p-2 lg:h-20 lg:w-20 lg:rounded-3xl">
             <img src={logoSrc(branding)} alt="" className="h-full w-full rounded-2xl object-contain" />
           </div>
-          <h1 className="mt-5 text-[26px] font-bold leading-tight tracking-tight drop-shadow-sm lg:text-4xl">{name}</h1>
+          <h1 className="mt-4 text-[26px] font-bold leading-tight tracking-tight drop-shadow-sm lg:mt-5 lg:text-4xl">{name}</h1>
           {name !== t('common.jarMgmt') && (
             <span className="mt-2.5 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-[13px] font-medium ring-1 ring-white/20 backdrop-blur-sm">
               <Droplets size={14} aria-hidden="true" /> {t('common.jarMgmt')}
             </span>
           )}
 
-          {/* Desktop: the pitch + features */}
-          <div className="mt-10 hidden max-w-lg lg:block">
+          {/* RO purifier filling water jars */}
+          <img
+            src="/illustration.svg"
+            alt=""
+            className="mt-5 w-full max-w-[320px] animate-fade-in drop-shadow-xl lg:mt-6 lg:max-w-[440px]"
+            width="520"
+            height="360"
+          />
+
+          {/* Desktop: the pitch */}
+          <div className="mt-6 hidden max-w-lg lg:block">
             <h2 className="text-2xl font-semibold leading-snug tracking-tight">{t('login.brandTitle')}</h2>
             <p className="mt-2 text-white/80">{t('login.brandSub')}</p>
-            <ul className="mt-8 grid grid-cols-3 gap-3">
-              {HIGHLIGHTS.map((h) => (
-                <li key={h.key} className="rounded-2xl bg-white/10 p-4 ring-1 ring-white/15 backdrop-blur-sm">
-                  <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/20">
-                    <h.icon size={20} aria-hidden="true" />
-                  </span>
-                  <div className="mt-3 text-sm font-semibold leading-tight">{t(h.key)}</div>
-                </li>
-              ))}
-            </ul>
           </div>
           <p className="mt-auto hidden pt-10 text-xs text-white/60 lg:block">© {YEAR} {name}</p>
         </div>

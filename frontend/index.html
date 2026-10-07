@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#1d45d8" />
     <meta name="description" content="EasyJar – जार व्यवस्थापन" />
+    <!-- EasyJar favicon: the same for every company -->
+    <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" type="image/png" href="/favicon.png" />
 
     <!-- Install: the manifest is served per company by the API (src/lib/branding.js switches it after login). -->
@@ -24,9 +26,9 @@
 
     <title>EasyJar</title>
     <script>
-      // Before first paint: dark mode (same rule as src/lib/theme.js) and the saved company
-      // branding (same data as src/lib/branding.js), so there is no white flash and an
-      // installed company app opens with its own name, logo and manifest.
+      // Before first paint: dark mode (same rule as src/lib/theme.js), and the saved company's
+      // manifest/title (same data as src/lib/branding.js) so an installed company app keeps its
+      // own install name and icon. The splash below is always EasyJar's own.
       try {
         var t = localStorage.getItem('rws_theme');
         if (t === 'dark' || (t !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -34,10 +36,7 @@
         }
         var b = JSON.parse(localStorage.getItem('rws_branding') || 'null');
         if (b) {
-          var mr = localStorage.getItem('rws_lang') !== 'en';
-          window.__brandName = (mr && b.name_mr) || b.name;
-          window.__brandLogo = b.logo_url || (b.icons && b.icons['icon-192']);
-          document.title = window.__brandName;
+          document.title = (localStorage.getItem('rws_lang') !== 'en' && b.name_mr) || b.name;
           var set = function (sel, attr, val) { var el = document.querySelector(sel); if (el && val) el.setAttribute(attr, val); };
           set('link[rel="manifest"]', 'href', b.manifest_url);
           set('link[rel="apple-touch-icon"]', 'href', b.icons && b.icons['apple-touch']);
@@ -46,28 +45,29 @@
       } catch (e) {}
     </script>
     <style>
-      /* Splash shown instantly while the app loads (also on iPhone, which has no manifest splash). */
+      /* EasyJar splash, shown instantly while the app loads (also on iPhone, which has no manifest splash). */
       #splash { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
         background: #f5f6f8; font-family: system-ui, sans-serif; z-index: 50; }
       .dark #splash { background: #0b0d12; }
-      #splash img { width: 88px; height: 88px; border-radius: 22px; object-fit: contain; box-shadow: 0 10px 30px rgba(15,23,42,.14); }
-      #splash h1 { margin: 18px 0 2px; font-size: 20px; font-weight: 700; color: var(--brand, #1d45d8); text-align: center; padding: 0 16px; }
+      #splash img { width: min(300px, 78vw); height: auto; }
+      #splash h1 { margin: 10px 0 2px; font-size: 20px; font-weight: 700; color: var(--brand, #1d45d8); text-align: center; padding: 0 16px; }
       .dark #splash h1 { color: color-mix(in oklab, var(--brand, #1d45d8) 45%, white); }
       #splash p { margin: 0; color: #64748b; font-size: 14px; }
+      #splash footer { position: absolute; bottom: calc(24px + env(safe-area-inset-bottom)); left: 0; right: 0; text-align: center;
+        font-size: 12px; line-height: 1.6; color: #94a3b8; }
+      #splash footer b { color: #64748b; font-weight: 600; }
     </style>
   </head>
   <body>
     <div id="splash">
-      <img src="/icons/icon-192.png" alt="" />
+      <img src="/illustration.svg" alt="" width="520" height="360" />
       <h1>EasyJar</h1>
-      <p>जार व्यवस्थापन</p>
+      <p>Jar Management</p>
+      <footer>
+        Developed by <b>AB Technology</b><br />
+        7666287015 · abtechsolution.store
+      </footer>
     </div>
-    <script>
-      try {
-        if (window.__brandName) document.querySelector('#splash h1').textContent = window.__brandName;
-        if (window.__brandLogo) document.querySelector('#splash img').src = window.__brandLogo;
-      } catch (e) {}
-    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

@@ -16,7 +16,7 @@ export default defineConfig(({ mode }) => ({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.png', 'icons/apple-touch-icon.png'],
+      includeAssets: ['favicon.ico', 'favicon.png', 'icons/apple-touch-icon.png'],
       // The manifest is NOT built here: each company gets its own from the API
       // (/api/companies/<slug>/manifest.webmanifest), linked from index.html / src/lib/branding.js.
       manifest: false,
@@ -27,6 +27,8 @@ export default defineConfig(({ mode }) => ({
         // /api and /up belong to the Laravel service; never answer them with the app shell.
         navigateFallbackDenylist: [/^\/api\//, /^\/up$/],
         globPatterns: ['**/*.{js,css,html,png,jpg,svg,woff2}'],
+        // The full-size logo source is not needed offline.
+        globIgnores: ['**/EasyJar Water Delivery Logo.png'],
         runtimeCaching: [
           {
             // Last-seen API data is shown when offline. Writes (POST/PUT/DELETE) are never cached;
