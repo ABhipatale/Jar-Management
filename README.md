@@ -1,4 +1,4 @@
-# Jar Management
+# EasyJar
 
 A phone-first app for water-jar businesses. One deployment serves many companies: each company has its own login, data, name, logo and installable app (the design and colours are the same for everyone), and the platform owner (super admin) registers and manages the companies.
 
@@ -114,7 +114,7 @@ The app calls `/api/...` on its own domain, so no CORS setup or `VITE_API_URL` i
    MYSQL_ATTR_SSL_CA=/etc/ssl/certs/ca-certificates.crt   # only if the host requires TLS
    SUPERADMIN_EMAIL=you@example.com
    SUPERADMIN_PASSWORD=<strong password>
-   PLATFORM_NAME=Jar Management
+   PLATFORM_NAME=EasyJar
    ```
 4. **Deploy.** When a backend instance starts, `backend/vercel-start.sh` runs `migrate` and the seeder. Both are safe to repeat, and the seeder only creates the super admin and missing default settings. To run migrations yourself instead, set `RUN_MIGRATIONS=false`.
 5. **Check** that `https://<your-app>.vercel.app/up` shows "Application up", then log in.

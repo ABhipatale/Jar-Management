@@ -9,9 +9,9 @@ return [
         'password' => env('SUPERADMIN_PASSWORD'),
     ],
 
-    // Shown where no company is known yet (login page, super-admin panel).
-    'platform_name' => env('PLATFORM_NAME', 'Jar Management'),
-    'platform_name_mr' => env('PLATFORM_NAME_MR', 'जार व्यवस्थापन'),
+    // The product name, shown where no company is known yet (login page, splash, super-admin panel).
+    'platform_name' => env('PLATFORM_NAME', 'EasyJar'),
+    'platform_name_mr' => env('PLATFORM_NAME_MR', 'EasyJar'),
 
     // Web Push keys for phone notifications (reminders). Generate once; keep the private key secret.
     'vapid' => [

@@ -16,9 +16,10 @@ const EVENT = 'rws:branding';
 
 const DEFAULT = {
   company: null,
-  name: 'Jar Management',
-  name_mr: 'जार व्यवस्थापन',
-  short_name: 'Jar Management',
+  // The product name, used until the server says which company (or the platform) this is.
+  name: 'EasyJar',
+  name_mr: 'EasyJar',
+  short_name: 'EasyJar',
   logo_url: null,
   icons: {
     'icon-192': '/icons/icon-192.png',
