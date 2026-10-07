@@ -41,7 +41,7 @@ class JarBusinessTest extends TestCase
     public function test_login_with_email_or_mobile(): void
     {
         $this->app['auth']->forgetGuards();
-        User::create(['name' => 'Owner', 'email' => 'owner@shop.in', 'mobile' => '9404349071', 'password' => 'secret123']);
+        User::factory()->create(['name' => 'Owner', 'email' => 'owner@shop.in', 'mobile' => '9404349071', 'password' => 'secret123']);
 
         $this->postJson('/api/login', ['login' => 'owner@shop.in', 'password' => 'secret123'])->assertOk()->assertJsonStructure(['token']);
         $this->postJson('/api/login', ['login' => '+91 94043 49071', 'password' => 'secret123'])->assertOk();

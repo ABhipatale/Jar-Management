@@ -23,6 +23,11 @@ import CashReport from './pages/reports/CashReport';
 import UdhariReport from './pages/reports/UdhariReport';
 import PendingReport from './pages/reports/PendingReport';
 import JarStatusReport from './pages/reports/JarStatusReport';
+import AdminLayout from './pages/admin/AdminLayout';
+import Companies from './pages/admin/Companies';
+import CompanyForm from './pages/admin/CompanyForm';
+import CompanyDetail from './pages/admin/CompanyDetail';
+import AuditLog from './pages/admin/AuditLog';
 
 export default function App() {
   const { user } = useAuth();
@@ -31,6 +36,22 @@ export default function App() {
     return (
       <Routes>
         <Route path="*" element={<Login />} />
+      </Routes>
+    );
+  }
+
+  // Platform owner: the companies panel only (a company's app is opened via "Log in as company").
+  if (user.role === 'super_admin') {
+    return (
+      <Routes>
+        <Route path="admin" element={<AdminLayout />}>
+          <Route index element={<Companies />} />
+          <Route path="companies/new" element={<CompanyForm />} />
+          <Route path="companies/:id" element={<CompanyDetail />} />
+          <Route path="companies/:id/edit" element={<CompanyForm />} />
+          <Route path="audit" element={<AuditLog />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/admin" replace />} />
       </Routes>
     );
   }

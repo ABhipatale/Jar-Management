@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Controllers\Api\Admin\CompanyController as AdminCompanyController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BookingController;
+use App\Http\Controllers\Api\BrandingController;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\ExpenseController;
@@ -15,14 +17,41 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
 
+// Public branding: the browser loads the manifest and icons without the app's login token.
+Route::get('/branding', [BrandingController::class, 'platform']);
+Route::get('/manifest.webmanifest', [BrandingController::class, 'platformManifest']);
+Route::get('/companies/{slug}/branding', [BrandingController::class, 'company']);
+Route::get('/companies/{slug}/manifest.webmanifest', [BrandingController::class, 'manifest']);
+Route::get('/companies/{slug}/icons/{kind}.png', [BrandingController::class, 'icon']);
+
 // Daily reminder job (Vercel Cron). Idempotent: only sends due reminders, each once.
 Route::get('/cron/reminders', [NotificationController::class, 'cron'])->middleware('throttle:10,1');
 
+// Any logged-in user (company users and the super admin).
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::put('/me/password', [AuthController::class, 'changePassword']);
+});
 
+// Super-admin panel: manage the companies using the platform.
+Route::middleware(['auth:sanctum', 'super.admin'])->prefix('admin')->controller(AdminCompanyController::class)->group(function () {
+    Route::get('/companies', 'index');
+    Route::post('/companies', 'store');
+    Route::get('/companies/{company}', 'show');
+    Route::put('/companies/{company}', 'update');
+    Route::delete('/companies/{company}', 'destroy');
+    Route::post('/companies/{company}/suspend', 'suspend');
+    Route::post('/companies/{company}/activate', 'activate');
+    Route::post('/companies/{company}/owner-password', 'resetOwnerPassword');
+    Route::post('/companies/{company}/impersonate', 'impersonate');
+    Route::post('/companies/{company}/logo', 'uploadLogo');
+    Route::delete('/companies/{company}/logo', 'removeLogo');
+    Route::get('/audit', 'auditLog');
+});
+
+// The business app: every query below only sees the user's own company.
+Route::middleware(['auth:sanctum', 'company'])->group(function () {
     Route::get('/dashboard', DashboardController::class);
 
     Route::get('/customers/{customer}/ledger', [CustomerController::class, 'ledger']);
@@ -65,4 +94,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/settings', [SettingController::class, 'show']);
     Route::put('/settings', [SettingController::class, 'update']);
+    Route::post('/settings/logo', [SettingController::class, 'uploadLogo']);
+    Route::delete('/settings/logo', [SettingController::class, 'removeLogo']);
 });

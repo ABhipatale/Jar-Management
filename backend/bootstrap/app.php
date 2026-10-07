@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Middleware\EnsureCompanyAccess;
+use App\Http\Middleware\EnsureSuperAdmin;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -25,6 +27,11 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Language of API messages: X-Locale header (mr = default, en = English).
         $middleware->api(prepend: [SetLocale::class]);
+
+        $middleware->alias([
+            'company' => EnsureCompanyAccess::class,
+            'super.admin' => EnsureSuperAdmin::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         // The app only ever shows short, friendly messages — never PHP/Laravel internals.

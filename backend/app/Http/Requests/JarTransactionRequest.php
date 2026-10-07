@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Support\CurrentCompany;
 use Illuminate\Validation\Rule;
 
 class JarTransactionRequest extends ApiRequest
@@ -9,7 +10,7 @@ class JarTransactionRequest extends ApiRequest
     public function rules(): array
     {
         return [
-            'customer_id' => ['required', 'integer', Rule::exists('customers', 'id')->whereNull('deleted_at')],
+            'customer_id' => ['required', 'integer', Rule::exists('customers', 'id')->where('company_id', CurrentCompany::id())->whereNull('deleted_at')],
             'transaction_date' => ['required', 'date_format:Y-m-d', 'before_or_equal:today'],
             'transaction_type' => ['required', 'in:given,returned'],
             'jar_quantity' => ['required', 'integer', 'min:1', 'max:10000'],

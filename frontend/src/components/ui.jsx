@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AlertTriangle, ArrowDownRight, ArrowUpRight, ChevronLeft, Inbox, Minus, Phone, Plus, RotateCw, X } from 'lucide-react';
-import { t, lang } from '../i18n';
-import { money } from '../lib/format';
+import { t } from '../i18n';
+import { businessName, businessPlace, money } from '../lib/format';
 import { Sparkline } from './charts';
 
 /* ────────────────────────────────────────────────────────────────────────────
@@ -337,10 +337,9 @@ export function Modal({ title, description, onClose, children, size = 'md' }) {
 export function PrintHeader({ settings, title, subtitle }) {
   return (
     <div className="print-only mb-4 border-b pb-3">
-      <div className="text-lg font-bold">{lang === 'mr' ? settings?.business_name_mr || settings?.business_name || t('common.businessName') : settings?.business_name || t('common.businessName')}</div>
+      <div className="text-lg font-bold">{businessName(settings)}</div>
       <div className="text-sm text-slate-600">
-        {lang === 'mr' ? settings?.business_place_mr || settings?.business_address || t('common.businessPlace') : settings?.business_address || t('common.businessPlace')}
-        {settings?.business_mobile ? ` · ${settings.business_mobile}` : ''}
+        {[businessPlace(settings), settings?.business_mobile].filter(Boolean).join(' · ')}
       </div>
       <div className="mt-2 font-semibold">{title}</div>
       {subtitle && <div className="text-sm text-slate-600">{subtitle}</div>}

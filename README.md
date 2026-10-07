@@ -1,11 +1,25 @@
-# Sai Water Suppliers – Jar Management
+# Jar Management
 
-A simple app for one water-jar shop in Kolewadi, built to be used on a phone.
+A phone-first app for water-jar businesses. One deployment serves many companies: each company has its own login, data, name, logo and installable app (the design and colours are the same for everyone), and the platform owner (super admin) registers and manages the companies.
 
 ```
 React PWA (Vercel)  →  Laravel 12 REST API  →  MySQL
 frontend/              backend/
 ```
+
+## Companies (multi-tenant)
+
+- **One database, `company_id` on every business table.** Customers, jars, jar entries, payments, ledger, expenses, settings, reminders, bookings and push subscriptions all belong to one company.
+- **The company comes from the login, never from the request.** Every Eloquent model uses the `BelongsToCompany` trait: queries only see the logged-in user's company, and new rows get its id. Query-builder code (reports, balances) uses `CurrentCompany::table()`, which adds the same filter. With no company known, queries return nothing and writes fail. Background work (the cron job, seeders, the admin panel) sets the company explicitly with `CurrentCompany::run()`.
+- **Roles:** `super_admin` (no company; manages companies), `owner` (full access to their company), `staff` (column exists; not used yet).
+- **Logins are unique across the platform** (email and mobile), because one login page serves every company and the login decides which company opens.
+- **Suspended or expired companies** cannot log in, and their open sessions get a 403 with the reason. The cron job skips them.
+- **Super-admin panel** (`/admin` in the app, `/api/admin/*`): list, register, edit, suspend/activate, extend the plan, reset the owner's password, upload the logo, delete (soft), and **Log in as company** for support (a 2-hour owner session with a banner; logged). Every action is written to `admin_audit_logs`.
+- **Branding:** the name, short name and logo are stored on the company; the app's design and colours are the same for every company. The server generates the app icons from the logo (192, 512, maskable and Apple 180 px) and stores them in the database, because Vercel's filesystem is temporary.
+- **Installed app:** after login, the app points `<link rel="manifest">` at `/api/companies/<slug>/manifest.webmanifest`, so *Install app* / *Add to Home Screen* uses the company's name and icon. The branding is saved on the phone, so an installed company app opens with its own splash, even offline. Before anyone logs in, the platform's name and icon are shown.
+- **Offline data on the phone** (cached settings, offline outbox) is stored per company, so one phone can be used by two companies without mixing data.
+
+**Installed-app limits** (set by the phone, not the app): Android Chrome picks up a renamed company or a new icon when it re-checks the manifest, which can take up to a day. iPhone keeps the name and icon from the moment of *Add to Home Screen*; to see a new logo there, remove the app and add it again.
 
 ## What it does
 
@@ -52,20 +66,22 @@ cd backend
 composer install
 cp .env.example .env            # set DB_* for your MySQL (create the empty database first), APP_DEBUG=true, APP_ENV=local
 php artisan key:generate
-php artisan migrate --seed      # creates tables + the admin account + default settings
-php artisan db:seed --class=DemoSeeder   # optional sample customers (local only)
+php artisan migrate --seed      # creates tables + the super admin (SUPERADMIN_EMAIL / SUPERADMIN_PASSWORD)
+php artisan db:seed --class=DemoSeeder   # optional sample customers for the first company (local only)
 php artisan serve               # http://127.0.0.1:8000
 
 # App
 cd ../frontend
 npm install
 cp .env.example .env            # VITE_API_URL=http://127.0.0.1:8000
-npm run dev                     # http://localhost:5173
+npm run dev                     # http://localhost:5173 (/api is proxied to VITE_API_URL)
 ```
 
-Default login is `admin@saiwater.in` / `ChangeMe@123` (or whatever `ADMIN_EMAIL` and `ADMIN_PASSWORD` are set to in `.env`). You can also log in with `ADMIN_MOBILE`. **Change the password in Settings after the first login.**
+Log in with `SUPERADMIN_EMAIL` / `SUPERADMIN_PASSWORD`, register a company with its owner login, then log in as that owner (or use **Log in as company**). **Change the passwords after the first login.**
 
-Tests (these use in-memory SQLite, so no database setup is needed): `cd backend && php artisan test`
+**Upgrading an existing single-shop database:** `php artisan migrate` creates company #1 (slug `sai`) from the saved shop settings and moves every existing row and user into it. Nothing is lost; the old admin login keeps working as that company's owner.
+
+Tests (these use in-memory SQLite, so no database setup is needed): `cd backend && php artisan test`. They include tenant isolation (company B cannot read or change company A's data by id, list, report or validation), the super-admin panel, branding/manifest/icons and the per-company cron.
 
 ## Deploy (one Vercel project, two services)
 
@@ -86,24 +102,24 @@ The app calls `/api/...` on its own domain, so no CORS setup or `VITE_API_URL` i
    APP_DEBUG=false
    APP_TIMEZONE=Asia/Kolkata
    DB_CONNECTION=mysql
-   DB_URL=mysql://user:pass@host:3306/sai_water
+   DB_URL=mysql://user:pass@host:3306/jar_management
    MYSQL_ATTR_SSL_CA=/etc/ssl/certs/ca-certificates.crt   # only if the host requires TLS
-   ADMIN_EMAIL=admin@saiwater.in
-   ADMIN_MOBILE=9404349071
-   ADMIN_PASSWORD=<strong password>
+   SUPERADMIN_EMAIL=you@example.com
+   SUPERADMIN_PASSWORD=<strong password>
+   PLATFORM_NAME=Jar Management
    ```
-4. **Deploy.** When a backend instance starts, `backend/vercel-start.sh` runs `migrate` and the seeder. Both are safe to repeat, and the seeder only creates the admin account and default settings if they are missing. To run migrations yourself instead, set `RUN_MIGRATIONS=false`.
+4. **Deploy.** When a backend instance starts, `backend/vercel-start.sh` runs `migrate` and the seeder. Both are safe to repeat, and the seeder only creates the super admin and missing default settings. To run migrations yourself instead, set `RUN_MIGRATIONS=false`.
 5. **Check** that `https://<your-app>.vercel.app/up` shows "Application up", then log in.
 
 The backend's filesystem on Vercel is temporary. Logs go to Vercel's runtime logs, the cache and login throttling use the database, and all business data is in MySQL.
 
 Local development without Vercel works as before: run `php artisan serve` for the API and `npm run dev` for the app, with `VITE_API_URL` set in `frontend/.env`. Running `vercel dev` also works, but it needs Docker to build the backend container.
 
-**Install on a phone**: open the Vercel URL. On Android (Chrome), tap ⋮ → *Install app*. On iPhone (Safari), tap Share → *Add to Home Screen*.
+**Install on a phone**: open the Vercel URL and **log in first** (so the install uses the company's name and icon). On Android (Chrome), tap ⋮ → *Install app*. On iPhone (Safari), tap Share → *Add to Home Screen*.
 
 ## Notes
 
-- **Name and logo**: Sai Water Suppliers (साई वॉटर सप्लायर्स), Kolewadi. The app icons and login banner come from the shop's banner. The business name in the header, reports and WhatsApp messages comes from **Settings**, so it can be changed without touching code.
+- **Name and logo** of each company are set in **Settings → Branding** (or by the super admin). They are used in the header, reports, print/PDF, Excel, WhatsApp messages, phone notifications and the installed app. Companies without a logo use the default water-drop icon in `frontend/public/icons`.
 - Developed by **AB Technology Services** · 7666287015.
 - **PDF export** uses the browser's print dialog ("Save as PDF"). Marathi names print correctly this way, whereas JavaScript PDF libraries garble Devanagari unless fonts are embedded.
 - **Jar stock** is one row per jar in the `jars` table, even in quantity mode. This gives exact totals and dated damaged/lost counts for the monthly report.

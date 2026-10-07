@@ -2,10 +2,10 @@
 
 namespace App\Services;
 
+use App\Support\CurrentCompany;
 use App\Models\CustomerLedger;
 use App\Models\JarTransaction;
 use App\Models\Payment;
-use Illuminate\Support\Facades\DB;
 
 /**
  * customer_ledger is a derived statement. After any entry, payment or delete we
@@ -62,13 +62,16 @@ class LedgerService
         usort($events, fn ($a, $b) => $a['sort'] <=> $b['sort']);
 
         $now = now();
+        $companyId = CurrentCompany::require();
         $balance = 0.0;
         $jars = 0;
         $rows = [];
         foreach ($events as $e) {
             $balance = round($balance + $e['due'], 2);
             $jars += $e['jars'];
+            // Bulk insert skips model events, so company_id is set here.
             $rows[] = $e['row'] + [
+                'company_id' => $companyId,
                 'customer_id' => $customerId,
                 'balance' => $balance,
                 'jar_balance' => $jars,
@@ -77,7 +80,7 @@ class LedgerService
             ];
         }
 
-        DB::table('customer_ledger')->where('customer_id', $customerId)->delete();
+        CurrentCompany::table('customer_ledger')->where('customer_id', $customerId)->delete();
         foreach (array_chunk($rows, 200) as $chunk) {
             CustomerLedger::insert($chunk);
         }

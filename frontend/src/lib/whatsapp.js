@@ -1,3 +1,4 @@
+import { brandName } from './branding';
 import { fmtDate, today } from './format';
 
 // Default WhatsApp templates (customer-facing, always Marathi). The shop can edit them in
@@ -102,17 +103,26 @@ export function fillTemplate(template, values) {
 
 function shopValues(settings) {
   const base = {
-    shop_name: settings?.business_name_mr || 'साई वॉटर सप्लायर्स',
-    shop_place: settings?.business_place_mr || 'कोळेवाडी',
-    owner_name: settings?.owner_name_mr || 'श्री. अतुल भागवत',
-    contact_lines: String(settings?.contact_numbers || '9404349071, 8308285774')
+    shop_name: settings?.business_name_mr || settings?.business_name || brandName(),
+    shop_place: settings?.business_place_mr || '',
+    owner_name: settings?.owner_name_mr || '',
+    contact_lines: String(settings?.contact_numbers || '')
       .split(/[,\n]/)
       .map((n) => n.trim())
       .filter(Boolean)
       .map((n) => `📱 ${n}`)
       .join('\n'),
   };
-  return { ...base, footer: fillTemplate(DEFAULT_FOOTER, base) };
+  return { ...base, footer: footerFor(base) };
+}
+
+/** The closing block, leaving out place / contacts / owner when the company has not set them. */
+function footerFor(base) {
+  let text = DEFAULT_FOOTER;
+  if (!base.shop_place) text = text.replace(', {shop_place}', '');
+  if (!base.contact_lines) text = text.replace('\n\n📞 *संपर्क*\n{contact_lines}', '');
+  if (!base.owner_name) text = text.replace('\n👤 {owner_name}', '');
+  return fillTemplate(text, base);
 }
 
 /** Template text for a message; makes sure the closing {footer} block is always there. */

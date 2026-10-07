@@ -4,9 +4,9 @@ import { CircleCheck, Clock, Droplets, MessageCircle, Phone, Wallet } from 'luci
 import ExportBar from '../../components/ExportBar';
 import { Empty, ErrorBox, Loader, PageHeader, PrintHeader } from '../../components/ui';
 import { useSettings } from '../../context/SettingsContext';
-import { lang, t } from '../../i18n';
+import { t } from '../../i18n';
 import { exportExcel } from '../../lib/export';
-import { fmtDate, money, today } from '../../lib/format';
+import { businessName, fmtDate, money, today } from '../../lib/format';
 import { useApi, useDebounced } from '../../lib/useApi';
 import { messages, openWhatsApp } from '../../lib/whatsapp';
 import ReportFilters from './ReportFilters';
@@ -37,7 +37,7 @@ export default function PendingReport() {
       {loading && !data && <Loader />}
       {data && (
         <>
-          <ExportBar onExcel={() => exportExcel(`${t('rep.pending.file')}-${today()}`, t('rep.pending.sheet'), cols, rows, [(lang === 'en' ? settings.business_name || 'Sai Water Suppliers' : settings.business_name_mr || 'साई वॉटर सप्लायर्स'), t('rep.pending.titleLine', { date: fmtDate(today()) }), t('rep.pending.totalLine', { total: data.total })])} />
+          <ExportBar onExcel={() => exportExcel(`${t('rep.pending.file')}-${today()}`, t('rep.pending.sheet'), cols, rows, [businessName(settings), t('rep.pending.titleLine', { date: fmtDate(today()) }), t('rep.pending.totalLine', { total: data.total })])} />
 
           <div className="card flex items-center gap-3 !bg-red-50 !ring-red-200">
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-red-100 text-red-600">

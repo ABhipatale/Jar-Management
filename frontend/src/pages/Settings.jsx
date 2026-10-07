@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Droplets, KeyRound, Languages, LogOut, MessageCircle, MessageSquareText, Palette, Save, Store } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Droplets, ImagePlus, KeyRound, Languages, LogOut, MessageCircle, MessageSquareText, Palette, Save, Sparkles, Store, Trash2 } from 'lucide-react';
 import api, { errorMessage } from '../api/client';
 import { ThemeSwitch } from '../components/Layout';
 import { Field, Loader, PageHeader, Segmented } from '../components/ui';
@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext';
 import { useUi } from '../context/UiContext';
 import { LANGS, lang, setLang, t, tx } from '../i18n';
+import { logoSrc } from '../lib/branding';
 import { DEFAULT_TEMPLATES, getWaApp, setWaApp } from '../lib/whatsapp';
 
 const TEMPLATES = [
@@ -43,6 +44,8 @@ export default function Settings() {
   const [busy, setBusy] = useState(false);
   const [pw, setPw] = useState({ current_password: '', password: '', password_confirmation: '' });
   const [waApp, setWaAppState] = useState(getWaApp);
+  const [logoBusy, setLogoBusy] = useState(false);
+  const logoInput = useRef(null);
 
   useEffect(() => {
     api.get('/settings').then(({ data }) => {
@@ -74,6 +77,28 @@ export default function Settings() {
       toast(errorMessage(err), 'error');
     } finally {
       setBusy(false);
+    }
+  };
+
+  // Logo is saved right away (not with the form): the server makes the app icons from it.
+  const logo = async (file) => {
+    setLogoBusy(true);
+    try {
+      let res;
+      if (file) {
+        const body = new FormData();
+        body.append('logo', file);
+        res = await api.post('/settings/logo', body);
+      } else {
+        res = await api.delete('/settings/logo');
+      }
+      setSettings(res.data);
+      setForm((f) => ({ ...f, branding: res.data.branding }));
+      toast(res.data.message);
+    } catch (err) {
+      toast(errorMessage(err), 'error');
+    } finally {
+      setLogoBusy(false);
     }
   };
 
@@ -121,6 +146,46 @@ export default function Settings() {
 
       <form onSubmit={save} className="space-y-5">
         <h2 className="section-title pt-1">{t('set.secShop')}</h2>
+        <Section icon={Sparkles} tone="bg-amber-50 text-amber-700" title={t('brand.title')} hint={t('brand.hint')}>
+          <div className="flex flex-wrap items-center gap-4">
+            <img
+              src={logoSrc(form.branding || {})}
+              alt=""
+              className="h-20 w-20 rounded-2xl bg-white object-contain ring-1 ring-line"
+            />
+            <div className="space-y-2">
+              <input
+                ref={logoInput}
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  e.target.value = '';
+                  if (f) logo(f);
+                }}
+              />
+              <div className="flex flex-wrap gap-2">
+                <button type="button" className="btn-light" onClick={() => logoInput.current?.click()} disabled={logoBusy}>
+                  <ImagePlus size={16} /> {form.branding?.logo_url ? t('adm.changeLogo') : t('adm.uploadLogo')}
+                </button>
+                {form.branding?.logo_url && (
+                  <button type="button" className="btn-light text-red-600" onClick={() => logo(null)} disabled={logoBusy}>
+                    <Trash2 size={16} /> {t('adm.removeLogo')}
+                  </button>
+                )}
+              </div>
+              <p className="text-xs text-muted">{t('adm.logoHint')}</p>
+            </div>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label={t('adm.f.shortName')} hint={t('adm.f.shortNameHint')}>
+              <input className="input" value={form.short_name || ''} onChange={set('short_name')} maxLength={40} />
+            </Field>
+          </div>
+          <p className="rounded-lg bg-surface-2 p-3 text-xs leading-relaxed text-muted ring-1 ring-line">{t('brand.installNote')}</p>
+        </Section>
+
         <Section icon={Store} title={t('set.shop')}>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label={t('set.businessName')}>

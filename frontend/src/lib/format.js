@@ -1,5 +1,6 @@
 // Formatting + date helpers. All dates travel to the API as YYYY-MM-DD (local time).
-import { lang, t } from '../i18n';
+import { lang } from '../i18n';
+import { brandName } from './branding';
 
 export function toISODate(d = new Date()) {
   const y = d.getFullYear();
@@ -74,13 +75,13 @@ export function fmtLongDate(iso = today()) {
   });
 }
 
-/** Business name / place in the app's language (header, Excel). */
+/** Company name / place in the app's language (header, print, Excel). */
 export function businessName(settings) {
-  return lang === 'mr' ? settings?.business_name_mr || t('common.businessName') : settings?.business_name || t('common.businessName');
+  return (lang === 'mr' ? settings?.business_name_mr || settings?.business_name : settings?.business_name) || brandName();
 }
 
 export function businessPlace(settings) {
-  return lang === 'mr' ? settings?.business_place_mr || t('common.businessPlace') : settings?.business_address || t('common.businessPlace');
+  return (lang === 'mr' ? settings?.business_place_mr || settings?.business_address : settings?.business_address) || '';
 }
 
 export function num(v) {

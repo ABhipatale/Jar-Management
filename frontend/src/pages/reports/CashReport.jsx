@@ -6,9 +6,9 @@ import RangeFilter, { initialRange } from '../../components/RangeFilter';
 import { SortTh, useSort } from '../../components/table';
 import { Empty, ErrorBox, Loader, PageHeader, PrintHeader, SkeletonCards, StatCard } from '../../components/ui';
 import { useSettings } from '../../context/SettingsContext';
-import { lang, t } from '../../i18n';
+import { t } from '../../i18n';
 import { exportExcel } from '../../lib/export';
-import { fmtDate, money } from '../../lib/format';
+import { businessName, fmtDate, money } from '../../lib/format';
 import { useApi } from '../../lib/useApi';
 
 const short = (v) => (v >= 1000 ? `₹${(v / 1000).toFixed(v >= 10000 ? 0 : 1)}k` : `₹${Math.round(v)}`);
@@ -52,7 +52,7 @@ export default function CashReport() {
       )}
       {s && (
         <>
-          <ExportBar onExcel={() => exportExcel(`${t('rep.cash.file')}-${range.from}`, t('rep.cash.sheet'), cols, data.days, [(lang === 'en' ? settings.business_name || 'Sai Water Suppliers' : settings.business_name_mr || 'साई वॉटर सप्लायर्स'), t('rep.cash.titleLine', { period })])} />
+          <ExportBar onExcel={() => exportExcel(`${t('rep.cash.file')}-${range.from}`, t('rep.cash.sheet'), cols, data.days, [businessName(settings), t('rep.cash.titleLine', { period })])} />
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <StatCard icon={Banknote} label={t('rep.cash.cashCollection')} value={money(s.cash)} tone="green" />
             <StatCard icon={Smartphone} label={t('rep.cash.upiBank')} value={money(s.payments_upi + s.payments_bank)} tone="purple" />

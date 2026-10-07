@@ -54,10 +54,33 @@ export function setUnauthorizedHandler(fn) {
   onUnauthorized = fn;
 }
 
+// 403 with one of these codes = the company was suspended / expired or the user disabled
+// while logged in: log out and show the reason on the login screen.
+const BLOCKED = ['company_suspended', 'company_expired', 'user_inactive', 'no_company'];
+const REASON_KEY = 'rws_logout_reason';
+
+export function takeLogoutReason() {
+  try {
+    const r = sessionStorage.getItem(REASON_KEY);
+    sessionStorage.removeItem(REASON_KEY);
+    return r;
+  } catch {
+    return null;
+  }
+}
+
 api.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err.response?.status === 401 && !err.config?.url?.endsWith('/login')) {
+      onUnauthorized();
+    }
+    if (err.response?.status === 403 && BLOCKED.includes(err.response.data?.code)) {
+      try {
+        sessionStorage.setItem(REASON_KEY, err.response.data.message || '');
+      } catch {
+        /* ignore */
+      }
       onUnauthorized();
     }
     return Promise.reject(err);

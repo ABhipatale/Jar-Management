@@ -16,6 +16,7 @@ class SettingsRequest extends ApiRequest
         return [
             'business_name' => ['sometimes', 'required', 'string', 'max:120'],
             'business_name_mr' => ['sometimes', 'nullable', 'string', 'max:120'],
+            'short_name' => ['sometimes', 'nullable', 'string', 'max:40'],
             'business_address' => ['sometimes', 'nullable', 'string', 'max:300'],
             'business_place_mr' => ['sometimes', 'nullable', 'string', 'max:120'],
             'business_mobile' => ['sometimes', 'nullable', 'regex:/^[6-9][0-9]{9}$/'],

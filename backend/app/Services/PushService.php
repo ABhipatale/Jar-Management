@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\PushSubscription;
+use App\Support\CurrentCompany;
 use Illuminate\Support\Facades\Log;
 use Minishlink\WebPush\Subscription;
 use Minishlink\WebPush\WebPush;
@@ -36,6 +37,10 @@ class PushService
                 'privateKey' => config('shop.vapid.private'),
             ]], ['TTL' => 86400]);
 
+            // Only this company's phones (PushSubscription is company-scoped), with its own icon.
+            $company = CurrentCompany::get();
+            $icon = $company ? app(BrandingService::class)->forCompany($company)['icons']['icon-192'] : null;
+
             foreach (PushSubscription::all() as $sub) {
                 $push->queueNotification(
                     Subscription::create([
@@ -44,7 +49,7 @@ class PushService
                         'authToken' => $sub->auth,
                         'contentEncoding' => 'aes128gcm',
                     ]),
-                    json_encode($payload($sub->locale ?: 'mr'), JSON_UNESCAPED_UNICODE)
+                    json_encode($payload($sub->locale ?: 'mr') + array_filter(['icon' => $icon]), JSON_UNESCAPED_UNICODE)
                 );
             }
 

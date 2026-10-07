@@ -1,13 +1,15 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import api from '../api/client';
+import { setBranding } from '../lib/branding';
+import { companyKey } from '../lib/storage';
 
-/** Shop settings (name, default rate, WhatsApp templates…), cached for offline use. */
+/** Company settings (name, default rate, WhatsApp templates…), cached per company for offline use. */
 const SettingsContext = createContext(null);
-const KEY = 'rws_settings';
+const key = () => companyKey('rws_settings');
 
 function cached() {
   try {
-    return JSON.parse(localStorage.getItem(KEY) || '{}');
+    return JSON.parse(localStorage.getItem(key()) || '{}');
   } catch {
     return {};
   }
@@ -18,8 +20,10 @@ export function SettingsProvider({ children }) {
 
   const apply = (data) => {
     setSettings(data);
+    // Settings carry the company's branding (name, colour, logo): keep the app in step.
+    if (data?.branding) setBranding(data.branding);
     try {
-      localStorage.setItem(KEY, JSON.stringify(data));
+      localStorage.setItem(key(), JSON.stringify(data));
     } catch {
       /* ignore */
     }

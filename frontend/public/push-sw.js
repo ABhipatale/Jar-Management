@@ -8,10 +8,11 @@ self.addEventListener('push', (event) => {
     data = { body: event.data ? event.data.text() : '' };
   }
   event.waitUntil(
-    self.registration.showNotification(data.title || 'साई वॉटर सप्लायर्स', {
+    // The server sends the company's own icon with each notification.
+    self.registration.showNotification(data.title || '🔔', {
       body: data.body || '',
-      icon: '/icons/icon-192.png',
-      badge: '/icons/icon-192.png',
+      icon: data.icon || '/icons/icon-192.png',
+      badge: data.icon || '/icons/icon-192.png',
       tag: data.tag,
       renotify: Boolean(data.tag),
       data: { url: data.url || '/notifications' },

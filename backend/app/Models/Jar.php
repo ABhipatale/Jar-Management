@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Jar extends Model
 {
+    use BelongsToCompany;
+
     public const STATUSES = ['available', 'with_customer', 'returned', 'damaged', 'lost'];
 
     protected $fillable = ['jar_number', 'status', 'customer_id', 'status_date'];

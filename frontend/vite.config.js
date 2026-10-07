@@ -1,32 +1,25 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
+  // Local development: /api (manifest, icons, logos) is forwarded to `php artisan serve`,
+  // so the same relative URLs work as on Vercel.
+  server: {
+    proxy: {
+      '/api': { target: loadEnv(mode, process.cwd(), '').VITE_API_URL || 'http://127.0.0.1:8000', changeOrigin: true },
+    },
+  },
   plugins: [
     react(),
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.png', 'icons/apple-touch-icon.png'],
-      manifest: {
-        name: 'साई वॉटर सप्लायर्स – जार व्यवस्थापन',
-        short_name: 'साई वॉटर',
-        description: 'साई वॉटर सप्लायर्स, कोळेवाडी – दैनंदिन जार वाटप, परत आलेले जार, उधारी आणि पेमेंट.',
-        lang: 'mr-IN',
-        start_url: '/',
-        scope: '/',
-        display: 'standalone',
-        orientation: 'portrait',
-        background_color: '#ffffff',
-        theme_color: '#1e3a8a',
-        icons: [
-          { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
-          { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
-          { src: '/icons/maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
-        ],
-      },
+      // The manifest is NOT built here: each company gets its own from the API
+      // (/api/companies/<slug>/manifest.webmanifest), linked from index.html / src/lib/branding.js.
+      manifest: false,
       workbox: {
         // Phone notifications for jar reminders (public/push-sw.js).
         importScripts: ['push-sw.js'],
@@ -51,4 +44,4 @@ export default defineConfig({
       },
     }),
   ],
-});
+}));

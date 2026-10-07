@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Company;
 use App\Models\PushSubscription;
 use App\Models\Reminder;
 use App\Services\BookingService;
 use App\Services\PushService;
 use App\Services\ReminderService;
+use App\Support\CurrentCompany;
 use Illuminate\Http\Request;
 
 class NotificationController extends Controller
@@ -69,6 +71,11 @@ class NotificationController extends Controller
             'keys.auth' => ['required', 'string', 'max:100'],
         ]);
 
+        // A browser has one endpoint. If it was registered under another company before
+        // (different login on the same phone), move it to this company.
+        PushSubscription::withoutGlobalScope('company')->where('endpoint', $data['endpoint'])
+            ->where('company_id', '!=', CurrentCompany::require())->delete();
+
         PushSubscription::updateOrCreate(
             ['endpoint' => $data['endpoint']],
             [
@@ -96,9 +103,39 @@ class NotificationController extends Controller
      */
     public function cron()
     {
-        // Follow-up reminders go out from 9 AM; the 7 AM run only does the bookings.
-        $reminders = now()->hour >= 9 ? $this->reminders->runDue() : null;
+        $results = [];
+        // Each company is processed on its own: its reminders, its bookings, its phones.
+        Company::query()->where('status', Company::ACTIVE)
+            ->where(fn ($q) => $q->whereNull('expires_at')->orWhere('expires_at', '>', now()))
+            ->orderBy('id')
+            ->each(function (Company $company) use (&$results) {
+                $results[$company->slug] = CurrentCompany::run($company, fn () => [
+                    // Follow-up reminders go out from 9 AM; the 7 AM run only does the bookings.
+                    'reminders' => now()->hour >= 9 ? $this->reminders->runDue() : null,
+                    'bookings' => $this->bookings->runNotifications(),
+                ]);
+            });
 
-        return response()->json(['reminders' => $reminders, 'bookings' => $this->bookings->runNotifications()]);
+        return response()->json([
+            // Totals across all companies, then the per-company breakdown.
+            'reminders' => self::sum(array_column($results, 'reminders')),
+            'bookings' => self::sum(array_column($results, 'bookings')),
+            'companies' => $results,
+        ]);
+    }
+
+    /** Adds up the numeric fields of several result arrays (null when there is nothing). */
+    private static function sum(array $parts): ?array
+    {
+        $total = null;
+        foreach (array_filter($parts, 'is_array') as $part) {
+            foreach ($part as $key => $value) {
+                if (is_numeric($value)) {
+                    $total[$key] = ($total[$key] ?? 0) + $value;
+                }
+            }
+        }
+
+        return $total;
     }
 }

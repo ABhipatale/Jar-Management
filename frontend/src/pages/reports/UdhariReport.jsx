@@ -5,9 +5,9 @@ import RangeFilter, { initialRange } from '../../components/RangeFilter';
 import { SortTh, useSort } from '../../components/table';
 import { Empty, ErrorBox, Loader, PageHeader, PendingText, PrintHeader, SkeletonCards, StatCard } from '../../components/ui';
 import { useSettings } from '../../context/SettingsContext';
-import { lang, t } from '../../i18n';
+import { t } from '../../i18n';
 import { exportExcel } from '../../lib/export';
-import { fmtDate, money } from '../../lib/format';
+import { businessName, fmtDate, money } from '../../lib/format';
 import { useApi, useDebounced } from '../../lib/useApi';
 import ReportFilters from './ReportFilters';
 
@@ -47,7 +47,7 @@ export default function UdhariReport() {
       )}
       {s && (
         <>
-          <ExportBar onExcel={() => exportExcel(`${t('rep.udhari.file')}-${range.from}`, t('rep.udhari.sheet'), cols, rows, [(lang === 'en' ? settings.business_name || 'Sai Water Suppliers' : settings.business_name_mr || 'साई वॉटर सप्लायर्स'), t('rep.udhari.titleLine', { period })])} />
+          <ExportBar onExcel={() => exportExcel(`${t('rep.udhari.file')}-${range.from}`, t('rep.udhari.sheet'), cols, rows, [businessName(settings), t('rep.udhari.titleLine', { period })])} />
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
             <StatCard icon={HandCoins} label={t('rep.udhari.given')} value={money(s.udhari)} tone="amber" />
             <StatCard icon={CircleCheck} label={t('rep.udhari.recovered')} value={money(s.payments)} tone="green" />

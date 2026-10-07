@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Support\CurrentCompany;
 use Illuminate\Validation\Rule;
 
 class PaymentRequest extends ApiRequest
@@ -9,7 +10,7 @@ class PaymentRequest extends ApiRequest
     public function rules(): array
     {
         return [
-            'customer_id' => ['required', 'integer', Rule::exists('customers', 'id')->whereNull('deleted_at')],
+            'customer_id' => ['required', 'integer', Rule::exists('customers', 'id')->where('company_id', CurrentCompany::id())->whereNull('deleted_at')],
             'payment_date' => ['required', 'date_format:Y-m-d', 'before_or_equal:today'],
             'amount' => ['required', 'numeric', 'gt:0', 'max:10000000'],
             'payment_mode' => ['required', 'in:cash,upi,bank'],

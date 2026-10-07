@@ -21,9 +21,9 @@ import ExportBar from '../../components/ExportBar';
 import { SortTh, useSort } from '../../components/table';
 import { Empty, ErrorBox, Loader, PageHeader, PendingText, PrintHeader, SkeletonCards, StatCard } from '../../components/ui';
 import { useSettings } from '../../context/SettingsContext';
-import { lang, t, tx } from '../../i18n';
+import { t, tx } from '../../i18n';
 import { exportExcel } from '../../lib/export';
-import { addDays, fmtDate, money, today } from '../../lib/format';
+import { addDays, businessName, fmtDate, money, today } from '../../lib/format';
 import { useApi, useDebounced } from '../../lib/useApi';
 import { messages, openWhatsApp } from '../../lib/whatsapp';
 import ReportFilters from './ReportFilters';
@@ -67,7 +67,7 @@ export default function PeriodReport({ kind }) {
       ],
       rows,
       [
-        lang === 'en' ? settings.business_name || 'Sai Water Suppliers' : settings.business_name_mr || 'साई वॉटर सप्लायर्स',
+        businessName(settings),
         `${TITLES[kind]}: ${period}`,
         t('rep.period.excelSummary', { given: s.given, returned: s.returned, sales: s.sales, cash: s.cash, udhari: s.udhari, payments: s.payments, pending: s.pending }),
       ]

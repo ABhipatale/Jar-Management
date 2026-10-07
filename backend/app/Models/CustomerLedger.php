@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CustomerLedger extends Model
 {
+    use BelongsToCompany;
+
     protected $table = 'customer_ledger';
 
     protected $fillable = [

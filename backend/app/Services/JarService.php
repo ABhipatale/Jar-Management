@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Support\CurrentCompany;
 use App\Models\Jar;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -53,9 +54,12 @@ class JarService
         DB::transaction(function () use ($qty) {
             $next = $this->nextNumber();
             $now = now();
+            $companyId = CurrentCompany::require();
             $rows = [];
             for ($i = 0; $i < $qty; $i++) {
+                // Bulk insert skips model events, so company_id is set here.
                 $rows[] = [
+                    'company_id' => $companyId,
                     'jar_number' => sprintf('JAR-%03d', $next + $i),
                     'status' => 'available',
                     'status_date' => $now->toDateString(),

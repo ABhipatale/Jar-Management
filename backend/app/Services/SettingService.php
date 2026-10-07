@@ -6,16 +6,18 @@ use App\Models\Setting;
 
 class SettingService
 {
-    /** Editable shop settings and their defaults. Empty WhatsApp templates = app's built-in text. */
+    /**
+     * Editable per-company settings and their defaults (each company has its own rows).
+     * Empty WhatsApp templates = app's built-in text. The business name and colours live on
+     * the company itself (see SettingController), not here.
+     */
     public const DEFAULTS = [
-        'business_name' => 'Sai Water Suppliers',
-        'business_name_mr' => 'साई वॉटर सप्लायर्स',
-        'business_address' => 'Kolewadi',
-        'business_place_mr' => 'कोळेवाडी',
+        'business_address' => '',
+        'business_place_mr' => '',
         'business_mobile' => '',
         // Shown at the end of every WhatsApp message (संपर्क block).
-        'owner_name_mr' => 'श्री. अतुल भागवत',
-        'contact_numbers' => '9404349071, 8308285774',
+        'owner_name_mr' => '',
+        'contact_numbers' => '',
         'default_rate' => '30',
         'jar_tracking' => '0',
         'expense_types' => 'डिझेल,पगार,वीज बिल,जार खरेदी,दुरुस्ती,इतर',

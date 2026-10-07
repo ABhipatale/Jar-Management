@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Support\CurrentCompany;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 
@@ -18,7 +19,7 @@ class BalanceService
 {
     private function txTotals(): Builder
     {
-        return DB::table('jar_transactions')
+        return CurrentCompany::table('jar_transactions')
             ->whereNull('deleted_at')
             ->select('customer_id')
             ->selectRaw("SUM(CASE WHEN transaction_type = 'given' THEN jar_quantity ELSE 0 END) AS given")
@@ -30,7 +31,7 @@ class BalanceService
 
     private function paymentTotals(): Builder
     {
-        return DB::table('payments')
+        return CurrentCompany::table('payments')
             ->whereNull('deleted_at')
             ->select('customer_id')
             ->selectRaw('SUM(amount) AS paid')
@@ -41,7 +42,7 @@ class BalanceService
     /** customers (not deleted) + current_jars + pending_amount. Alias: c */
     public function customersQuery(): Builder
     {
-        return DB::table('customers as c')
+        return CurrentCompany::table('customers as c')
             ->leftJoinSub($this->txTotals(), 't', 't.customer_id', '=', 'c.id')
             ->leftJoinSub($this->paymentTotals(), 'p', 'p.customer_id', '=', 'c.id')
             ->whereNull('c.deleted_at')
@@ -59,14 +60,14 @@ class BalanceService
     /** @return array{current_jars:int, pending:float} */
     public function forCustomer(int $customerId): array
     {
-        $t = DB::table('jar_transactions')
+        $t = CurrentCompany::table('jar_transactions')
             ->whereNull('deleted_at')
             ->where('customer_id', $customerId)
             ->selectRaw("COALESCE(SUM(CASE WHEN transaction_type = 'given' THEN jar_quantity ELSE -jar_quantity END), 0) AS jars")
             ->selectRaw('COALESCE(SUM(udhari_amount), 0) - COALESCE(SUM(advance_amount), 0) AS due')
             ->first();
 
-        $paid = DB::table('payments')
+        $paid = CurrentCompany::table('payments')
             ->whereNull('deleted_at')
             ->where('customer_id', $customerId)
             ->sum('amount');
@@ -80,7 +81,7 @@ class BalanceService
     /** Jars currently out with all (non-deleted) customers. */
     public function totalCustomerJars(): int
     {
-        return (int) DB::table('jar_transactions as j')
+        return (int) CurrentCompany::table('jar_transactions as j')
             ->join('customers as c', 'c.id', '=', 'j.customer_id')
             ->whereNull('j.deleted_at')
             ->whereNull('c.deleted_at')

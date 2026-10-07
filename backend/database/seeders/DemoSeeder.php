@@ -2,20 +2,28 @@
 
 namespace Database\Seeders;
 
+use App\Models\Company;
 use App\Models\Customer;
+use App\Support\CurrentCompany;
 use App\Services\JarService;
 use App\Services\JarTransactionService;
 use App\Services\PaymentService;
 use Illuminate\Database\Seeder;
 
 /**
- * Optional sample data for trying the app locally:
+ * Optional sample data for trying the app locally, added to the FIRST company:
  *   php artisan db:seed --class=DemoSeeder
- * Do NOT run this on the live shop database.
+ * Do NOT run this on the live database.
  */
 class DemoSeeder extends Seeder
 {
     public function run(JarService $jars, JarTransactionService $tx, PaymentService $payments): void
+    {
+        $company = Company::orderBy('id')->firstOrFail();
+        CurrentCompany::run($company, fn () => $this->seed($jars, $tx, $payments));
+    }
+
+    private function seed(JarService $jars, JarTransactionService $tx, PaymentService $payments): void
     {
         $jars->setTotal(100);
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Services\BookingService;
+use App\Support\CurrentCompany;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -50,7 +51,7 @@ class BookingController extends Controller
     private function validated(Request $request, bool $withCustomer): array
     {
         return $request->validate(array_filter([
-            'customer_id' => $withCustomer ? ['required', 'integer', Rule::exists('customers', 'id')->whereNull('deleted_at')] : null,
+            'customer_id' => $withCustomer ? ['required', 'integer', Rule::exists('customers', 'id')->where('company_id', CurrentCompany::id())->whereNull('deleted_at')] : null,
             'delivery_date' => ['required', 'date_format:Y-m-d', 'after_or_equal:today'],
             'jar_quantity' => ['required', 'integer', 'min:1', 'max:10000'],
             'notes' => ['nullable', 'string', 'max:500'],

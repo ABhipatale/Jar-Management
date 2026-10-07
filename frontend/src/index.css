@@ -7,8 +7,10 @@
    Semantic colours. Use these for new UI:
    bg-app (page) · bg-surface (cards, inputs) · bg-surface-2 (subtle fills)
    ring-line / border-line (hairlines) · text-ink (main text) · text-muted
-   Brand blue comes from the shop logo. */
+   Brand colour: one colour for the whole app (the same for every company);
+   every brand-* shade below is mixed from --brand. */
 :root {
+  --brand: #1d45d8;
   --app-bg: #f5f6f8;
   --app-surface: #ffffff;
   --app-surface-2: #f7f8fa;
@@ -46,8 +48,8 @@
   --color-slate-900: #eef1f6;
 
   /* Soft tints (bg-*-50/100, ring-*-200) become low-light tints of the same hue */
-  --color-brand-50: color-mix(in oklab, #3b82f6 14%, #12151c);
-  --color-brand-100: color-mix(in oklab, #3b82f6 24%, #12151c);
+  --color-brand-50: color-mix(in oklab, var(--brand) 18%, #12151c);
+  --color-brand-100: color-mix(in oklab, var(--brand) 30%, #12151c);
   --color-emerald-50: color-mix(in oklab, #10b981 13%, #12151c);
   --color-emerald-100: color-mix(in oklab, #10b981 22%, #12151c);
   --color-emerald-200: color-mix(in oklab, #10b981 32%, #12151c);
@@ -74,7 +76,7 @@
 }
 
 /* Readable coloured text on dark surfaces (dark text shades → light ones) */
-.dark :is(.text-brand-700, .text-brand-800) { color: #93b4fd; }
+.dark :is(.text-brand-700, .text-brand-800) { color: color-mix(in oklab, var(--brand) 45%, white); }
 .dark :is(.text-emerald-700, .text-emerald-800, .text-emerald-900, .text-green-700) { color: #4ade9a; }
 .dark :is(.text-amber-700, .text-amber-800, .text-amber-900) { color: #fbbf4d; }
 .dark :is(.text-red-600, .text-red-700, .text-red-800) { color: #f87171; }
@@ -94,16 +96,18 @@
 }
 
 @theme {
-  --color-brand-50: #eff5ff;
-  --color-brand-100: #dbe8fe;
-  --color-brand-200: #bfd4fe;
-  --color-brand-300: #93b4fd;
-  --color-brand-400: #6090fa;
-  --color-brand-500: #3b6ff6;
-  --color-brand-600: #2557eb;
-  --color-brand-700: #1d45d8;
-  --color-brand-800: #1e3aaf;
-  --color-brand-900: #1e3489;
+  /* --brand is the 700 shade; lighter ones mix in white, darker ones black.
+     Plain @theme (not inline) so utilities read these variables and .dark can override them. */
+  --color-brand-50: color-mix(in oklab, var(--brand) 7%, white);
+  --color-brand-100: color-mix(in oklab, var(--brand) 15%, white);
+  --color-brand-200: color-mix(in oklab, var(--brand) 27%, white);
+  --color-brand-300: color-mix(in oklab, var(--brand) 45%, white);
+  --color-brand-400: color-mix(in oklab, var(--brand) 65%, white);
+  --color-brand-500: color-mix(in oklab, var(--brand) 82%, white);
+  --color-brand-600: color-mix(in oklab, var(--brand) 92%, white);
+  --color-brand-700: var(--brand);
+  --color-brand-800: color-mix(in oklab, var(--brand) 82%, black);
+  --color-brand-900: color-mix(in oklab, var(--brand) 66%, black);
   --font-sans: "Inter", "Noto Sans Devanagari", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --shadow-soft: var(--app-shadow);
   --shadow-pop: var(--app-shadow-lg);
@@ -204,3 +208,31 @@ input[type="date"]::-webkit-calendar-picker-indicator { opacity: 0.6; cursor: po
   .tbl { min-width: 0 !important; font-size: 11px; }
   main { padding: 0 !important; }
 }
+
+/* ───────────── Login page ─────────────
+   Deep "water" gradient from the brand colour, soft light blobs, floating bubbles. */
+.login-hero {
+  background:
+    radial-gradient(90% 70% at 15% 0%, color-mix(in oklab, #38bdf8 45%, transparent) 0%, transparent 65%),
+    radial-gradient(70% 60% at 100% 100%, color-mix(in oklab, #22d3ee 30%, transparent) 0%, transparent 70%),
+    linear-gradient(160deg, color-mix(in oklab, var(--brand) 78%, black) 0%, var(--brand) 50%, color-mix(in oklab, var(--brand) 55%, #0ea5e9) 100%);
+}
+.login-bubble {
+  position: absolute;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 30% 30%, rgb(255 255 255 / 0.35), rgb(255 255 255 / 0.06) 60%);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.22);
+  animation: login-float 8s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes login-float {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-16px) scale(1.04); }
+}
+.login-logo { box-shadow: 0 18px 40px -12px rgb(2 6 23 / 0.55), 0 0 0 6px rgb(255 255 255 / 0.14); }
+.btn-glow {
+  background: linear-gradient(135deg, var(--color-brand-600), color-mix(in oklab, var(--brand) 55%, #0ea5e9));
+  box-shadow: 0 10px 24px -10px color-mix(in oklab, var(--brand) 80%, transparent);
+}
+.btn-glow:hover { filter: brightness(1.06); }
+.login-input { @apply h-12 rounded-xl bg-surface-2 pl-11 text-[15px] focus:bg-surface; }

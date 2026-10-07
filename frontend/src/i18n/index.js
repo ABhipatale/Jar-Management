@@ -4,12 +4,13 @@
 //   t('entry.saved')                       -> text in the current language
 //   t('entry.onlyAvailable', { n: 5 })     -> fills {n} in the text
 //
-// Text lives in one dictionary file per app area (shell / entry / reports), each shaped
+// Text lives in one dictionary file per app area (shell / entry / reports / admin), each shaped
 // { mr: { key: 'मराठी' }, en: { key: 'English' } }. Changing language reloads the app,
 // so t() can be a plain function used anywhere (components, api client, helpers).
 import shell from './shell';
 import entry from './entry';
 import reports from './reports';
+import admin from './admin';
 
 const STORAGE_KEY = 'rws_lang';
 export const LANGS = { mr: 'मराठी', en: 'English' };
@@ -33,7 +34,7 @@ export function setLang(lang) {
 
 export const lang = getLang();
 
-const parts = [shell, entry, reports];
+const parts = [shell, entry, reports, admin];
 const dict = Object.assign({}, ...parts.map((p) => p[lang] || {}));
 const fallback = Object.assign({}, ...parts.map((p) => p.mr || {}));
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Jar;
 use App\Services\JarService;
+use App\Support\CurrentCompany;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -71,7 +72,7 @@ class JarController extends Controller
     {
         $data = $request->validate([
             'status' => ['required', Rule::in(Jar::STATUSES)],
-            'customer_id' => ['nullable', 'integer', Rule::exists('customers', 'id')->whereNull('deleted_at')],
+            'customer_id' => ['nullable', 'integer', Rule::exists('customers', 'id')->where('company_id', CurrentCompany::id())->whereNull('deleted_at')],
         ], ['status.in' => __('चुकीची जार स्थिती.')]);
 
         $this->jars->setStatus($jar, $data['status'], $data['customer_id'] ?? null);

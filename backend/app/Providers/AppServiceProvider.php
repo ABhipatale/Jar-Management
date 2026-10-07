@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Support\CurrentCompany;
 use Illuminate\Http\Request;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Sanctum\Sanctum;
@@ -13,7 +14,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // One tenant context per request (scoped = reset between requests in long-running workers).
+        $this->app->scoped(CurrentCompany::class);
     }
 
     /**

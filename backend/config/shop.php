@@ -2,18 +2,22 @@
 
 // Read through config() so values still work after `php artisan config:cache`.
 return [
-    'admin' => [
-        'name' => env('ADMIN_NAME', 'Shop Owner'),
-        'email' => env('ADMIN_EMAIL', 'admin@saiwater.in'),
-        'mobile' => env('ADMIN_MOBILE'),
-        'password' => env('ADMIN_PASSWORD', 'ChangeMe@123'),
+    // The platform owner who registers and manages companies (created by: php artisan db:seed).
+    'superadmin' => [
+        'name' => env('SUPERADMIN_NAME', 'Super Admin'),
+        'email' => env('SUPERADMIN_EMAIL'),
+        'password' => env('SUPERADMIN_PASSWORD'),
     ],
+
+    // Shown where no company is known yet (login page, super-admin panel).
+    'platform_name' => env('PLATFORM_NAME', 'Jar Management'),
+    'platform_name_mr' => env('PLATFORM_NAME_MR', 'जार व्यवस्थापन'),
 
     // Web Push keys for phone notifications (reminders). Generate once; keep the private key secret.
     'vapid' => [
         'public' => env('VAPID_PUBLIC_KEY'),
         'private' => env('VAPID_PRIVATE_KEY'),
-        'subject' => env('VAPID_SUBJECT', 'mailto:admin@saiwater.in'),
+        'subject' => env('VAPID_SUBJECT', 'mailto:admin@example.com'),
     ],
 
 ];

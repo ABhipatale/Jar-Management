@@ -2,31 +2,36 @@
 
 namespace Database\Seeders;
 
+use App\Models\Company;
 use App\Models\User;
-use App\Services\SettingService;
+use App\Services\CompanyService;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
     /**
-     * Production seed: the single admin account + default shop settings.
-     * Admin credentials come from .env (ADMIN_EMAIL / ADMIN_MOBILE / ADMIN_PASSWORD).
+     * Production seed, safe to re-run:
+     *  - the platform super admin (SUPERADMIN_EMAIL / SUPERADMIN_PASSWORD in .env);
+     *  - default settings for every company that is missing some.
+     * Companies and their owners are created from the super-admin panel.
      */
     public function run(): void
     {
-        // firstOrCreate: re-running the seeder never resets a password changed in the app.
-        User::firstOrCreate(
-            ['email' => mb_strtolower(config('shop.admin.email'))],
-            [
-                'name' => config('shop.admin.name'),
-                'mobile' => config('shop.admin.mobile') ?: null,
-                'password' => config('shop.admin.password'),
-            ]
-        );
+        $email = config('shop.superadmin.email');
+        if ($email && config('shop.superadmin.password')) {
+            // firstOrCreate: re-running the seeder never resets a password changed in the app.
+            User::firstOrCreate(
+                ['email' => mb_strtolower($email)],
+                [
+                    'name' => config('shop.superadmin.name'),
+                    'password' => config('shop.superadmin.password'),
+                    'role' => User::SUPER_ADMIN,
+                    'company_id' => null,
+                ]
+            );
+        }
 
-        // Store defaults once; never overwrite what the owner already changed.
-        $settings = app(SettingService::class);
-        $existing = \App\Models\Setting::pluck('key')->all();
-        $settings->save(array_diff_key(SettingService::DEFAULTS, array_flip($existing)));
+        $companies = app(CompanyService::class);
+        Company::all()->each(fn (Company $c) => $companies->ensureDefaultSettings($c));
     }
 }

@@ -2,10 +2,10 @@
 
 namespace App\Services;
 
+use App\Support\CurrentCompany;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Query\Builder;
-use Illuminate\Support\Facades\DB;
 
 /**
  * All dashboard / report numbers. Every figure is summed from the database.
@@ -23,7 +23,7 @@ class ReportService
 
     public function summary(string $from, string $to, ?int $customerId = null): array
     {
-        $tx = DB::table('jar_transactions')
+        $tx = CurrentCompany::table('jar_transactions')
             ->whereNull('deleted_at')
             ->whereBetween('transaction_date', [$from, $to])
             ->when($customerId, fn ($q) => $q->where('customer_id', $customerId))
@@ -34,7 +34,7 @@ class ReportService
             ->selectRaw('COALESCE(SUM(udhari_amount), 0) AS udhari')
             ->first();
 
-        $pay = DB::table('payments')
+        $pay = CurrentCompany::table('payments')
             ->whereNull('deleted_at')
             ->whereBetween('payment_date', [$from, $to])
             ->when($customerId, fn ($q) => $q->where('customer_id', $customerId))
@@ -44,14 +44,14 @@ class ReportService
             ->selectRaw("COALESCE(SUM(CASE WHEN payment_mode = 'bank' THEN amount ELSE 0 END), 0) AS bank")
             ->first();
 
-        $exp = $customerId ? null : DB::table('expenses')
+        $exp = $customerId ? null : CurrentCompany::table('expenses')
             ->whereNull('deleted_at')
             ->whereBetween('expense_date', [$from, $to])
             ->selectRaw('COALESCE(SUM(amount), 0) AS total')
             ->selectRaw("COALESCE(SUM(CASE WHEN payment_mode = 'cash' THEN amount ELSE 0 END), 0) AS cash")
             ->first();
 
-        $jarStatus = DB::table('jars')
+        $jarStatus = CurrentCompany::table('jars')
             ->whereIn('status', ['damaged', 'lost'])
             ->whereBetween('status_date', [$from, $to])
             ->selectRaw("COALESCE(SUM(CASE WHEN status = 'damaged' THEN 1 ELSE 0 END), 0) AS damaged")
@@ -90,7 +90,7 @@ class ReportService
      */
     public function customerWise(string $from, string $to, ?int $customerId = null, ?string $search = null): array
     {
-        $tx = DB::table('jar_transactions')
+        $tx = CurrentCompany::table('jar_transactions')
             ->whereNull('deleted_at')
             ->whereBetween('transaction_date', [$from, $to])
             ->select('customer_id')
@@ -101,7 +101,7 @@ class ReportService
             ->selectRaw('SUM(udhari_amount) AS udhari')
             ->groupBy('customer_id');
 
-        $pay = DB::table('payments')
+        $pay = CurrentCompany::table('payments')
             ->whereNull('deleted_at')
             ->whereBetween('payment_date', [$from, $to])
             ->select('customer_id')
@@ -149,7 +149,7 @@ class ReportService
      */
     public function dailySeries(string $from, string $to): array
     {
-        $tx = DB::table('jar_transactions')->whereNull('deleted_at')
+        $tx = CurrentCompany::table('jar_transactions')->whereNull('deleted_at')
             ->whereBetween('transaction_date', [$from, $to])
             ->groupBy('transaction_date')
             ->selectRaw('transaction_date AS d')
@@ -159,7 +159,7 @@ class ReportService
             ->selectRaw('SUM(udhari_amount) AS udhari')
             ->get()->keyBy(fn ($r) => substr((string) $r->d, 0, 10));
 
-        $pay = DB::table('payments')->whereNull('deleted_at')
+        $pay = CurrentCompany::table('payments')->whereNull('deleted_at')
             ->whereBetween('payment_date', [$from, $to])
             ->groupBy('payment_date')
             ->selectRaw('payment_date AS d')
@@ -188,19 +188,19 @@ class ReportService
     /** Day-by-day cash book for the period. */
     public function cashBook(string $from, string $to): array
     {
-        $entries = DB::table('jar_transactions')->whereNull('deleted_at')
+        $entries = CurrentCompany::table('jar_transactions')->whereNull('deleted_at')
             ->whereBetween('transaction_date', [$from, $to])
             ->groupBy('transaction_date')
             ->selectRaw('transaction_date AS d, SUM(paid_amount + advance_amount) AS v')
             ->pluck('v', 'd');
 
-        $pays = DB::table('payments')->whereNull('deleted_at')
+        $pays = CurrentCompany::table('payments')->whereNull('deleted_at')
             ->whereBetween('payment_date', [$from, $to])
             ->groupBy('payment_date', 'payment_mode')
             ->selectRaw('payment_date AS d, payment_mode AS m, SUM(amount) AS v')
             ->get();
 
-        $exps = DB::table('expenses')->whereNull('deleted_at')
+        $exps = CurrentCompany::table('expenses')->whereNull('deleted_at')
             ->whereBetween('expense_date', [$from, $to])
             ->where('payment_mode', 'cash')
             ->groupBy('expense_date')

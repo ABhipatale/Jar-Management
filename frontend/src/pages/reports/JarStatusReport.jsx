@@ -6,9 +6,9 @@ import ExportBar from '../../components/ExportBar';
 import { SortTh, useSort } from '../../components/table';
 import { Empty, ErrorBox, Loader, PageHeader, PendingText, PrintHeader, SkeletonCards, StatCard } from '../../components/ui';
 import { useSettings } from '../../context/SettingsContext';
-import { lang, t } from '../../i18n';
+import { t } from '../../i18n';
 import { exportExcel } from '../../lib/export';
-import { fmtDate, today } from '../../lib/format';
+import { businessName, fmtDate, today } from '../../lib/format';
 import { useApi, useDebounced } from '../../lib/useApi';
 import ReportFilters from './ReportFilters';
 
@@ -50,7 +50,7 @@ export default function JarStatusReport() {
                 ],
                 rows,
                 [
-                  lang === 'en' ? settings.business_name || 'Sai Water Suppliers' : settings.business_name_mr || 'साई वॉटर सप्लायर्स',
+                  businessName(settings),
                   t('rep.jarStatus.titleLine', { date: fmtDate(today()) }),
                   t('rep.jarStatus.summaryLine', { total: s.total_jars, available: s.available_jars, customers: s.customer_jars, damaged: s.damaged_jars, lost: s.lost_jars }),
                 ]

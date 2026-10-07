@@ -1,4 +1,5 @@
 import api, { isNetworkError, errorMessage } from '../api/client';
+import { companyKey } from './storage';
 
 /**
  * Offline outbox for jar entries, payments and expenses.
@@ -8,13 +9,27 @@ import api, { isNetworkError, errorMessage } from '../api/client';
  * record if it sees the same uuid again — so a save that is retried, or synced
  * later from this outbox, can never create a duplicate transaction.
  */
-const KEY = 'rws_outbox';
+// One outbox per company: an entry saved offline is only ever sent with that company's login.
+const key = () => companyKey('rws_outbox');
 const listeners = new Set();
 let syncing = false;
 
+// Before multi-company the outbox had one shared key. Saves waiting there came from the
+// only company of that time, so they move to the first company that logs in on this phone.
+function adoptLegacy() {
+  const k = key();
+  const legacy = localStorage.getItem('rws_outbox');
+  if (k === 'rws_outbox' || !legacy) return;
+  const mine = JSON.parse(localStorage.getItem(k) || '[]');
+  const ids = new Set(mine.map((i) => i.id));
+  localStorage.setItem(k, JSON.stringify([...mine, ...JSON.parse(legacy).filter((i) => !ids.has(i.id))]));
+  localStorage.removeItem('rws_outbox');
+}
+
 function read() {
   try {
-    return JSON.parse(localStorage.getItem(KEY) || '[]');
+    adoptLegacy();
+    return JSON.parse(localStorage.getItem(key()) || '[]');
   } catch {
     return [];
   }
@@ -22,7 +37,7 @@ function read() {
 
 function write(items) {
   try {
-    localStorage.setItem(KEY, JSON.stringify(items));
+    localStorage.setItem(key(), JSON.stringify(items));
   } catch {
     /* storage full / blocked */
   }

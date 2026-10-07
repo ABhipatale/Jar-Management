@@ -12,7 +12,7 @@ class AuthTokenHeaderTest extends TestCase
 
     private function loginToken(): string
     {
-        User::create(['name' => 'Owner', 'email' => 'owner@shop.in', 'password' => 'secret123']);
+        User::factory()->create(['name' => 'Owner', 'email' => 'owner@shop.in', 'password' => 'secret123']);
 
         return $this->postJson('/api/login', ['login' => 'owner@shop.in', 'password' => 'secret123', 'remember' => true])
             ->assertOk()->json('token');

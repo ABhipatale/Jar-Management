@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Booking extends Model
 {
+    use BelongsToCompany;
+
     protected $fillable = [
         'customer_id', 'delivery_date', 'jar_quantity', 'notes', 'status', 'jar_transaction_id',
         'eve_notified_at', 'morning_notified_at', 'delivered_at',

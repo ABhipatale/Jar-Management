@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Middleware\EnsureCompanyAccess;
 use App\Http\Requests\LoginRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -25,19 +26,43 @@ class AuthController extends Controller
             throw ValidationException::withMessages(['login' => __('ईमेल/मोबाईल किंवा पासवर्ड चुकीचा आहे.')]);
         }
 
+        // Suspended/expired company or disabled user: say why instead of logging in.
+        if (! $user->isSuperAdmin() && ($reason = EnsureCompanyAccess::blockReason($user))) {
+            throw ValidationException::withMessages(['login' => EnsureCompanyAccess::message($reason)]);
+        }
+        if ($user->isSuperAdmin() && ! $user->is_active) {
+            throw ValidationException::withMessages(['login' => EnsureCompanyAccess::message('user_inactive')]);
+        }
+
         // "Remember me" keeps the phone logged in for 90 days, otherwise 12 hours.
         $expires = $request->boolean('remember') ? now()->addDays(90) : now()->addHours(12);
         $token = $user->createToken('pwa', ['*'], $expires)->plainTextToken;
 
-        return response()->json([
-            'token' => $token,
-            'user' => $user->only('id', 'name', 'email', 'mobile'),
-        ]);
+        return response()->json(['token' => $token, 'user' => self::present($user)]);
     }
 
     public function me(Request $request)
     {
-        return response()->json(['user' => $request->user()->only('id', 'name', 'email', 'mobile')]);
+        $user = $request->user();
+        $impersonating = str_starts_with((string) $user->currentAccessToken()?->name, 'impersonate:');
+
+        return response()->json(['user' => self::present($user, $impersonating)]);
+    }
+
+    /** The logged-in user as the app sees it: role + their company (null for the super admin). */
+    public static function present(User $user, bool $impersonating = false): array
+    {
+        $company = $user->company;
+
+        return $user->only('id', 'name', 'email', 'mobile', 'role') + [
+            'impersonating' => $impersonating,
+            'company' => $company ? [
+                'id' => $company->id,
+                'name' => $company->name,
+                'name_mr' => $company->name_mr,
+                'slug' => $company->slug,
+            ] : null,
+        ];
     }
 
     public function logout(Request $request)

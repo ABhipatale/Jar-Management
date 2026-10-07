@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\JarTransaction;
 use App\Models\Reminder;
+use App\Support\CurrentCompany;
 use Illuminate\Support\Facades\Cache;
 
 /**
@@ -120,7 +121,7 @@ class ReminderService
         if (now()->hour < 9) {
             return ['closed' => 0, 'notified' => 0, 'devices' => 0];
         }
-        if ($lazy && ! Cache::add('reminders:ran:'.now()->toDateString(), 1, now()->endOfDay())) {
+        if ($lazy && ! Cache::add('reminders:ran:'.CurrentCompany::require().':'.now()->toDateString(), 1, now()->endOfDay())) {
             return ['closed' => 0, 'notified' => 0, 'devices' => 0];
         }
 
