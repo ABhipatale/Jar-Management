@@ -1,0 +1,206 @@
+@import "tailwindcss";
+
+/* Dark mode is a class on <html> (set by src/lib/theme.js: light / dark / auto). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ───────────────────────────── Design tokens ─────────────────────────────
+   Semantic colours. Use these for new UI:
+   bg-app (page) · bg-surface (cards, inputs) · bg-surface-2 (subtle fills)
+   ring-line / border-line (hairlines) · text-ink (main text) · text-muted
+   Brand blue comes from the shop logo. */
+:root {
+  --app-bg: #f5f6f8;
+  --app-surface: #ffffff;
+  --app-surface-2: #f7f8fa;
+  --app-line: #e5e7eb;
+  --app-line-strong: #d4d7dd;
+  --app-ink: #0f172a;
+  --app-muted: #64748b;
+  --app-shadow: 0 1px 2px rgb(15 23 42 / 0.04), 0 1px 1px rgb(15 23 42 / 0.03);
+  --app-shadow-lg: 0 12px 32px -8px rgb(15 23 42 / 0.18), 0 2px 6px rgb(15 23 42 / 0.06);
+  color-scheme: light;
+}
+
+.dark {
+  --app-bg: #0b0d12;
+  --app-surface: #12151c;
+  --app-surface-2: #181c25;
+  --app-line: #242a36;
+  --app-line-strong: #323a4a;
+  --app-ink: #e7eaf0;
+  --app-muted: #97a1b5;
+  --app-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
+  --app-shadow-lg: 0 16px 40px -10px rgb(0 0 0 / 0.7), 0 0 0 1px rgb(255 255 255 / 0.04);
+  color-scheme: dark;
+
+  /* Neutral scale used across the screens (text-slate-*, ring-slate-*, bg-slate-*) */
+  --color-slate-50: #161a22;
+  --color-slate-100: #1b202a;
+  --color-slate-200: #262c38;
+  --color-slate-300: #333b4b;
+  --color-slate-400: #66718a;
+  --color-slate-500: #919cb2;
+  --color-slate-600: #a9b3c6;
+  --color-slate-700: #c5cddb;
+  --color-slate-800: #dce2eb;
+  --color-slate-900: #eef1f6;
+
+  /* Soft tints (bg-*-50/100, ring-*-200) become low-light tints of the same hue */
+  --color-brand-50: color-mix(in oklab, #3b82f6 14%, #12151c);
+  --color-brand-100: color-mix(in oklab, #3b82f6 24%, #12151c);
+  --color-emerald-50: color-mix(in oklab, #10b981 13%, #12151c);
+  --color-emerald-100: color-mix(in oklab, #10b981 22%, #12151c);
+  --color-emerald-200: color-mix(in oklab, #10b981 32%, #12151c);
+  --color-green-50: color-mix(in oklab, #22c55e 13%, #12151c);
+  --color-amber-50: color-mix(in oklab, #f59e0b 13%, #12151c);
+  --color-amber-100: color-mix(in oklab, #f59e0b 22%, #12151c);
+  --color-amber-200: color-mix(in oklab, #f59e0b 32%, #12151c);
+  --color-amber-300: color-mix(in oklab, #f59e0b 42%, #12151c);
+  --color-red-50: color-mix(in oklab, #ef4444 13%, #12151c);
+  --color-red-100: color-mix(in oklab, #ef4444 22%, #12151c);
+  --color-red-200: color-mix(in oklab, #ef4444 32%, #12151c);
+  --color-red-300: color-mix(in oklab, #ef4444 42%, #12151c);
+  --color-sky-50: color-mix(in oklab, #0ea5e9 13%, #12151c);
+  --color-sky-100: color-mix(in oklab, #0ea5e9 22%, #12151c);
+  --color-sky-200: color-mix(in oklab, #0ea5e9 32%, #12151c);
+  --color-sky-300: color-mix(in oklab, #0ea5e9 42%, #12151c);
+  --color-violet-50: color-mix(in oklab, #8b5cf6 13%, #12151c);
+  --color-violet-100: color-mix(in oklab, #8b5cf6 22%, #12151c);
+  --color-violet-200: color-mix(in oklab, #8b5cf6 32%, #12151c);
+  --color-teal-50: color-mix(in oklab, #14b8a6 13%, #12151c);
+  --color-teal-100: color-mix(in oklab, #14b8a6 22%, #12151c);
+  --color-indigo-50: color-mix(in oklab, #6366f1 13%, #12151c);
+  --color-indigo-100: color-mix(in oklab, #6366f1 22%, #12151c);
+}
+
+/* Readable coloured text on dark surfaces (dark text shades → light ones) */
+.dark :is(.text-brand-700, .text-brand-800) { color: #93b4fd; }
+.dark :is(.text-emerald-700, .text-emerald-800, .text-emerald-900, .text-green-700) { color: #4ade9a; }
+.dark :is(.text-amber-700, .text-amber-800, .text-amber-900) { color: #fbbf4d; }
+.dark :is(.text-red-600, .text-red-700, .text-red-800) { color: #f87171; }
+.dark :is(.text-sky-700, .text-sky-800, .text-sky-900) { color: #6cc4f0; }
+.dark :is(.text-violet-700, .text-violet-800, .text-violet-900) { color: #b9a2fb; }
+.dark :is(.text-teal-700, .text-teal-800, .text-teal-900) { color: #45d1c0; }
+.dark :is(.text-indigo-700, .text-indigo-800) { color: #a5b4fc; }
+
+@theme inline {
+  --color-app: var(--app-bg);
+  --color-surface: var(--app-surface);
+  --color-surface-2: var(--app-surface-2);
+  --color-line: var(--app-line);
+  --color-line-strong: var(--app-line-strong);
+  --color-ink: var(--app-ink);
+  --color-muted: var(--app-muted);
+}
+
+@theme {
+  --color-brand-50: #eff5ff;
+  --color-brand-100: #dbe8fe;
+  --color-brand-200: #bfd4fe;
+  --color-brand-300: #93b4fd;
+  --color-brand-400: #6090fa;
+  --color-brand-500: #3b6ff6;
+  --color-brand-600: #2557eb;
+  --color-brand-700: #1d45d8;
+  --color-brand-800: #1e3aaf;
+  --color-brand-900: #1e3489;
+  --font-sans: "Inter", "Noto Sans Devanagari", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --shadow-soft: var(--app-shadow);
+  --shadow-pop: var(--app-shadow-lg);
+
+  --animate-fade-in: fade-in 0.16s ease-out;
+  --animate-pop-in: pop-in 0.18s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+  --animate-sheet-in: sheet-in 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+  --animate-toast-in: toast-in 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  --animate-shimmer: shimmer 1.4s ease-in-out infinite;
+
+  @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes pop-in { from { opacity: 0; transform: translateY(6px) scale(0.97); } to { opacity: 1; transform: none; } }
+  @keyframes sheet-in { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+  @keyframes toast-in { from { transform: translateY(-8px); opacity: 0; } to { transform: none; opacity: 1; } }
+  @keyframes shimmer { 0% { opacity: 0.55; } 50% { opacity: 1; } 100% { opacity: 0.55; } }
+}
+
+html, body { background: var(--app-bg); -webkit-tap-highlight-color: transparent; }
+body {
+  color: var(--app-ink);
+  overscroll-behavior-y: none;
+  font-feature-settings: "cv11", "ss01";
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+input, select, textarea, button { font: inherit; }
+::selection { background: color-mix(in oklab, var(--color-brand-500) 25%, transparent); }
+:focus-visible { outline: 2px solid var(--color-brand-500); outline-offset: 2px; }
+input[type="date"]::-webkit-calendar-picker-indicator { opacity: 0.6; cursor: pointer; }
+.dark input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+/* v4: a custom utility so the button variants below can @apply it. */
+@utility btn {
+  @apply inline-flex select-none items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-[15px] font-semibold transition duration-150 active:scale-[.98] disabled:pointer-events-none disabled:opacity-50;
+}
+
+@layer components {
+  /* Surfaces */
+  .card { @apply rounded-xl bg-surface p-4 shadow-soft ring-1 ring-line; }
+  .card-hover { @apply transition hover:ring-line-strong hover:shadow-pop; }
+  .section-title { @apply text-[13px] font-semibold uppercase tracking-wide text-muted; }
+
+  /* Form controls */
+  .label { @apply mb-1.5 block text-sm font-medium text-slate-700; }
+  .input { @apply w-full rounded-lg border border-line-strong bg-surface px-3.5 py-2.5 text-base text-ink shadow-soft outline-none transition placeholder:text-slate-400 hover:border-slate-400 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 disabled:bg-surface-2 disabled:text-muted disabled:shadow-none; }
+
+  /* Buttons */
+  .btn-primary { @apply btn bg-brand-600 text-white shadow-soft hover:bg-brand-700; }
+  .btn-light { @apply btn bg-surface text-ink shadow-soft ring-1 ring-line-strong hover:bg-surface-2; }
+  .btn-ghost { @apply btn text-slate-700 hover:bg-surface-2; }
+  .btn-danger { @apply btn bg-red-600 text-white shadow-soft hover:bg-red-500; }
+  .btn-wa { @apply btn bg-[#1fae55] text-white shadow-soft hover:bg-[#1a9a4b]; }
+  .btn-sm { @apply gap-1.5 rounded-md px-3 py-1.5 text-sm; }
+  .icon-btn { @apply grid h-9 w-9 place-items-center rounded-lg text-slate-600 transition hover:bg-surface-2 hover:text-ink; }
+
+  /* Filter chips */
+  .chip { @apply inline-flex shrink-0 items-center gap-1.5 rounded-full bg-surface px-3.5 py-1.5 text-sm font-medium text-slate-700 shadow-soft ring-1 ring-line-strong transition hover:bg-surface-2; }
+  .chip-active { @apply bg-ink text-surface ring-ink hover:bg-ink; }
+
+  /* Tables */
+  .table-wrap { @apply -mx-4 overflow-x-auto px-4; }
+  .tbl { @apply w-full min-w-max text-sm; }
+  .tbl th { @apply whitespace-nowrap border-b border-line bg-surface-2 px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-muted first:rounded-tl-lg last:rounded-tr-lg; }
+  .tbl td { @apply whitespace-nowrap border-b border-line px-3 py-3 text-ink; }
+  .tbl tbody tr { @apply transition-colors hover:bg-surface-2; }
+  .tbl .num { @apply text-right tabular-nums; }
+
+  /* Skeleton loading */
+  .skeleton { @apply animate-shimmer rounded-md bg-slate-200; }
+}
+
+.pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+
+/* Bottom menu = 64px + phone safe area (no bottom menu on desktop: sidebar instead). */
+:root { --nav-h: calc(4rem + env(safe-area-inset-bottom)); }
+@media (min-width: 1024px) { :root { --nav-h: 0px; } }
+.main-above-nav { padding-bottom: calc(var(--nav-h) + 6rem); }
+.fab-above-nav { bottom: calc(var(--nav-h) + 1.75rem); }
+.sticky-above-nav { bottom: calc(var(--nav-h) + 1.25rem); }
+.pt-safe { padding-top: env(safe-area-inset-top); }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }
+.tabular { font-variant-numeric: tabular-nums; }
+
+.print-only { display: none; }
+
+@media print {
+  @page { margin: 12mm; }
+  html, body { background: #fff !important; color: #000 !important; }
+  .no-print { display: none !important; }
+  .print-only { display: block !important; }
+  .card { box-shadow: none !important; border: 1px solid #e2e8f0; break-inside: avoid; }
+  .table-wrap { overflow: visible !important; margin: 0 !important; padding: 0 !important; }
+  .tbl { min-width: 0 !important; font-size: 11px; }
+  main { padding: 0 !important; }
+}

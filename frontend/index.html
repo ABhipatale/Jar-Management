@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="mr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#1d45d8" />
+    <meta name="description" content="साई वॉटर सप्लायर्स, कोळेवाडी – जार व्यवस्थापन" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+
+    <!-- iPhone: install to home screen -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="साई वॉटर" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+
+    <!-- Inter (Latin) + Noto Sans Devanagari (Marathi) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <title>साई वॉटर सप्लायर्स – जार व्यवस्थापन</title>
+    <script>
+      // Apply dark mode before first paint (same rule as src/lib/theme.js) – no white flash.
+      try {
+        var t = localStorage.getItem('rws_theme');
+        if (t === 'dark' || (t !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.classList.add('dark');
+        }
+      } catch (e) {}
+    </script>
+    <style>
+      /* Splash shown instantly while the app loads (also on iPhone, which has no manifest splash). */
+      #splash { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+        background: #f5f6f8; font-family: system-ui, sans-serif; z-index: 50; }
+      .dark #splash { background: #0b0d12; }
+      #splash img { width: 88px; height: 88px; border-radius: 22px; box-shadow: 0 10px 30px rgba(29,69,216,.18); }
+      #splash h1 { margin: 18px 0 2px; font-size: 20px; font-weight: 700; color: #1d45d8; }
+      .dark #splash h1 { color: #93b4fd; }
+      #splash p { margin: 0; color: #64748b; font-size: 14px; }
+    </style>
+  </head>
+  <body>
+    <div id="splash">
+      <img src="/icons/icon-192.png" alt="" />
+      <h1>साई वॉटर सप्लायर्स</h1>
+      <p>कोळेवाडी · जार व्यवस्थापन</p>
+    </div>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

@@ -1,0 +1,11 @@
+{
+	frankenphp
+	admin off
+}
+
+# Vercel sets PORT; 80 is its default container port.
+:{$PORT:80} {
+	root * /app/public
+	encode zstd br gzip
+	php_server
+}

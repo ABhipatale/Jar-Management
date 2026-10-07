@@ -1,0 +1,54 @@
+# Laravel API as a Vercel container service (FrankenPHP = PHP + web server in one binary).
+# Built by Vercel from vercel.json -> services.backend.
+
+# --- 1. PHP dependencies -------------------------------------------------------
+FROM composer:2 AS vendor
+WORKDIR /app
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --no-interaction --no-progress --no-scripts --prefer-dist
+COPY . .
+# Runs package:discover, which writes bootstrap/cache/{packages,services}.php.
+RUN composer dump-autoload --no-dev --optimize --classmap-authoritative
+
+# --- 2. Runtime -----------------------------------------------------------------
+# Debian (glibc) image rather than Alpine: glibc honours /etc/gai.conf below.
+FROM dunglas/frankenphp:1-php8.4
+RUN install-php-extensions pdo_pgsql opcache gmp
+
+# Prefer IPv4 when a hostname (the Neon database) has both IPv6 and IPv4 addresses.
+# Without this, each DB connection first tried an unreachable IPv6 address and waited
+# for the connect timeout (~10 s per request) before falling back to IPv4.
+RUN echo "precedence ::ffff:0:0/96  100" >> /etc/gai.conf
+
+# Production PHP settings + opcache (code is immutable inside the image).
+RUN cp "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
+ && printf '%s\n' \
+    'opcache.enable=1' \
+    'opcache.validate_timestamps=0' \
+    'opcache.memory_consumption=128' \
+    'opcache.max_accelerated_files=20000' \
+    'opcache.interned_strings_buffer=16' \
+    'realpath_cache_size=4096K' \
+    'realpath_cache_ttl=600' \
+    > "$PHP_INI_DIR/conf.d/zz-app.ini"
+
+WORKDIR /app
+COPY --from=vendor /app /app
+COPY Caddyfile.vercel /etc/caddy/Caddyfile
+
+# Routes never depend on env vars, so they can be cached at build time.
+# (Config is NOT cached here: env vars only exist at runtime.)
+RUN php artisan route:cache
+
+# The container filesystem is not persistent, so Laravel's writable storage lives in /tmp,
+# logs go to stderr (Vercel runtime logs), and nothing relies on local files or sessions.
+ENV PORT=80 \
+    APP_ENV=production \
+    LARAVEL_STORAGE_PATH=/tmp/storage \
+    LOG_CHANNEL=stderr \
+    SESSION_DRIVER=array \
+    CACHE_STORE=database \
+    QUEUE_CONNECTION=sync \
+    DB_PERSISTENT=true
+
+CMD ["sh", "/app/vercel-start.sh"]
