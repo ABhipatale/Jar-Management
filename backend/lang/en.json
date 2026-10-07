@@ -110,5 +110,7 @@
     "कृपया लोगो निवडा.": "Please choose a logo.",
     "लोगो 4 MB पेक्षा लहान असावा.": "The logo must be smaller than 4 MB.",
     "लोगो जतन झाला.": "Logo saved.",
-    "लोगो काढला.": "Logo removed."
+    "लोगो काढला.": "Logo removed.",
+    "⚠️ तुमचा प्लॅन लवकरच संपेल": "⚠️ Your plan ends soon",
+    "तुमचा प्लॅन :days दिवसांत (:date) संपेल. कृपया पेमेंट करा.": "Your plan ends in :days days (:date). Please make a payment."
 }

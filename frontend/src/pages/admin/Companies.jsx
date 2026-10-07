@@ -3,10 +3,9 @@ import { Link } from 'react-router-dom';
 import { AlertTriangle, Building2, CheckCircle2, ChevronRight, Clock, PauseCircle, Plus, Search, X } from 'lucide-react';
 import { Empty, ErrorBox, Loader, PageHeader, StatCard } from '../../components/ui';
 import { t } from '../../i18n';
-import { fmtDate } from '../../lib/format';
+import { daysUntil, fmtDate } from '../../lib/format';
 import { useApi, useDebounced } from '../../lib/useApi';
 import { StatusBadge } from './common';
-import { daysLeft } from './dates';
 
 const FILTERS = ['', 'active', 'suspended', 'expired'];
 
@@ -25,9 +24,14 @@ export default function Companies() {
       total: rows.length,
       active: rows.filter((c) => c.status === 'active' && !c.expired).length,
       suspended: rows.filter((c) => c.status === 'suspended').length,
-      expiring: rows.filter((c) => !c.expired && c.expires_at && daysLeft(c.expires_at) <= 7).length,
+      expiring: rows.filter((c) => !c.expired && c.expires_at && daysUntil(c.expires_at) <= 7).length,
     };
   }, [all.data]);
+
+  const ending = useMemo(
+    () => (all.data?.data || []).filter((c) => c.status === 'active' && !c.expired && c.expires_at && daysUntil(c.expires_at) >= 1 && daysUntil(c.expires_at) <= 3),
+    [all.data]
+  );
 
   return (
     <div className="space-y-4">
@@ -40,6 +44,31 @@ export default function Companies() {
           </Link>
         }
       />
+
+      {/* Plans ending within 3 days: time to collect payment. */}
+      {ending.length > 0 && (
+        <div className="flex items-start gap-3 rounded-xl bg-amber-50 p-4 text-amber-900 ring-1 ring-amber-200" role="status">
+          <AlertTriangle size={20} className="mt-0.5 shrink-0" aria-hidden="true" />
+          <div className="min-w-0 text-sm">
+            <div className="font-semibold">{t('plan.adminEnding', { n: ending.length })}</div>
+            <ul className="mt-1 space-y-0.5">
+              {ending.map((c) => (
+                <li key={c.id}>
+                  <Link to={`/admin/companies/${c.id}`} className="font-medium underline-offset-2 hover:underline">
+                    {c.name_mr || c.name}
+                  </Link>{' '}
+                  · {fmtDate(c.expires_at)} ({t('plan.daysLeft', { days: daysUntil(c.expires_at) })})
+                  {c.owner?.mobile && (
+                    <a href={`tel:${c.owner.mobile}`} className="ml-1 text-amber-800 underline-offset-2 hover:underline">
+                      · {c.owner.mobile}
+                    </a>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard label={t('adm.stat.total')} value={stats.total} icon={Building2} tone="blue" />
@@ -109,8 +138,8 @@ export default function Companies() {
                   <div className="tabular-nums text-ink">
                     {c.customers} <span className="text-muted">{t('adm.customers')}</span>
                   </div>
-                  <div className={`text-xs ${c.expires_at && daysLeft(c.expires_at) <= 7 ? 'font-semibold text-amber-700' : 'text-muted'}`}>
-                    {c.expires_at && daysLeft(c.expires_at) <= 7 && <AlertTriangle size={12} className="mr-1 inline" aria-hidden="true" />}
+                  <div className={`text-xs ${c.expires_at && daysUntil(c.expires_at) <= 7 ? 'font-semibold text-amber-700' : 'text-muted'}`}>
+                    {c.expires_at && daysUntil(c.expires_at) <= 7 && <AlertTriangle size={12} className="mr-1 inline" aria-hidden="true" />}
                     {t('adm.expires')}: {c.expires_at ? fmtDate(c.expires_at) : t('adm.noExpiry')}
                   </div>
                 </div>

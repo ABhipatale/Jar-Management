@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
-  BarChart3, Bell, CalendarClock, ChevronsLeft, ChevronsRight, CloudOff, Droplets, Home, LayoutDashboard, ListChecks,
+  AlertTriangle, BarChart3, Bell, CalendarClock, ChevronsLeft, ChevronsRight, CloudOff, Droplets, Home, LayoutDashboard, ListChecks,
   LogOut, Menu, Monitor, Moon, Plus, PlusCircle, Receipt, Search, Settings as SettingsIcon, Sun, Users, Wallet, X,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -11,7 +11,7 @@ import api from '../api/client';
 import { discard, outboxItems, subscribe, syncOutbox } from '../lib/outbox';
 import { t, tx } from '../i18n';
 import { logoSrc, useBranding } from '../lib/branding';
-import { businessName, businessPlace } from '../lib/format';
+import { businessName, businessPlace, daysUntil, fmtDate } from '../lib/format';
 import { getTheme, setTheme } from '../lib/theme';
 import { useDebounced } from '../lib/useApi';
 import { DevCredit, PendingText } from './ui';
@@ -68,6 +68,10 @@ export default function Layout() {
   const { user, logout, stopImpersonating } = useAuth();
   const branding = useBranding();
   const place = [businessPlace(settings), t('common.jarMgmt')].filter(Boolean).join(' · ');
+  // Last 3 days of the company's plan: a "please pay" line on every screen.
+  const planEnd = user?.company?.expires_at;
+  const planDays = planEnd ? daysUntil(planEnd) : null;
+  const planEnding = planDays !== null && planDays >= 1 && planDays <= 3;
   const { toast, confirm } = useUi();
   const [drawer, setDrawer] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -192,6 +196,12 @@ export default function Layout() {
       </aside>
 
       <div className="transition-[padding] duration-200 lg:pl-[var(--sb)]">
+        {planEnding && (
+          <div className="no-print pt-safe flex items-center justify-center gap-2 bg-amber-400 px-4 py-1.5 text-center text-[13px] font-semibold text-amber-950" role="status">
+            <AlertTriangle size={15} className="shrink-0" aria-hidden="true" />
+            <span>{planDays === 1 ? t('plan.endsTomorrow', { date: fmtDate(planEnd) }) : t('plan.endsIn', { days: planDays, date: fmtDate(planEnd) })}</span>
+          </div>
+        )}
         {/* Super admin "logged in as" this company (support). */}
         {user?.impersonating && (
           <div className="no-print pt-safe flex flex-wrap items-center justify-center gap-x-3 gap-y-1 bg-amber-100 px-4 py-2 text-center text-sm font-medium text-amber-900 ring-1 ring-amber-300">

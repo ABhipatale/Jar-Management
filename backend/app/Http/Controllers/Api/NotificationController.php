@@ -8,13 +8,18 @@ use App\Models\PushSubscription;
 use App\Models\Reminder;
 use App\Services\BookingService;
 use App\Services\PushService;
+use App\Services\PlanReminderService;
 use App\Services\ReminderService;
 use App\Support\CurrentCompany;
 use Illuminate\Http\Request;
 
 class NotificationController extends Controller
 {
-    public function __construct(private ReminderService $reminders, private BookingService $bookings) {}
+    public function __construct(
+        private ReminderService $reminders,
+        private BookingService $bookings,
+        private PlanReminderService $plans,
+    ) {}
 
     public function index()
     {
@@ -113,6 +118,7 @@ class NotificationController extends Controller
                     // Follow-up reminders go out from 9 AM; the 7 AM run only does the bookings.
                     'reminders' => now()->hour >= 9 ? $this->reminders->runDue() : null,
                     'bookings' => $this->bookings->runNotifications(),
+                    'plan' => $this->plans->run(),
                 ]);
             });
 

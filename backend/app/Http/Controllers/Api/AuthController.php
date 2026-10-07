@@ -61,6 +61,9 @@ class AuthController extends Controller
                 'name' => $company->name,
                 'name_mr' => $company->name_mr,
                 'slug' => $company->slug,
+                'plan' => $company->plan,
+                // The app shows a "please pay" banner during the last days before this date.
+                'expires_at' => $company->expires_at?->toDateString(),
             ] : null,
         ];
     }
