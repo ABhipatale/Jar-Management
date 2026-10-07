@@ -50,7 +50,7 @@ class BalanceService
             ->selectRaw('COALESCE(t.udhari, 0) - COALESCE(t.advance, 0) - COALESCE(p.paid, 0) AS pending_amount');
     }
 
-    /** Wraps customersQuery so computed columns can be used in WHERE (PostgreSQL can't filter on aliases). */
+    /** Wraps customersQuery so computed columns can be used in WHERE (SQL can't filter on SELECT aliases). */
     public function balancesTable(): Builder
     {
         return DB::query()->fromSub($this->customersQuery(), 'b');

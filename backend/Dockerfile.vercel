@@ -13,9 +13,9 @@ RUN composer dump-autoload --no-dev --optimize --classmap-authoritative
 # --- 2. Runtime -----------------------------------------------------------------
 # Debian (glibc) image rather than Alpine: glibc honours /etc/gai.conf below.
 FROM dunglas/frankenphp:1-php8.4
-RUN install-php-extensions pdo_pgsql opcache gmp
+RUN install-php-extensions pdo_mysql opcache gmp
 
-# Prefer IPv4 when a hostname (the Neon database) has both IPv6 and IPv4 addresses.
+# Prefer IPv4 when a hostname (the MySQL database) has both IPv6 and IPv4 addresses.
 # Without this, each DB connection first tried an unreachable IPv6 address and waited
 # for the connect timeout (~10 s per request) before falling back to IPv4.
 RUN echo "precedence ::ffff:0:0/96  100" >> /etc/gai.conf

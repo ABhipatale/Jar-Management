@@ -16,8 +16,7 @@ return [
     |
     */
 
-    // Use PostgreSQL automatically when a Vercel/Neon database URL is present.
-    'default' => env('DB_CONNECTION', env('DATABASE_URL') || env('POSTGRES_URL') ? 'pgsql' : 'sqlite'),
+    'default' => env('DB_CONNECTION', 'mysql'),
 
     /*
     |--------------------------------------------------------------------------
@@ -45,7 +44,8 @@ return [
 
         'mysql' => [
             'driver' => 'mysql',
-            'url' => env('DB_URL'),
+            // DATABASE_URL / MYSQL_URL are what most hosted MySQL providers give you.
+            'url' => env('DB_URL', env('DATABASE_URL', env('MYSQL_URL'))),
             'host' => env('DB_HOST', '127.0.0.1'),
             'port' => env('DB_PORT', '3306'),
             'database' => env('DB_DATABASE', 'laravel'),
@@ -58,9 +58,15 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
+            // Fail fast (default is 30s) so a slow/unreachable DB gives a clear error, not a hung request.
+            // DB_PERSISTENT (on in the Vercel container) reuses the connection across requests handled by
+            // the same PHP worker, so the TLS handshake to the database is not paid on every request.
+            // MYSQL_ATTR_SSL_CA: path to the CA file when the host requires TLS (e.g. /etc/ssl/certs/ca-certificates.crt).
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
-            ]) : [],
+                PDO::ATTR_TIMEOUT => (int) env('DB_CONNECT_TIMEOUT', 5),
+                PDO::ATTR_PERSISTENT => (bool) env('DB_PERSISTENT', false),
+            ], fn ($v) => $v !== null) : [],
         ],
 
         'mariadb' => [
@@ -85,8 +91,7 @@ return [
 
         'pgsql' => [
             'driver' => 'pgsql',
-            // DATABASE_URL / POSTGRES_URL are what Vercel's Neon (Postgres) integration injects.
-            'url' => env('DB_URL', env('DATABASE_URL', env('POSTGRES_URL'))),
+            'url' => env('DB_URL'),
             'host' => env('DB_HOST', '127.0.0.1'),
             'port' => env('DB_PORT', '5432'),
             'database' => env('DB_DATABASE', 'laravel'),
@@ -96,14 +101,7 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'search_path' => 'public',
-            'sslmode' => env('DB_SSLMODE', 'prefer'),
-            // Fail fast (default is 30s) so a slow/unreachable DB gives a clear error, not a hung request.
-            // DB_PERSISTENT (on in the Vercel container) reuses the connection across requests handled by
-            // the same PHP worker, so the TLS handshake to the database is not paid on every request.
-            'options' => extension_loaded('pdo_pgsql') ? [
-                PDO::ATTR_TIMEOUT => (int) env('DB_CONNECT_TIMEOUT', 5),
-                PDO::ATTR_PERSISTENT => (bool) env('DB_PERSISTENT', false),
-            ] : [],
+            'sslmode' => 'prefer',
         ],
 
         'sqlsrv' => [

@@ -3,7 +3,7 @@
 A simple app for one water-jar shop in Kolewadi, built to be used on a phone.
 
 ```
-React PWA (Vercel)  →  Laravel 12 REST API  →  PostgreSQL
+React PWA (Vercel)  →  Laravel 12 REST API  →  MySQL
 frontend/              backend/
 ```
 
@@ -44,13 +44,13 @@ The server blocks:
 
 ## Run locally
 
-Requirements: PHP 8.2+ with `pdo_pgsql`, Composer, Node 20+, and PostgreSQL.
+Requirements: PHP 8.2+ with `pdo_mysql`, Composer, Node 20+, and MySQL 8+ (or MariaDB 10.6+, e.g. from XAMPP).
 
 ```bash
 # API
 cd backend
 composer install
-cp .env.example .env            # set DB_* for your PostgreSQL, APP_DEBUG=true, APP_ENV=local
+cp .env.example .env            # set DB_* for your MySQL (create the empty database first), APP_DEBUG=true, APP_ENV=local
 php artisan key:generate
 php artisan migrate --seed      # creates tables + the admin account + default settings
 php artisan db:seed --class=DemoSeeder   # optional sample customers (local only)
@@ -78,16 +78,16 @@ The root `vercel.json` deploys both parts as a single Vercel project on one doma
 
 The app calls `/api/...` on its own domain, so no CORS setup or `VITE_API_URL` is needed in production.
 
-1. **PostgreSQL**: create a database (for example Neon, Mumbai or Singapore region) and copy its connection string.
+1. **MySQL**: create a hosted MySQL 8 database (for example Aiven, TiDB Cloud or PlanetScale, in a Mumbai or Singapore region) and copy its connection details.
 2. **Vercel project**: import the GitHub repo and leave Root Directory at the **repository root**, where `vercel.json` lives. Services is a beta feature, so your Vercel team may need it enabled.
 3. **Environment variables** (Project → Settings → Environment Variables):
    ```
    APP_KEY=base64:...        # php artisan key:generate --show
    APP_DEBUG=false
    APP_TIMEZONE=Asia/Kolkata
-   DB_CONNECTION=pgsql
-   DB_URL=postgresql://...?sslmode=require
-   DB_SSLMODE=require
+   DB_CONNECTION=mysql
+   DB_URL=mysql://user:pass@host:3306/sai_water
+   MYSQL_ATTR_SSL_CA=/etc/ssl/certs/ca-certificates.crt   # only if the host requires TLS
    ADMIN_EMAIL=admin@saiwater.in
    ADMIN_MOBILE=9404349071
    ADMIN_PASSWORD=<strong password>
@@ -95,7 +95,7 @@ The app calls `/api/...` on its own domain, so no CORS setup or `VITE_API_URL` i
 4. **Deploy.** When a backend instance starts, `backend/vercel-start.sh` runs `migrate` and the seeder. Both are safe to repeat, and the seeder only creates the admin account and default settings if they are missing. To run migrations yourself instead, set `RUN_MIGRATIONS=false`.
 5. **Check** that `https://<your-app>.vercel.app/up` shows "Application up", then log in.
 
-The backend's filesystem on Vercel is temporary. Logs go to Vercel's runtime logs, the cache and login throttling use the database, and all business data is in PostgreSQL.
+The backend's filesystem on Vercel is temporary. Logs go to Vercel's runtime logs, the cache and login throttling use the database, and all business data is in MySQL.
 
 Local development without Vercel works as before: run `php artisan serve` for the API and `npm run dev` for the app, with `VITE_API_URL` set in `frontend/.env`. Running `vercel dev` also works, but it needs Docker to build the backend container.
 
