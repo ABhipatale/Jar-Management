@@ -71,7 +71,7 @@ export default function Layout() {
   // Last 3 days of the company's plan: a "please pay" line on every screen.
   const planEnd = user?.company?.expires_at;
   const planDays = planEnd ? daysUntil(planEnd) : null;
-  const planEnding = !user?.company?.auto_renew && planDays !== null && planDays >= 1 && planDays <= 3;
+  const planEnding = planDays !== null && planDays >= 1 && planDays <= 3;
   const { toast, confirm } = useUi();
   const [drawer, setDrawer] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);

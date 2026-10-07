@@ -21,7 +21,6 @@ class BillingController extends Controller
     public function index()
     {
         $company = CurrentCompany::get();
-        $renewing = $this->billing->renewing($company->id);
 
         return response()->json([
             'enabled' => $this->billing->enabled(),
@@ -31,7 +30,6 @@ class BillingController extends Controller
                 'expires_at' => $company->expires_at?->toDateString(),
                 'expired' => $company->isExpired(),
             ],
-            'auto_renew' => $renewing ? ['plan_id' => $renewing->plan_id, 'plan' => $renewing->plan?->name] : null,
             'plans' => Plan::where('is_active', true)->orderBy('sort_order')->orderBy('price')->get()
                 ->map(fn (Plan $p) => $p->only('id', 'name', 'name_mr', 'price', 'interval', 'description')),
             'payments' => BillingPayment::with('plan:id,name,name_mr')->latest('id')->limit(24)->get()
@@ -45,33 +43,26 @@ class BillingController extends Controller
         ]);
     }
 
-    public function subscribe(Request $request)
+    public function order(Request $request)
     {
         $data = $request->validate(['plan_id' => ['required', 'integer', Rule::exists('plans', 'id')->where('is_active', true)->whereNull('deleted_at')]]);
 
-        return response()->json($this->billing->subscribe(Plan::findOrFail($data['plan_id']), $request->user()));
+        return response()->json($this->billing->order(Plan::findOrFail($data['plan_id']), $request->user()));
     }
 
     public function verify(Request $request)
     {
         $data = $request->validate([
             'razorpay_payment_id' => ['required', 'string', 'max:40'],
-            'razorpay_subscription_id' => ['required', 'string', 'max:40'],
+            'razorpay_order_id' => ['required', 'string', 'max:40'],
             'razorpay_signature' => ['required', 'string', 'max:200'],
         ]);
-        $company = $this->billing->verify($data['razorpay_payment_id'], $data['razorpay_subscription_id'], $data['razorpay_signature']);
+        $company = $this->billing->verify($data['razorpay_payment_id'], $data['razorpay_order_id'], $data['razorpay_signature']);
 
         return response()->json([
             'message' => __('पेमेंट यशस्वी! तुमचा प्लॅन :date पर्यंत सुरू आहे.', ['date' => $company->expires_at->format('d/m/Y')]),
             'expires_at' => $company->expires_at->toDateString(),
         ]);
-    }
-
-    public function cancel()
-    {
-        $this->billing->cancel();
-
-        return response()->json(['message' => __('ऑटो-रिन्यू बंद केले. प्लॅन शेवटच्या तारखेपर्यंत सुरू राहील.')]);
     }
 
     /** Razorpay → us (no login). Wrong signature = 400 so a forged call does nothing. */

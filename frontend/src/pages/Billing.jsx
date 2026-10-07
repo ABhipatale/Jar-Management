@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BadgeCheck, CalendarClock, CheckCircle2, CreditCard, Crown, Phone, RefreshCcw, Sparkles } from 'lucide-react';
+import { BadgeCheck, CalendarClock, CheckCircle2, CreditCard, Crown, Phone, Sparkles } from 'lucide-react';
 import api, { errorMessage } from '../api/client';
 import { ErrorBox, Loader, PageHeader } from '../components/ui';
 import { useAuth } from '../context/AuthContext';
@@ -13,26 +13,26 @@ import { useApi } from '../lib/useApi';
 const planName = (p) => (lang === 'mr' ? p.name_mr || p.name : p.name);
 
 /**
- * Plans + Razorpay auto-pay. `locked`: the company's plan has ended and this is the only
+ * Plans + one-time Razorpay payment (each payment adds a month/year). `locked`: the company's plan has ended and this is the only
  * screen it can use until someone pays.
  */
 export default function Billing({ locked = false }) {
   const { refreshMe } = useAuth();
-  const { toast, confirm } = useUi();
+  const { toast } = useUi();
   const { data, loading, error, reload } = useApi('/billing');
   const [busy, setBusy] = useState(null);
 
   if (error) return <ErrorBox message={error} onRetry={reload} />;
   if (loading && !data) return <Loader />;
 
-  const { company, plans, payments, auto_renew: autoRenew, enabled } = data;
+  const { company, plans, payments, enabled } = data;
   const monthly = plans.find((p) => p.interval === 'month');
   const left = company.expires_at ? daysUntil(company.expires_at) : null;
 
   const buy = async (plan) => {
     setBusy(plan.id);
     try {
-      const { data: order } = await api.post('/billing/subscribe', { plan_id: plan.id });
+      const { data: order } = await api.post('/billing/order', { plan_id: plan.id });
       const paid = await payWithRazorpay(order);
       if (!paid) return; // popup closed
       const { data: res } = await api.post('/billing/verify', paid);
@@ -41,21 +41,6 @@ export default function Billing({ locked = false }) {
       reload();
     } catch (err) {
       toast(err?.response ? errorMessage(err) : t('bill.failed'), 'error');
-    } finally {
-      setBusy(null);
-    }
-  };
-
-  const stopAutoPay = async () => {
-    if (!(await confirm({ message: t('bill.cancelConfirm'), confirmText: t('bill.cancelAuto'), danger: true }))) return;
-    setBusy('cancel');
-    try {
-      const { data: res } = await api.post('/billing/cancel');
-      toast(res.message);
-      await refreshMe();
-      reload();
-    } catch (err) {
-      toast(errorMessage(err), 'error');
     } finally {
       setBusy(null);
     }
@@ -83,16 +68,6 @@ export default function Billing({ locked = false }) {
             {!company.expired && left !== null && t('plan.daysLeft', { days: left })}
             {company.expired && t('bill.choosePlan')}
           </div>
-          {autoRenew && (
-            <div className="mt-2 flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-600/20">
-                <RefreshCcw size={13} /> {t('bill.autoOn', { plan: autoRenew.plan })}
-              </span>
-              <button className="text-xs font-semibold text-red-600 hover:underline" onClick={stopAutoPay} disabled={busy === 'cancel'}>
-                {t('bill.cancelAuto')}
-              </button>
-            </div>
-          )}
         </div>
       </div>
 
@@ -113,7 +88,6 @@ export default function Billing({ locked = false }) {
         {plans.map((p) => {
           const yearly = p.interval === 'year';
           const save = yearly && monthly ? monthly.price * 12 - p.price : 0;
-          const current = autoRenew?.plan_id === p.id;
           return (
             <div
               key={p.id}
@@ -142,14 +116,14 @@ export default function Billing({ locked = false }) {
               <button
                 className={`mt-5 w-full ${yearly ? 'btn-primary' : 'btn-light'}`}
                 onClick={() => buy(p)}
-                disabled={!enabled || busy !== null || current}
+                disabled={!enabled || busy !== null}
               >
                 {busy === p.id ? (
                   <span className="h-4 w-4 animate-spin rounded-full border-2 border-current/40 border-t-current" aria-hidden="true" />
                 ) : (
                   <CreditCard size={17} />
                 )}
-                {current ? t('bill.current') : t('bill.choose')}
+                {t('bill.choose')}
               </button>
             </div>
           );

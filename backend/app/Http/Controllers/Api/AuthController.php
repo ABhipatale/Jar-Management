@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Middleware\EnsureCompanyAccess;
 use App\Http\Requests\LoginRequest;
 use App\Models\User;
-use App\Services\BillingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
@@ -68,8 +67,6 @@ class AuthController extends Controller
                 // The app shows a "please pay" banner during the last days before this date.
                 'expires_at' => $company->expires_at?->toDateString(),
                 'expired' => $company->isExpired(),
-                // Auto-pay is on: no "please pay" reminders needed.
-                'auto_renew' => app(BillingService::class)->renewing($company->id) !== null,
             ] : null,
         ];
     }

@@ -70,8 +70,19 @@ function setHead(selector, create, attr, value) {
 const link = (rel) => () => Object.assign(document.createElement('link'), { rel });
 const meta = (name) => () => Object.assign(document.createElement('meta'), { name });
 
+/** Browser-tab icon: the company's own logo when it uploaded one, otherwise EasyJar's. */
+function setFavicon(b) {
+  const own = b.logo_url ? b.icons?.['icon-192'] : null;
+  document.head.querySelectorAll('link[rel="icon"]').forEach((el) => {
+    const easyJar = el.getAttribute('type') === 'image/png' ? '/favicon.png' : '/favicon.ico';
+    const href = own || easyJar;
+    if (el.getAttribute('href') !== href) el.setAttribute('href', href);
+  });
+}
+
 /** Puts the company on the page: title, manifest, icons. (Colours are the app's own, the same for everyone.) */
 export function applyBranding(b = getBranding()) {
+  setFavicon(b);
   document.title = `${brandName(b)} – ${t('common.jarMgmt')}`;
   setHead('link[rel="manifest"]', link('manifest'), 'href', b.manifest_url);
   setHead('link[rel="apple-touch-icon"]', link('apple-touch-icon'), 'href', b.icons?.['apple-touch']);

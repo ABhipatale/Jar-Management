@@ -35,11 +35,15 @@ class BillingTest extends TestCase
     private function keys(): void
     {
         config(['services.razorpay' => ['key_id' => 'rzp_test_key', 'key_secret' => 'secret123', 'webhook_secret' => 'whsec']]);
-        Http::fake([
-            'api.razorpay.com/v1/plans' => Http::response(['id' => 'plan_RZP1']),
-            'api.razorpay.com/v1/subscriptions' => Http::response(['id' => 'sub_RZP1', 'status' => 'created']),
-            'api.razorpay.com/v1/subscriptions/*/cancel' => Http::response(['id' => 'sub_RZP1', 'status' => 'active']),
-        ]);
+        Http::fake(['api.razorpay.com/v1/orders' => Http::sequence()
+            ->push(['id' => 'order_RZP1', 'status' => 'created'])
+            ->push(['id' => 'order_RZP2', 'status' => 'created'])]);
+    }
+
+    private function pay(string $orderId, string $paymentId)
+    {
+        return $this->postJson('/api/billing/verify', ['razorpay_payment_id' => $paymentId, 'razorpay_order_id' => $orderId,
+            'razorpay_signature' => hash_hmac('sha256', $orderId.'|'.$paymentId, 'secret123')]);
     }
 
     private function monthly(): Plan
@@ -66,74 +70,61 @@ class BillingTest extends TestCase
 
     public function test_without_razorpay_keys_payment_is_politely_refused(): void
     {
-        $this->postJson('/api/billing/subscribe', ['plan_id' => $this->monthly()->id])
+        $this->postJson('/api/billing/order', ['plan_id' => $this->monthly()->id])
             ->assertStatus(422)->assertJsonValidationErrors('payment');
     }
 
-    public function test_subscribe_verify_extends_the_plan_by_one_month(): void
+    public function test_one_time_payment_extends_the_plan_by_one_month(): void
     {
         $this->keys();
         $this->owner->company->update(['expires_at' => '2026-10-10']); // still 2 days left
 
-        $this->postJson('/api/billing/subscribe', ['plan_id' => $this->monthly()->id])->assertOk()
-            ->assertJsonPath('subscription_id', 'sub_RZP1')
+        $this->postJson('/api/billing/order', ['plan_id' => $this->monthly()->id])->assertOk()
+            ->assertJsonPath('order_id', 'order_RZP1')
+            ->assertJsonPath('amount', 25000)
             ->assertJsonPath('key_id', 'rzp_test_key');
+        Http::assertSent(fn ($r) => str_ends_with($r->url(), '/orders') && $r['amount'] === 25000 && $r['currency'] === 'INR');
 
-        Http::assertSent(fn ($r) => str_ends_with($r->url(), '/plans') && $r['item']['amount'] === 25000 && $r['period'] === 'monthly');
-        Http::assertSent(fn ($r) => str_ends_with($r->url(), '/subscriptions') && $r['plan_id'] === 'plan_RZP1');
-
-        $sig = hash_hmac('sha256', 'pay_1|sub_RZP1', 'secret123');
-        $this->postJson('/api/billing/verify', ['razorpay_payment_id' => 'pay_1', 'razorpay_subscription_id' => 'sub_RZP1', 'razorpay_signature' => $sig])
-            ->assertOk()->assertJsonPath('expires_at', '2026-11-10'); // added on top of the days left
-
+        $this->pay('order_RZP1', 'pay_1')->assertOk()->assertJsonPath('expires_at', '2026-11-10'); // added on top of the days left
         $this->assertSame('Monthly', $this->owner->company->fresh()->plan);
-        $this->getJson('/api/me')->assertJsonPath('user.company.auto_renew', true);
+
+        // Paying again (next month, or early) adds another month; nothing renews by itself.
+        $this->postJson('/api/billing/order', ['plan_id' => $this->monthly()->id])->assertJsonPath('order_id', 'order_RZP2');
+        $this->pay('order_RZP2', 'pay_2')->assertOk()->assertJsonPath('expires_at', '2026-12-10');
+        $this->assertSame(2, BillingPayment::count());
     }
 
     public function test_bad_signature_does_not_extend(): void
     {
         $this->keys();
-        $this->postJson('/api/billing/subscribe', ['plan_id' => $this->monthly()->id])->assertOk();
-        $this->postJson('/api/billing/verify', ['razorpay_payment_id' => 'pay_1', 'razorpay_subscription_id' => 'sub_RZP1', 'razorpay_signature' => 'forged'])
+        $this->postJson('/api/billing/order', ['plan_id' => $this->monthly()->id])->assertOk();
+        $this->postJson('/api/billing/verify', ['razorpay_payment_id' => 'pay_1', 'razorpay_order_id' => 'order_RZP1', 'razorpay_signature' => 'forged'])
             ->assertStatus(422);
         $this->assertNull($this->owner->company->fresh()->expires_at);
     }
 
-    public function test_renewal_webhook_extends_once_and_rejects_forgeries(): void
+    public function test_order_paid_webhook_extends_once_and_rejects_forgeries(): void
     {
         $this->keys();
         $this->owner->company->update(['expires_at' => '2026-10-05']); // already expired
-        $this->postJson('/api/billing/subscribe', ['plan_id' => Plan::where('interval', 'year')->value('id')])->assertOk();
+        $this->postJson('/api/billing/order', ['plan_id' => Plan::where('interval', 'year')->value('id')])->assertOk();
 
-        $charged = ['event' => 'subscription.charged', 'payload' => [
-            'subscription' => ['entity' => ['id' => 'sub_RZP1', 'status' => 'active']],
-            'payment' => ['entity' => ['id' => 'pay_9', 'amount' => 199900, 'currency' => 'INR']],
+        $paid = ['event' => 'order.paid', 'payload' => [
+            'order' => ['entity' => ['id' => 'order_RZP1', 'status' => 'paid']],
+            'payment' => ['entity' => ['id' => 'pay_9', 'order_id' => 'order_RZP1', 'amount' => 199900, 'currency' => 'INR']],
         ]];
         $this->app['auth']->forgetGuards();
-        $this->webhook($charged)->assertOk();
-        $this->webhook($charged)->assertOk(); // Razorpay retry: counted once
+        $this->webhook($paid, 'wrong-secret')->assertStatus(400);
+        $this->webhook($paid)->assertOk();
+        $this->webhook($paid)->assertOk(); // Razorpay retry: counted once
 
         $company = Company::find($this->owner->company_id);
         $this->assertSame('2027-10-08', $company->expires_at->toDateString()); // from today, since it had expired
         $this->assertSame(1, BillingPayment::withoutGlobalScope('company')->count());
 
-        $this->webhook($charged, 'wrong-secret')->assertStatus(400);
-
-        $this->webhook(['event' => 'subscription.halted', 'payload' => ['subscription' => ['entity' => ['id' => 'sub_RZP1']]]])->assertOk();
+        // The app's own verify() for the same payment does not add a second year.
         Sanctum::actingAs($this->owner);
-        $this->getJson('/api/me')->assertJsonPath('user.company.auto_renew', false);
-    }
-
-    public function test_owner_can_turn_off_auto_renew(): void
-    {
-        $this->keys();
-        $this->postJson('/api/billing/subscribe', ['plan_id' => $this->monthly()->id]);
-        $this->postJson('/api/billing/verify', ['razorpay_payment_id' => 'pay_1', 'razorpay_subscription_id' => 'sub_RZP1',
-            'razorpay_signature' => hash_hmac('sha256', 'pay_1|sub_RZP1', 'secret123')])->assertOk();
-
-        $this->postJson('/api/billing/cancel')->assertOk();
-        Http::assertSent(fn ($r) => str_contains($r->url(), '/subscriptions/sub_RZP1/cancel'));
-        $this->getJson('/api/billing')->assertJsonPath('auto_renew', null);
+        $this->pay('order_RZP1', 'pay_9')->assertOk()->assertJsonPath('expires_at', '2027-10-08');
     }
 
     public function test_expired_company_sees_plans_but_nothing_else(): void
@@ -153,7 +144,7 @@ class BillingTest extends TestCase
         // Inactive plans are hidden from companies and cannot be bought.
         Sanctum::actingAs($this->owner);
         $this->getJson('/api/billing')->assertJsonCount(2, 'plans');
-        $this->postJson('/api/billing/subscribe', ['plan_id' => $id])->assertStatus(422)->assertJsonValidationErrors('plan_id');
+        $this->postJson('/api/billing/order', ['plan_id' => $id])->assertStatus(422)->assertJsonValidationErrors('plan_id');
 
         Sanctum::actingAs(User::factory()->superAdmin()->create());
         $this->deleteJson("/api/admin/plans/{$id}")->assertOk();

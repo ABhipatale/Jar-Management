@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#1d45d8" />
     <meta name="description" content="EasyJar – जार व्यवस्थापन" />
-    <!-- EasyJar favicon: the same for every company -->
+    <!-- EasyJar favicon; after login src/lib/branding.js swaps in the company's logo if it has one -->
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" type="image/png" href="/favicon.png" />
 
@@ -41,6 +41,9 @@
           set('link[rel="manifest"]', 'href', b.manifest_url);
           set('link[rel="apple-touch-icon"]', 'href', b.icons && b.icons['apple-touch']);
           set('meta[name="apple-mobile-web-app-title"]', 'content', b.short_name);
+          if (b.logo_url && b.icons) {
+            document.querySelectorAll('link[rel="icon"]').forEach(function (el) { el.setAttribute('href', b.icons['icon-192']); });
+          }
         }
       } catch (e) {}
     </script>
@@ -65,7 +68,7 @@
       <p>Jar Management</p>
       <footer>
         Developed by <b>AB Technology</b><br />
-        7666287015 · abtechsolution.store
+        7666287015 · abtechservices.store
       </footer>
     </div>
     <div id="root"></div>

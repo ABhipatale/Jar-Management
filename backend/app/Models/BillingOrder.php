@@ -6,16 +6,16 @@ use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-/** One successful plan payment (adds one month or year to the company's plan). */
-class BillingPayment extends Model
+/** A Razorpay order: one one-time payment for one plan period (a month or a year). */
+class BillingOrder extends Model
 {
     use BelongsToCompany;
 
-    protected $fillable = ['company_id', 'billing_order_id', 'plan_id', 'razorpay_payment_id', 'amount', 'currency', 'period_end'];
+    protected $fillable = ['company_id', 'plan_id', 'user_id', 'razorpay_order_id', 'amount', 'status'];
 
     protected function casts(): array
     {
-        return ['amount' => 'float', 'period_end' => 'datetime'];
+        return ['amount' => 'float'];
     }
 
     public function plan(): BelongsTo

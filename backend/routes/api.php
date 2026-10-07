@@ -102,9 +102,8 @@ Route::middleware(['auth:sanctum', 'company'])->group(function () {
 
     // Plan & payment. Named billing.*: these stay open after the plan expires, so it can be renewed.
     Route::get('/billing', [BillingController::class, 'index'])->name('billing.index');
-    Route::post('/billing/subscribe', [BillingController::class, 'subscribe'])->name('billing.subscribe');
+    Route::post('/billing/order', [BillingController::class, 'order'])->name('billing.order');
     Route::post('/billing/verify', [BillingController::class, 'verify'])->name('billing.verify');
-    Route::post('/billing/cancel', [BillingController::class, 'cancel'])->name('billing.cancel');
 
     Route::get('/settings', [SettingController::class, 'show']);
     Route::put('/settings', [SettingController::class, 'update']);

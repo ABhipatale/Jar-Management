@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { CalendarPlus, ImagePlus, KeyRound, LogIn, Mail, Pause, Pencil, Phone, Play, Trash2, Users } from 'lucide-react';
 import api, { errorMessage } from '../../api/client';
 import defaultLogo from '../../assets/logo.png';
-import { Badge, ErrorBox, Field, Loader, Modal, PageHeader, StatCard } from '../../components/ui';
+import { ErrorBox, Field, Loader, Modal, PageHeader, StatCard } from '../../components/ui';
 import { useAuth } from '../../context/AuthContext';
 import { useUi } from '../../context/UiContext';
 import { t } from '../../i18n';
@@ -112,7 +112,6 @@ export default function CompanyDetail() {
           <div className="flex flex-wrap items-center gap-2">
             <StatusBadge company={c} />
             {c.plan && <span className="text-sm text-muted">{t('adm.plan')}: {c.plan}</span>}
-            {c.auto_renew && <Badge kind="advance">{t('bill.autoOn', { plan: c.auto_renew })}</Badge>}
           </div>
           <div className="text-sm text-muted">
             {t('adm.expires')}: <span className="font-medium text-ink">{c.expires_at ? fmtDate(c.expires_at) : t('adm.noExpiry')}</span>

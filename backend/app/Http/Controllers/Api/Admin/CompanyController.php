@@ -11,7 +11,6 @@ use App\Models\Customer;
 use App\Models\JarTransaction;
 use App\Models\Plan;
 use App\Models\User;
-use App\Services\BillingService;
 use App\Services\BrandingService;
 use App\Services\CompanyService;
 use App\Services\IconService;
@@ -251,7 +250,6 @@ class CompanyController extends Controller
             'jar_entries' => JarTransaction::withoutGlobalScope('company')->where('company_id', $company->id)->count(),
             'last_activity_at' => JarTransaction::withoutGlobalScope('company')->where('company_id', $company->id)->max('created_at'),
             'branding' => $this->branding->forCompany($company),
-            'auto_renew' => app(BillingService::class)->renewing($company->id)?->plan?->name,
             'payments' => BillingPayment::withoutGlobalScope('company')->with('plan:id,name')
                 ->where('company_id', $company->id)->latest('id')->limit(24)->get()
                 ->map(fn (BillingPayment $p) => [

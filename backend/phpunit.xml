@@ -29,5 +29,8 @@
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
+        <env name="RAZORPAY_KEY_ID" value=""/>
+        <env name="RAZORPAY_KEY_SECRET" value=""/>
+        <env name="RAZORPAY_WEBHOOK_SECRET" value=""/>
     </php>
 </phpunit>

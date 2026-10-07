@@ -14,7 +14,7 @@ class PlanReminderService
 {
     public const DAYS = 3;
 
-    public function __construct(private PushService $push, private BillingService $billing) {}
+    public function __construct(private PushService $push) {}
 
     /** Whole days until the plan ends (null = never ends; 0 or less = already ended). */
     public static function daysLeft(?\DateTimeInterface $expiresAt): ?int
@@ -28,7 +28,7 @@ class PlanReminderService
         $company = CurrentCompany::get();
         $days = self::daysLeft($company?->expires_at);
 
-        if ($days === null || $days < 1 || $days > self::DAYS || $this->billing->renewing($company->id)
+        if ($days === null || $days < 1 || $days > self::DAYS
             || ! Cache::add('plan-reminder:'.$company->id.':'.now()->toDateString(), 1, now()->endOfDay())) {
             return ['days' => $days, 'sent' => false, 'devices' => 0];
         }

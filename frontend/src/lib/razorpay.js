@@ -18,8 +18,8 @@ function load() {
 }
 
 /**
- * Opens Checkout for a subscription created by our API (/billing/subscribe).
- * Resolves with { razorpay_payment_id, razorpay_subscription_id, razorpay_signature },
+ * Opens Checkout for a one-time order created by our API (/billing/order).
+ * Resolves with { razorpay_payment_id, razorpay_order_id, razorpay_signature },
  * resolves null if the user closed the popup, rejects if the payment failed.
  */
 export async function payWithRazorpay(order, { color = '#1d45d8' } = {}) {
@@ -27,7 +27,9 @@ export async function payWithRazorpay(order, { color = '#1d45d8' } = {}) {
   return new Promise((resolve, reject) => {
     const rzp = new window.Razorpay({
       key: order.key_id,
-      subscription_id: order.subscription_id,
+      order_id: order.order_id,
+      amount: order.amount,
+      currency: order.currency,
       name: order.name,
       description: order.description,
       prefill: order.prefill,

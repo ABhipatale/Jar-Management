@@ -33,20 +33,15 @@ class PlanController extends Controller
 
     public function update(Request $request, Plan $plan)
     {
-        $plan->fill($request->validate($this->rules(true)));
-        // Razorpay plans cannot change: a new one is created on the next purchase.
-        // (Subscriptions already running keep renewing at their old price.)
-        if ($plan->isDirty(['price', 'interval'])) {
-            $plan->razorpay_plan_id = null;
-        }
-        $plan->save();
+        // A new price applies from the next payment.
+        $plan->fill($request->validate($this->rules(true)))->save();
 
         return response()->json(['message' => __('प्लॅन बदलला.'), 'data' => $plan]);
     }
 
     public function destroy(Plan $plan)
     {
-        // Soft delete: companies already on it and running subscriptions keep working.
+        // Soft delete: companies already on it keep it until their end date.
         $plan->delete();
 
         return response()->json(['message' => __('प्लॅन हटवला.')]);
