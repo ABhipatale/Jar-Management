@@ -112,5 +112,14 @@
     "लोगो जतन झाला.": "Logo saved.",
     "लोगो काढला.": "Logo removed.",
     "⚠️ तुमचा प्लॅन लवकरच संपेल": "⚠️ Your plan ends soon",
-    "तुमचा प्लॅन :days दिवसांत (:date) संपेल. कृपया पेमेंट करा.": "Your plan ends in :days days (:date). Please make a payment."
+    "तुमचा प्लॅन :days दिवसांत (:date) संपेल. कृपया पेमेंट करा.": "Your plan ends in :days days (:date). Please make a payment.",
+    "तुमचा प्लॅन संपला आहे. पुढे वापरण्यासाठी कृपया प्लॅन निवडून पेमेंट करा.": "Your plan has ended. Please choose a plan and pay to continue.",
+    "पेमेंट सुरू करता आले नाही. कृपया थोड्या वेळाने पुन्हा प्रयत्न करा.": "Could not start the payment. Please try again in a little while.",
+    "ऑनलाइन पेमेंट लवकरच सुरू होईल. आत्ता प्लॅनसाठी कृपया सपोर्टशी संपर्क करा.": "Online payment is coming soon. For now, please contact support for a plan.",
+    "पेमेंटची खात्री करता आली नाही. पैसे कापले असल्यास काही वेळात प्लॅन आपोआप सुरू होईल.": "Could not confirm the payment. If money was deducted, the plan will start by itself shortly.",
+    "पेमेंट यशस्वी! तुमचा प्लॅन :date पर्यंत सुरू आहे.": "Payment successful! Your plan is active until :date.",
+    "ऑटो-रिन्यू बंद केले. प्लॅन शेवटच्या तारखेपर्यंत सुरू राहील.": "Auto-renew turned off. The plan stays active until its end date.",
+    "प्लॅन जोडला.": "Plan added.",
+    "प्लॅन बदलला.": "Plan updated.",
+    "प्लॅन हटवला.": "Plan deleted."
 }

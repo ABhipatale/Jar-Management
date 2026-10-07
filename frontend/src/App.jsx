@@ -28,6 +28,9 @@ import Companies from './pages/admin/Companies';
 import CompanyForm from './pages/admin/CompanyForm';
 import CompanyDetail from './pages/admin/CompanyDetail';
 import AuditLog from './pages/admin/AuditLog';
+import Plans from './pages/admin/Plans';
+import Billing from './pages/Billing';
+import PlanExpired from './pages/PlanExpired';
 
 export default function App() {
   const { user } = useAuth();
@@ -50,11 +53,15 @@ export default function App() {
           <Route path="companies/:id" element={<CompanyDetail />} />
           <Route path="companies/:id/edit" element={<CompanyForm />} />
           <Route path="audit" element={<AuditLog />} />
+          <Route path="plans" element={<Plans />} />
         </Route>
         <Route path="*" element={<Navigate to="/admin" replace />} />
       </Routes>
     );
   }
+
+  // Plan ended: only the plans screen until someone pays (every user of the company sees it).
+  if (user.company?.expired) return <PlanExpired />;
 
   return (
     <SettingsProvider>
@@ -73,6 +80,7 @@ export default function App() {
           <Route path="transactions" element={<Transactions />} />
           <Route path="expenses" element={<Expenses />} />
           <Route path="settings" element={<Settings />} />
+          <Route path="billing" element={<Billing />} />
           <Route path="notifications" element={<Notifications />} />
           <Route path="bookings" element={<Bookings />} />
           <Route path="reports" element={<Reports />} />

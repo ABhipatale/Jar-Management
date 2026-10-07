@@ -71,7 +71,7 @@ export default function Layout() {
   // Last 3 days of the company's plan: a "please pay" line on every screen.
   const planEnd = user?.company?.expires_at;
   const planDays = planEnd ? daysUntil(planEnd) : null;
-  const planEnding = planDays !== null && planDays >= 1 && planDays <= 3;
+  const planEnding = !user?.company?.auto_renew && planDays !== null && planDays >= 1 && planDays <= 3;
   const { toast, confirm } = useUi();
   const [drawer, setDrawer] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -200,6 +200,9 @@ export default function Layout() {
           <div className="no-print pt-safe flex items-center justify-center gap-2 bg-amber-400 px-4 py-1.5 text-center text-[13px] font-semibold text-amber-950" role="status">
             <AlertTriangle size={15} className="shrink-0" aria-hidden="true" />
             <span>{planDays === 1 ? t('plan.endsTomorrow', { date: fmtDate(planEnd) }) : t('plan.endsIn', { days: planDays, date: fmtDate(planEnd) })}</span>
+            <Link to="/billing" className="ml-1 shrink-0 rounded-full bg-amber-950 px-2.5 py-0.5 text-xs font-semibold text-amber-50 hover:bg-amber-900">
+              {t('bill.payNow')}
+            </Link>
           </div>
         )}
         {/* Super admin "logged in as" this company (support). */}

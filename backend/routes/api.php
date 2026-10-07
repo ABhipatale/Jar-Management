@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\Api\Admin\CompanyController as AdminCompanyController;
+use App\Http\Controllers\Api\Admin\PlanController as AdminPlanController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\BillingController;
 use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\BrandingController;
 use App\Http\Controllers\Api\CustomerController;
@@ -16,6 +18,9 @@ use App\Http\Controllers\Api\SettingController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
+
+// Razorpay -> us: plan renewals and subscription changes (signature-checked, no login).
+Route::post('/billing/webhook', [BillingController::class, 'webhook']);
 
 // Public branding: the browser loads the manifest and icons without the app's login token.
 Route::get('/branding', [BrandingController::class, 'platform']);
@@ -48,6 +53,9 @@ Route::middleware(['auth:sanctum', 'super.admin'])->prefix('admin')->controller(
     Route::post('/companies/{company}/logo', 'uploadLogo');
     Route::delete('/companies/{company}/logo', 'removeLogo');
     Route::get('/audit', 'auditLog');
+});
+Route::middleware(['auth:sanctum', 'super.admin'])->prefix('admin')->group(function () {
+    Route::apiResource('plans', AdminPlanController::class)->only(['index', 'store', 'update', 'destroy']);
 });
 
 // The business app: every query below only sees the user's own company.
@@ -91,6 +99,12 @@ Route::middleware(['auth:sanctum', 'company'])->group(function () {
     Route::get('/push/key', [NotificationController::class, 'pushKey']);
     Route::post('/push/subscribe', [NotificationController::class, 'subscribe']);
     Route::post('/push/unsubscribe', [NotificationController::class, 'unsubscribe']);
+
+    // Plan & payment. Named billing.*: these stay open after the plan expires, so it can be renewed.
+    Route::get('/billing', [BillingController::class, 'index'])->name('billing.index');
+    Route::post('/billing/subscribe', [BillingController::class, 'subscribe'])->name('billing.subscribe');
+    Route::post('/billing/verify', [BillingController::class, 'verify'])->name('billing.verify');
+    Route::post('/billing/cancel', [BillingController::class, 'cancel'])->name('billing.cancel');
 
     Route::get('/settings', [SettingController::class, 'show']);
     Route::put('/settings', [SettingController::class, 'update']);

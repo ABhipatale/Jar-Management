@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import api, { setUnauthorizedHandler, tokenStore } from '../api/client';
+import api, { setExpiredHandler, setUnauthorizedHandler, tokenStore } from '../api/client';
 import { refreshBranding } from '../lib/branding';
 import { companyKey, savedUser } from '../lib/storage';
 
@@ -59,22 +59,29 @@ export function AuthProvider({ children }) {
     setUser(null);
   }, []);
 
-  useEffect(() => {
-    setUnauthorizedHandler(clear);
-  }, [clear]);
-
-  // Refresh role/company (and branding) once per app start; a suspended company gets a 403 here.
-  useEffect(() => {
+  /** Re-read role/company (plan end date, auto-pay) from the server. */
+  const refreshMe = useCallback(async () => {
     if (!tokenStore.get()) return;
-    api.get('/me').then(({ data }) => {
+    try {
+      const { data } = await api.get('/me');
       const remember = Boolean(localStorage.getItem(USER_KEY));
       saveUser(data.user, remember);
       setUser(data.user);
       brandFor(data.user);
-    }, () => {
+    } catch {
       /* offline: keep the saved user */
-    });
+    }
   }, []);
+
+  useEffect(() => {
+    setUnauthorizedHandler(clear);
+    setExpiredHandler(refreshMe);
+  }, [clear, refreshMe]);
+
+  // Once per app start; a suspended company gets a 403 here, an expired one sees the plans.
+  useEffect(() => {
+    refreshMe();
+  }, [refreshMe]);
 
   const start = (token, nextUser, remember) => {
     tokenStore.set(token, remember);
@@ -127,7 +134,7 @@ export function AuthProvider({ children }) {
   const stopImpersonating = () => logout();
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, impersonate, stopImpersonating }}>{children}</AuthContext.Provider>
+    <AuthContext.Provider value={{ user, login, logout, impersonate, stopImpersonating, refreshMe }}>{children}</AuthContext.Provider>
   );
 }
 

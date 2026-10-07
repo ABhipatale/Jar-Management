@@ -35,4 +35,12 @@ return [
         ],
     ],
 
+    // Plan payments (auto-renewing subscriptions). Without keys the plans are shown but
+    // online payment is switched off; the super admin can still extend plans by hand.
+    'razorpay' => [
+        'key_id' => env('RAZORPAY_KEY_ID'),
+        'key_secret' => env('RAZORPAY_KEY_SECRET'),
+        'webhook_secret' => env('RAZORPAY_WEBHOOK_SECRET'),
+    ],
+
 ];

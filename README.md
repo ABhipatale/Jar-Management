@@ -19,6 +19,14 @@ frontend/              backend/
 - **Installed app:** after login, the app points `<link rel="manifest">` at `/api/companies/<slug>/manifest.webmanifest`, so *Install app* / *Add to Home Screen* uses the company's name and icon. The branding is saved on the phone, so an installed company app opens with its own splash, even offline. Before anyone logs in, the platform's name and icon are shown.
 - **Offline data on the phone** (cached settings, offline outbox) is stored per company, so one phone can be used by two companies without mixing data.
 
+**Plans & payments (Razorpay):**
+- The super admin manages plans (**Admin → Plans**: add, edit price/interval, hide, delete). It starts with **Monthly ₹250** and **Yearly ₹1999**.
+- Owners pay in **Settings → Plan & payment** (also linked from the "plan ends soon" banner). Payment is a **Razorpay subscription**, so it renews automatically every month/year; the owner can turn auto-pay off.
+- Each payment moves the company's end date forward by one month/year (from the current end date, or from today if it already ended). Renewals arrive by webhook (`POST /api/billing/webhook`, signature-checked). A payment is counted once even if it arrives twice.
+- 3 days before the end date (when auto-pay is off), the app shows a banner and phones get a notification once a day.
+- When the plan has ended, every user of the company can still log in but sees only the plans screen; all data is kept.
+- Until `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` and `RAZORPAY_WEBHOOK_SECRET` are set, online payment is switched off (plans still show, with the support number); extend plans by hand on the company page.
+
 **Installed-app limits** (set by the phone, not the app): Android Chrome picks up a renamed company or a new icon when it re-checks the manifest, which can take up to a day. iPhone keeps the name and icon from the moment of *Add to Home Screen*; to see a new logo there, remove the app and add it again.
 
 ## What it does

@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { CalendarPlus, ImagePlus, KeyRound, LogIn, Mail, Pause, Pencil, Phone, Play, Trash2, Users } from 'lucide-react';
 import api, { errorMessage } from '../../api/client';
 import defaultLogo from '../../assets/logo.png';
-import { ErrorBox, Field, Loader, Modal, PageHeader, StatCard } from '../../components/ui';
+import { Badge, ErrorBox, Field, Loader, Modal, PageHeader, StatCard } from '../../components/ui';
 import { useAuth } from '../../context/AuthContext';
 import { useUi } from '../../context/UiContext';
 import { t } from '../../i18n';
@@ -112,6 +112,7 @@ export default function CompanyDetail() {
           <div className="flex flex-wrap items-center gap-2">
             <StatusBadge company={c} />
             {c.plan && <span className="text-sm text-muted">{t('adm.plan')}: {c.plan}</span>}
+            {c.auto_renew && <Badge kind="advance">{t('bill.autoOn', { plan: c.auto_renew })}</Badge>}
           </div>
           <div className="text-sm text-muted">
             {t('adm.expires')}: <span className="font-medium text-ink">{c.expires_at ? fmtDate(c.expires_at) : t('adm.noExpiry')}</span>
@@ -193,6 +194,25 @@ export default function CompanyDetail() {
           </button>
         </section>
       </div>
+
+      {c.payments?.length > 0 && (
+        <section className="card !p-0">
+          <h2 className="border-b border-line px-4 py-3 font-semibold text-ink">{t('bill.history')}</h2>
+          <ul className="divide-y divide-line">
+            {c.payments.map((p) => (
+              <li key={p.id} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
+                <div className="min-w-0">
+                  <div className="font-medium text-ink">{p.plan}</div>
+                  <div className="truncate text-xs text-muted">
+                    {fmtDate(p.date)} · {t('bill.validTill', { date: fmtDate(p.period_end) })} · {p.razorpay_payment_id}
+                  </div>
+                </div>
+                <div className="font-semibold tabular-nums text-ink">₹{p.amount}</div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {pwOpen && <ResetPassword id={id} onClose={() => setPwOpen(false)} />}
     </div>

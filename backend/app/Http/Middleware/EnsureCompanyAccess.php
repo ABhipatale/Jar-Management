@@ -17,7 +17,12 @@ class EnsureCompanyAccess
     public function handle(Request $request, Closure $next): Response
     {
         $user = $request->user();
-        if ($reason = self::blockReason($user)) {
+        $reason = self::blockReason($user);
+        // An expired plan only closes the app, not the plan & payment screen.
+        if ($reason === 'company_expired' && $request->routeIs('billing.*')) {
+            return $next($request);
+        }
+        if ($reason) {
             return response()->json(['message' => self::message($reason), 'code' => $reason], 403);
         }
 
@@ -48,7 +53,7 @@ class EnsureCompanyAccess
     {
         return match ($reason) {
             'company_suspended' => __('तुमच्या कंपनीचे खाते बंद केले आहे. कृपया सपोर्टशी संपर्क करा.'),
-            'company_expired' => __('तुमचा प्लॅन संपला आहे. पुन्हा सुरू करण्यासाठी कृपया सपोर्टशी संपर्क करा.'),
+            'company_expired' => __('तुमचा प्लॅन संपला आहे. पुढे वापरण्यासाठी कृपया प्लॅन निवडून पेमेंट करा.'),
             'no_company' => __('हे खाते कोणत्याही कंपनीशी जोडलेले नाही.'),
             default => __('हे खाते बंद केले आहे.'),
         };

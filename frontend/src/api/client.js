@@ -54,9 +54,15 @@ export function setUnauthorizedHandler(fn) {
   onUnauthorized = fn;
 }
 
+// The company's plan ran out while the app was open: switch to the plans screen.
+let onExpired = () => {};
+export function setExpiredHandler(fn) {
+  onExpired = fn;
+}
+
 // 403 with one of these codes = the company was suspended / expired or the user disabled
 // while logged in: log out and show the reason on the login screen.
-const BLOCKED = ['company_suspended', 'company_expired', 'user_inactive', 'no_company'];
+const BLOCKED = ['company_suspended', 'user_inactive', 'no_company'];
 const REASON_KEY = 'rws_logout_reason';
 
 export function takeLogoutReason() {
@@ -82,6 +88,9 @@ api.interceptors.response.use(
         /* ignore */
       }
       onUnauthorized();
+    }
+    if (err.response?.status === 403 && err.response.data?.code === 'company_expired') {
+      onExpired();
     }
     return Promise.reject(err);
   }

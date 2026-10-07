@@ -203,7 +203,11 @@ class TenancyIsolationTest extends TestCase
         $user->company->update(['status' => Company::ACTIVE, 'expires_at' => now()->subDay()]);
         $this->app['auth']->forgetGuards();
         $this->getJson('/api/dashboard', ['X-Auth-Token' => $token])->assertForbidden()->assertJsonPath('code', 'company_expired');
-        $this->postJson('/api/login', ['login' => 'owner@b.in', 'password' => 'secret123'])->assertStatus(422);
+        // Expired (not suspended) still logs in, but only the plan & payment screen works.
+        $this->postJson('/api/login', ['login' => 'owner@b.in', 'password' => 'secret123'])->assertOk()
+            ->assertJsonPath('user.company.expired', true);
+        $this->app['auth']->forgetGuards();
+        $this->getJson('/api/billing', ['X-Auth-Token' => $token])->assertOk()->assertJsonPath('company.expired', true);
     }
 
     public function test_super_admin_cannot_use_the_business_api_directly(): void

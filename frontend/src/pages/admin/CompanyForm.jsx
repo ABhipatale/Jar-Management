@@ -5,9 +5,10 @@ import api, { errorMessage } from '../../api/client';
 import { ErrorBox, Field, Loader, PageHeader, Segmented } from '../../components/ui';
 import { useUi } from '../../context/UiContext';
 import { t } from '../../i18n';
+import { useApi } from '../../lib/useApi';
 
 const EMPTY = {
-  name: '', name_mr: '', short_name: '', slug: '', locale: 'mr', plan: '', expires_at: '',
+  name: '', name_mr: '', short_name: '', slug: '', locale: 'mr', plan_id: '', expires_at: '',
   owner_name: '', owner_email: '', owner_mobile: '', owner_password: '',
 };
 
@@ -21,6 +22,7 @@ export default function CompanyForm() {
   const [loading, setLoading] = useState(editing);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const plans = useApi('/admin/plans').data?.data || [];
 
   useEffect(() => {
     if (!editing) return;
@@ -45,7 +47,7 @@ export default function CompanyForm() {
     setError('');
     const company = {
       name: form.name, name_mr: form.name_mr || null, short_name: form.short_name || null, slug: form.slug || null,
-      locale: form.locale, plan: form.plan || null, expires_at: form.expires_at || null,
+      locale: form.locale, plan_id: form.plan_id ? Number(form.plan_id) : null, expires_at: form.expires_at || null,
     };
     try {
       const { data } = editing
@@ -120,7 +122,14 @@ export default function CompanyForm() {
         <h2 className="font-semibold text-ink">{t('adm.section.plan')}</h2>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label={t('adm.f.plan')}>
-            <input className="input" value={form.plan} onChange={set('plan')} placeholder={t('adm.f.planPh')} maxLength={40} />
+            <select className="input" value={form.plan_id} onChange={set('plan_id')}>
+              <option value="">—</option>
+              {plans.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name} · ₹{p.price}/{p.interval === 'year' ? t('bill.year') : t('bill.month')}
+                </option>
+              ))}
+            </select>
           </Field>
           <Field label={t('adm.f.expires')} hint={t('adm.f.expiresHint')}>
             <input className="input" type="date" value={form.expires_at} onChange={set('expires_at')} />

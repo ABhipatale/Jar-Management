@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -24,7 +25,7 @@ class Company extends Model
 
     protected $fillable = [
         'name', 'name_mr', 'short_name', 'slug', 'locale',
-        'status', 'plan', 'expires_at', 'assets_version',
+        'status', 'plan', 'plan_id', 'expires_at', 'assets_version',
     ];
 
     protected function casts(): array
@@ -38,6 +39,11 @@ class Company extends Model
     public function users(): HasMany
     {
         return $this->hasMany(User::class);
+    }
+
+    public function currentPlan(): BelongsTo
+    {
+        return $this->belongsTo(Plan::class, 'plan_id')->withTrashed();
     }
 
     public function isExpired(): bool

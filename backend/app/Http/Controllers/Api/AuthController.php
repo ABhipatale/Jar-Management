@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Middleware\EnsureCompanyAccess;
 use App\Http\Requests\LoginRequest;
 use App\Models\User;
+use App\Services\BillingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
@@ -26,8 +27,10 @@ class AuthController extends Controller
             throw ValidationException::withMessages(['login' => __('ईमेल/मोबाईल किंवा पासवर्ड चुकीचा आहे.')]);
         }
 
-        // Suspended/expired company or disabled user: say why instead of logging in.
-        if (! $user->isSuperAdmin() && ($reason = EnsureCompanyAccess::blockReason($user))) {
+        // Suspended company or disabled user: say why instead of logging in. An expired plan
+        // still logs in: the app then shows only the plans, so the company can pay.
+        $reason = $user->isSuperAdmin() ? null : EnsureCompanyAccess::blockReason($user);
+        if ($reason && $reason !== 'company_expired') {
             throw ValidationException::withMessages(['login' => EnsureCompanyAccess::message($reason)]);
         }
         if ($user->isSuperAdmin() && ! $user->is_active) {
@@ -64,6 +67,9 @@ class AuthController extends Controller
                 'plan' => $company->plan,
                 // The app shows a "please pay" banner during the last days before this date.
                 'expires_at' => $company->expires_at?->toDateString(),
+                'expired' => $company->isExpired(),
+                // Auto-pay is on: no "please pay" reminders needed.
+                'auto_renew' => app(BillingService::class)->renewing($company->id) !== null,
             ] : null,
         ];
     }

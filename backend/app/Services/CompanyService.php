@@ -28,6 +28,7 @@ class CompanyService
                 'slug' => $this->uniqueSlug($data['slug'] ?? null ?: $data['name']),
                 'locale' => $data['locale'] ?? 'mr',
                 'plan' => $data['plan'] ?? null,
+                'plan_id' => $data['plan_id'] ?? null,
                 'expires_at' => $data['expires_at'] ?? null,
                 'status' => Company::ACTIVE,
             ]);

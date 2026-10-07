@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { AlertTriangle, ArrowDownRight, ArrowUpRight, ChevronLeft, Inbox, Minus, Phone, Plus, RotateCw, X } from 'lucide-react';
 import { t } from '../i18n';
 import { businessName, businessPlace, money } from '../lib/format';
+import { SUPPORT_PHONE } from '../lib/support';
 import { Sparkline } from './charts';
 
 /* ────────────────────────────────────────────────────────────────────────────
@@ -354,8 +355,8 @@ export function DevCredit({ className = '' }) {
       <span>
         {t('common.devBy')} <span className="font-semibold text-slate-500">AB Technology Services</span>
       </span>
-      <a href="tel:7666287015" className="inline-flex items-center gap-1 font-medium text-slate-500 hover:text-ink">
-        <Phone size={12} /> 7666287015
+      <a href={`tel:${SUPPORT_PHONE}`} className="inline-flex items-center gap-1 font-medium text-slate-500 hover:text-ink">
+        <Phone size={12} /> {SUPPORT_PHONE}
       </a>
     </div>
   );

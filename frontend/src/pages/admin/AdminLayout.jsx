@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { Building2, History, LogOut, ShieldCheck } from 'lucide-react';
+import { Building2, CreditCard, History, LogOut, ShieldCheck } from 'lucide-react';
 import { DevCredit } from '../../components/ui';
 import { useAuth } from '../../context/AuthContext';
 import { t } from '../../i18n';
@@ -7,6 +7,7 @@ import { brandName, logoSrc, useBranding } from '../../lib/branding';
 
 const NAV = [
   { to: '/admin', label: t('adm.companies'), icon: Building2, end: true },
+  { to: '/admin/plans', label: t('plans.title'), icon: CreditCard },
   { to: '/admin/audit', label: t('adm.audit'), icon: History },
 ];
 

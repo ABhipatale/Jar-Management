@@ -27,7 +27,7 @@ class SuperAdminTest extends TestCase
     private function createCompany(array $x = [])
     {
         return $this->postJson('/api/admin/companies', $x + [
-            'name' => 'Raj Water', 'name_mr' => 'राज वॉटर', 'plan' => 'monthly', 'expires_at' => now()->addMonth()->toDateString(),
+            'name' => 'Raj Water', 'name_mr' => 'राज वॉटर', 'plan_id' => \App\Models\Plan::where('interval', 'month')->value('id'), 'expires_at' => now()->addMonth()->toDateString(),
             'owner_name' => 'Raj', 'owner_email' => 'Raj@Water.in', 'owner_mobile' => '9822001122', 'owner_password' => 'raj12345',
         ]);
     }

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Droplets, ImagePlus, KeyRound, Languages, LogOut, MessageCircle, MessageSquareText, Palette, Save, Sparkles, Store, Trash2 } from 'lucide-react';
+import { ChevronRight, CreditCard, Droplets, ImagePlus, KeyRound, Languages, LogOut, MessageCircle, MessageSquareText, Palette, Save, Sparkles, Store, Trash2 } from 'lucide-react';
 import api, { errorMessage } from '../api/client';
 import { ThemeSwitch } from '../components/Layout';
 import { Field, Loader, PageHeader, Segmented } from '../components/ui';
@@ -7,7 +7,9 @@ import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext';
 import { useUi } from '../context/UiContext';
 import { LANGS, lang, setLang, t, tx } from '../i18n';
+import { Link } from 'react-router-dom';
 import { logoSrc } from '../lib/branding';
+import { fmtDate } from '../lib/format';
 import { DEFAULT_TEMPLATES, getWaApp, setWaApp } from '../lib/whatsapp';
 
 const TEMPLATES = [
@@ -146,6 +148,18 @@ export default function Settings() {
 
       <form onSubmit={save} className="space-y-5">
         <h2 className="section-title pt-1">{t('set.secShop')}</h2>
+        <Link to="/billing" className="card card-hover flex items-center gap-3">
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-emerald-50 text-emerald-700">
+            <CreditCard size={18} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="font-semibold text-ink">{t('bill.title')}</div>
+            <div className="text-sm text-muted">
+              {user?.company?.expires_at ? t('bill.activeTill', { date: fmtDate(user.company.expires_at) }) : t('bill.noPlan')}
+            </div>
+          </div>
+          <ChevronRight size={18} className="shrink-0 text-slate-400" />
+        </Link>
         <Section icon={Sparkles} tone="bg-amber-50 text-amber-700" title={t('brand.title')} hint={t('brand.hint')}>
           <div className="flex flex-wrap items-center gap-4">
             <img

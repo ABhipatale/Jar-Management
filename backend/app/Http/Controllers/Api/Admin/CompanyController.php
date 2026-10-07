@@ -5,10 +5,13 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Controller;
 use App\Models\AdminAuditLog;
+use App\Models\BillingPayment;
 use App\Models\Company;
 use App\Models\Customer;
 use App\Models\JarTransaction;
+use App\Models\Plan;
 use App\Models\User;
+use App\Services\BillingService;
 use App\Services\BrandingService;
 use App\Services\CompanyService;
 use App\Services\IconService;
@@ -75,7 +78,7 @@ class CompanyController extends Controller
             'owner_password' => ['required', Password::min(6)],
         ], $this->messages());
 
-        $company = $this->companies->create($data);
+        $company = $this->companies->create($this->withPlanName($data));
         $this->audit($request, $company, 'company.created');
 
         return response()->json(['message' => __('कंपनी नोंदवली.'), 'data' => $this->detail($company)], 201);
@@ -87,7 +90,7 @@ class CompanyController extends Controller
         if (array_key_exists('slug', $data)) {
             $data['slug'] = $this->companies->uniqueSlug($data['slug'] ?: $data['name'] ?? $company->name, $company->id);
         }
-        $company->update($data);
+        $company->update($this->withPlanName($data));
         $this->audit($request, $company, 'company.updated', array_keys($data));
 
         return response()->json(['message' => __('कंपनी बदलली.'), 'data' => $this->detail($company)]);
@@ -187,6 +190,16 @@ class CompanyController extends Controller
         ]);
     }
 
+    /** The chosen plan's name is also kept on the company (shown in lists). */
+    private function withPlanName(array $data): array
+    {
+        if (array_key_exists('plan_id', $data)) {
+            $data['plan'] = $data['plan_id'] ? Plan::withTrashed()->find($data['plan_id'])?->name : null;
+        }
+
+        return $data;
+    }
+
     private function owner(Company $company): User
     {
         return User::where('company_id', $company->id)->where('role', User::OWNER)->orderBy('id')->firstOrFail();
@@ -202,7 +215,7 @@ class CompanyController extends Controller
             'short_name' => ['sometimes', 'nullable', 'string', 'max:40'],
             'slug' => ['sometimes', 'nullable', 'alpha_dash:ascii', 'max:60'],
             'locale' => ['sometimes', Rule::in(['mr', 'en'])],
-            'plan' => ['sometimes', 'nullable', 'string', 'max:40'],
+            'plan_id' => ['sometimes', 'nullable', 'integer', Rule::exists('plans', 'id')->whereNull('deleted_at')],
             'expires_at' => ['sometimes', 'nullable', 'date'],
         ];
     }
@@ -220,7 +233,7 @@ class CompanyController extends Controller
 
     private function present(Company $c, array $extra = []): array
     {
-        return $c->only('id', 'name', 'name_mr', 'short_name', 'slug', 'locale', 'status', 'plan') + [
+        return $c->only('id', 'name', 'name_mr', 'short_name', 'slug', 'locale', 'status', 'plan', 'plan_id') + [
             'expires_at' => $c->expires_at?->toDateString(),
             'expired' => $c->isExpired(),
             'created_at' => $c->created_at?->toDateString(),
@@ -238,6 +251,17 @@ class CompanyController extends Controller
             'jar_entries' => JarTransaction::withoutGlobalScope('company')->where('company_id', $company->id)->count(),
             'last_activity_at' => JarTransaction::withoutGlobalScope('company')->where('company_id', $company->id)->max('created_at'),
             'branding' => $this->branding->forCompany($company),
+            'auto_renew' => app(BillingService::class)->renewing($company->id)?->plan?->name,
+            'payments' => BillingPayment::withoutGlobalScope('company')->with('plan:id,name')
+                ->where('company_id', $company->id)->latest('id')->limit(24)->get()
+                ->map(fn (BillingPayment $p) => [
+                    'id' => $p->id,
+                    'date' => $p->created_at->toDateString(),
+                    'plan' => $p->plan?->name,
+                    'amount' => $p->amount,
+                    'razorpay_payment_id' => $p->razorpay_payment_id,
+                    'period_end' => $p->period_end?->toDateString(),
+                ]),
         ]);
     }
 }
