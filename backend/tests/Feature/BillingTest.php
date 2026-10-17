@@ -94,6 +94,20 @@ class BillingTest extends TestCase
         $this->assertSame(2, BillingPayment::count());
     }
 
+    public function test_price_changed_by_super_admin_is_charged_on_the_next_payment(): void
+    {
+        $this->keys();
+        $plan = $this->monthly();
+        Sanctum::actingAs(User::factory()->superAdmin()->create());
+        $this->putJson("/api/admin/plans/{$plan->id}", ['price' => 299])->assertOk();
+
+        Sanctum::actingAs($this->owner);
+        $this->assertSame(299, (int) collect($this->getJson('/api/billing')->json('plans'))->firstWhere('id', $plan->id)['price']);
+        $this->postJson('/api/billing/order', ['plan_id' => $plan->id])->assertOk()->assertJsonPath('amount', 29900);
+        $this->pay('order_RZP1', 'pay_1')->assertOk();
+        $this->assertSame(299.0, BillingPayment::first()->amount);
+    }
+
     public function test_bad_signature_does_not_extend(): void
     {
         $this->keys();
