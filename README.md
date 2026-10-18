@@ -128,6 +128,6 @@ Local development without Vercel works as before: run `php artisan serve` for th
 ## Notes
 
 - **Name and logo** of each company are set in **Settings → Branding** (or by the super admin). They are used in the header, reports, print/PDF, Excel, WhatsApp messages, phone notifications and the installed app. Companies without a logo use the default water-drop icon in `frontend/public/icons`.
-- Developed by **AB Technology Services** · 7666287015.
+- Developed by **AB Technology Services** · 96 89 03 03 01 · abnexa.in.
 - **PDF export** uses the browser's print dialog ("Save as PDF"). Marathi names print correctly this way, whereas JavaScript PDF libraries garble Devanagari unless fonts are embedded.
 - **Jar stock** is one row per jar in the `jars` table, even in quantity mode. This gives exact totals and dated damaged/lost counts for the monthly report.

@@ -7,7 +7,7 @@ import { useUi } from '../context/UiContext';
 import { lang, t } from '../i18n';
 import { daysUntil, fmtDate, money } from '../lib/format';
 import { payWithRazorpay } from '../lib/razorpay';
-import { SUPPORT_PHONE } from '../lib/support';
+import { SUPPORT_PHONE, SUPPORT_PHONE_DISPLAY } from '../lib/support';
 import { useApi } from '../lib/useApi';
 
 const planName = (p) => (lang === 'mr' ? p.name_mr || p.name : p.name);
@@ -77,7 +77,7 @@ export default function Billing({ locked = false }) {
           <div>
             <div className="font-semibold">{t('bill.soon')}</div>
             <a href={`tel:${SUPPORT_PHONE}`} className="mt-1 inline-flex items-center gap-1.5 font-semibold underline-offset-2 hover:underline">
-              <Phone size={14} /> {t('bill.callSupport', { phone: SUPPORT_PHONE })}
+              <Phone size={14} /> {t('bill.callSupport', { phone: SUPPORT_PHONE_DISPLAY })}
             </a>
           </div>
         </div>
