@@ -1,0 +1,29 @@
+# Hostinger: React app (static files) + Laravel API (/api/*, /up) on one domain.
+Options -MultiViews -Indexes
+DirectoryIndex index.html
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Pass the login token through to Laravel.
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # API -> Laravel
+    RewriteRule ^(api|up)(/.*)?$ index.php [L]
+
+    # Real files and folders (JS, CSS, icons, sw.js …) are served as they are.
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # Every other path is a screen of the React app.
+    RewriteRule ^ index.html [L]
+</IfModule>
+
+<IfModule mod_headers.c>
+    # Always check for a new version of the app shell and service worker.
+    <FilesMatch "^(index\.html|sw\.js|registerSW\.js|push-sw\.js|manifest\.webmanifest)$">
+        Header set Cache-Control "no-cache"
+    </FilesMatch>
+</IfModule>
