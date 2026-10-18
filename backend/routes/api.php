@@ -41,6 +41,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // Super-admin panel: manage the companies using the platform.
 Route::middleware(['auth:sanctum', 'super.admin'])->prefix('admin')->controller(AdminCompanyController::class)->group(function () {
+    Route::get('/overview', 'overview');
     Route::get('/companies', 'index');
     Route::post('/companies', 'store');
     Route::get('/companies/{company}', 'show');

@@ -9,7 +9,7 @@ import { useUi } from '../../context/UiContext';
 import { t } from '../../i18n';
 import { fmtDate, today } from '../../lib/format';
 import { useApi } from '../../lib/useApi';
-import { StatusBadge } from './common';
+import { PlanPill, StatusBadge } from './common';
 
 function addMonths(iso, months) {
   const d = new Date(`${iso}T00:00:00`);
@@ -75,7 +75,7 @@ export default function CompanyDetail() {
   const remove = async () => {
     const ok = await confirm({ message: t('adm.deleteConfirm', { name }), confirmText: t('adm.delete'), danger: true });
     if (!ok) return;
-    if (await run(() => api.delete(`/admin/companies/${id}`))) navigate('/admin', { replace: true });
+    if (await run(() => api.delete(`/admin/companies/${id}`))) navigate('/admin/companies', { replace: true });
   };
 
   const loginAs = async () => {
@@ -94,7 +94,7 @@ export default function CompanyDetail() {
       <PageHeader
         title={name}
         subtitle={c.name_mr ? c.name : `/${c.slug}`}
-        back="/admin"
+        back="/admin/companies"
         right={
           <Link to={`/admin/companies/${id}/edit`} className="btn-light">
             <Pencil size={16} /> <span className="hidden sm:inline">{t('adm.editCompany')}</span>
@@ -102,26 +102,34 @@ export default function CompanyDetail() {
         }
       />
 
-      <div className="card flex flex-wrap items-center gap-4">
-        <img
-          src={c.branding?.logo_url || defaultLogo}
-          alt=""
-          className="h-16 w-16 rounded-xl bg-white object-contain ring-1 ring-line"
-        />
-        <div className="min-w-0 flex-1 space-y-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <StatusBadge company={c} />
-            {c.plan && <span className="text-sm text-muted">{t('adm.plan')}: {c.plan}</span>}
+      <div className="admin-hero relative overflow-hidden rounded-2xl p-5 text-white shadow-pop">
+        <div className="pointer-events-none absolute -right-8 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" aria-hidden="true" />
+        <div className="relative flex flex-wrap items-center gap-4">
+          <img
+            src={c.branding?.logo_url || defaultLogo}
+            alt=""
+            className="h-16 w-16 rounded-2xl bg-white object-contain p-1 shadow-lg ring-4 ring-white/20"
+          />
+          <div className="min-w-0 flex-1 space-y-1.5">
+            <div className="flex flex-wrap items-center gap-2">
+              <StatusBadge company={c} />
+              <PlanPill company={c} />
+              {c.plan && <span className="text-sm text-white/80">{t('adm.plan')}: {c.plan}</span>}
+            </div>
+            <div className="text-sm text-white/80">
+              {t('adm.expires')}: <span className="font-semibold text-white">{c.expires_at ? fmtDate(c.expires_at) : t('adm.noExpiry')}</span>
+              {' · '}
+              {t('adm.created')}: {fmtDate(c.created_at)}
+            </div>
           </div>
-          <div className="text-sm text-muted">
-            {t('adm.expires')}: <span className="font-medium text-ink">{c.expires_at ? fmtDate(c.expires_at) : t('adm.noExpiry')}</span>
-            {' · '}
-            {t('adm.created')}: {fmtDate(c.created_at)}
-          </div>
+          <button
+            className="btn-on-hero"
+            onClick={loginAs}
+            disabled={busy || c.status !== 'active' || c.expired}
+          >
+            <LogIn size={18} /> {t('adm.loginAs')}
+          </button>
         </div>
-        <button className="btn-primary" onClick={loginAs} disabled={busy || c.status !== 'active' || c.expired}>
-          <LogIn size={18} /> {t('adm.loginAs')}
-        </button>
       </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">

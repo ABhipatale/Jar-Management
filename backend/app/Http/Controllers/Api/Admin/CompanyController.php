@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AdminAuditLog;
 use App\Models\BillingPayment;
 use App\Models\Company;
+use App\Models\CompanyAsset;
 use App\Models\Customer;
 use App\Models\JarTransaction;
 use App\Models\Plan;
@@ -50,13 +51,49 @@ class CompanyController extends Controller
         $lastActivity = JarTransaction::withoutGlobalScope('company')->whereIn('company_id', $ids)
             ->groupBy('company_id')->selectRaw('company_id, MAX(created_at) AS t')->pluck('t', 'company_id');
         $owners = User::whereIn('company_id', $ids)->where('role', User::OWNER)->orderBy('id')->get()->keyBy('company_id');
+        $logos = CompanyAsset::whereIn('company_id', $ids)->where('kind', 'logo')->pluck('company_id')->flip();
 
         return response()->json(['data' => $list->map(fn (Company $c) => $this->present($c, [
             'users' => (int) ($users[$c->id] ?? 0),
             'customers' => (int) ($customers[$c->id] ?? 0),
             'last_activity_at' => $lastActivity[$c->id] ?? null,
             'owner' => $owners->get($c->id)?->only('id', 'name', 'email', 'mobile'),
+            'logo_url' => $logos->has($c->id) ? "/api/companies/{$c->slug}/icons/logo.png?v={$c->assets_version}" : null,
         ]))]);
+    }
+
+    /** Dashboard numbers: plan revenue (this month, last 6 months) and the latest payments. */
+    public function overview()
+    {
+        $payments = BillingPayment::withoutGlobalScope('company');
+        $start = now()->startOfMonth()->subMonths(5);
+        $byMonth = (clone $payments)->where('created_at', '>=', $start)->get(['amount', 'created_at'])
+            ->groupBy(fn (BillingPayment $p) => $p->created_at->format('Y-m'))->map->sum('amount');
+
+        $months = collect(range(0, 5))->map(function (int $i) use ($start, $byMonth) {
+            $m = $start->copy()->addMonths($i);
+
+            return ['month' => $m->format('Y-m'), 'amount' => (float) ($byMonth[$m->format('Y-m')] ?? 0)];
+        });
+
+        return response()->json([
+            'revenue' => [
+                'total' => (float) (clone $payments)->sum('amount'),
+                'this_month' => $months->last()['amount'],
+                'last_month' => $months[4]['amount'],
+                'payments' => (clone $payments)->count(),
+                'months' => $months->values(),
+            ],
+            'customers' => Customer::withoutGlobalScope('company')->whereNull('deleted_at')->count(),
+            'recent_payments' => (clone $payments)->with(['plan:id,name', 'company:id,name,name_mr'])->latest('id')->limit(6)->get()
+                ->map(fn (BillingPayment $p) => [
+                    'id' => $p->id,
+                    'date' => $p->created_at->toDateString(),
+                    'amount' => $p->amount,
+                    'plan' => $p->plan?->name,
+                    'company' => $p->company ? ['id' => $p->company->id, 'name' => $p->company->name_mr ?: $p->company->name] : null,
+                ]),
+        ]);
     }
 
     public function show(Company $company)

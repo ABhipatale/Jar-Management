@@ -24,6 +24,7 @@ import UdhariReport from './pages/reports/UdhariReport';
 import PendingReport from './pages/reports/PendingReport';
 import JarStatusReport from './pages/reports/JarStatusReport';
 import AdminLayout from './pages/admin/AdminLayout';
+import AdminDashboard from './pages/admin/Dashboard';
 import Companies from './pages/admin/Companies';
 import CompanyForm from './pages/admin/CompanyForm';
 import CompanyDetail from './pages/admin/CompanyDetail';
@@ -48,7 +49,8 @@ export default function App() {
     return (
       <Routes>
         <Route path="admin" element={<AdminLayout />}>
-          <Route index element={<Companies />} />
+          <Route index element={<AdminDashboard />} />
+          <Route path="companies" element={<Companies />} />
           <Route path="companies/new" element={<CompanyForm />} />
           <Route path="companies/:id" element={<CompanyDetail />} />
           <Route path="companies/:id/edit" element={<CompanyForm />} />

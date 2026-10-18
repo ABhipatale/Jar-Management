@@ -70,7 +70,7 @@ export default function CompanyForm() {
 
   return (
     <form onSubmit={submit} className="mx-auto max-w-2xl space-y-4">
-      <PageHeader title={editing ? t('adm.editCompany') : t('adm.newCompany')} back={editing ? `/admin/companies/${id}` : '/admin'} />
+      <PageHeader title={editing ? t('adm.editCompany') : t('adm.newCompany')} back={editing ? `/admin/companies/${id}` : '/admin/companies'} />
 
       <section className="card space-y-4">
         <h2 className="font-semibold text-ink">{t('adm.section.company')}</h2>

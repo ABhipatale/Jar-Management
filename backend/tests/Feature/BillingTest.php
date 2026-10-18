@@ -165,6 +165,25 @@ class BillingTest extends TestCase
         $this->getJson('/api/admin/plans')->assertJsonCount(2, 'data');
     }
 
+    public function test_super_admin_overview_shows_plan_revenue(): void
+    {
+        $this->keys();
+        $this->postJson('/api/billing/order', ['plan_id' => $this->monthly()->id]);
+        $this->pay('order_RZP1', 'pay_1')->assertOk();
+
+        Sanctum::actingAs(User::factory()->superAdmin()->create());
+        $res = $this->getJson('/api/admin/overview')->assertOk()
+            ->assertJsonPath('revenue.payments', 1)
+            ->assertJsonPath('recent_payments.0.plan', 'Monthly')
+            ->assertJsonCount(6, 'revenue.months');
+        $this->assertEquals(250, $res->json('revenue.this_month'));
+        $this->assertEquals(250, $res->json('revenue.total'));
+        $this->assertSame('2026-10', $res->json('revenue.months.5.month'));
+
+        Sanctum::actingAs($this->owner);
+        $this->getJson('/api/admin/overview')->assertForbidden();
+    }
+
     public function test_company_users_cannot_manage_plans(): void
     {
         $this->postJson('/api/admin/plans', ['name' => 'Free', 'price' => 1, 'interval' => 'month'])->assertForbidden();

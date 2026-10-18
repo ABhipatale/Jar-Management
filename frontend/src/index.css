@@ -236,3 +236,26 @@ input[type="date"]::-webkit-calendar-picker-indicator { opacity: 0.6; cursor: po
 }
 .btn-glow:hover { filter: brightness(1.06); }
 .login-input { @apply h-12 rounded-xl bg-surface-2 pl-11 text-[15px] focus:bg-surface; }
+
+/* ───────────── Super-admin panel ─────────────
+   Deep sidebar (same in light and dark mode) and a brand-gradient banner. */
+.admin-sidebar {
+  background:
+    radial-gradient(120% 40% at 0% 0%, color-mix(in oklab, var(--brand) 38%, transparent) 0%, transparent 70%),
+    radial-gradient(90% 30% at 100% 100%, color-mix(in oklab, #0ea5e9 18%, transparent) 0%, transparent 70%),
+    #0b1020;
+}
+.admin-nav-link { @apply flex items-center gap-3 rounded-xl px-3 py-2.5 text-[14px] font-medium text-white/70 transition hover:bg-white/5 hover:text-white; }
+.admin-nav-link.active { @apply bg-white/10 text-white shadow-[inset_0_0_0_1px_rgb(255_255_255/0.08)]; }
+.admin-nav-link.active .admin-nav-icon { background: linear-gradient(135deg, var(--color-brand-500), #0ea5e9); color: #fff; }
+.admin-nav-icon { @apply grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-white/5 text-white/70 transition; }
+/* White button on the dark/brand surfaces; fixed colours, so dark mode's palette remap does not touch them. */
+.btn-on-hero { @apply btn bg-white shadow-soft hover:bg-white/90; color: #1d3fbf; }
+.btn-on-hero-ghost { @apply btn bg-white/10 text-white ring-1 ring-white/25 hover:bg-white/20; }
+.admin-hero {
+  background:
+    radial-gradient(80% 120% at 100% 0%, color-mix(in oklab, #38bdf8 40%, transparent) 0%, transparent 60%),
+    radial-gradient(60% 90% at 0% 100%, color-mix(in oklab, #22d3ee 22%, transparent) 0%, transparent 70%),
+    linear-gradient(135deg, color-mix(in oklab, var(--brand) 70%, black) 0%, var(--brand) 55%, color-mix(in oklab, var(--brand) 55%, #0ea5e9) 100%);
+}
+.admin-glass { @apply rounded-xl bg-white/10 ring-1 ring-white/15 backdrop-blur-sm; }

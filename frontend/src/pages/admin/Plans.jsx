@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AlertTriangle, CreditCard, Pencil, Plus, Trash2 } from 'lucide-react';
+import { AlertTriangle, Building2, CalendarDays, CreditCard, Crown, Pencil, Plus, Trash2 } from 'lucide-react';
 import api, { errorMessage } from '../../api/client';
 import { Badge, Empty, ErrorBox, Field, Loader, Modal, PageHeader, Segmented } from '../../components/ui';
 import { useUi } from '../../context/UiContext';
@@ -52,31 +52,46 @@ export default function Plans() {
       {plans.length === 0 ? (
         <Empty icon={CreditCard}>{t('plans.empty')}</Empty>
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {plans.map((p) => (
-            <div key={p.id} className={`card flex flex-col gap-2 ${p.is_active ? '' : 'opacity-70'}`}>
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <div className="truncate font-semibold text-ink">{p.name}</div>
-                  {p.name_mr && <div className="truncate text-sm text-muted">{p.name_mr}</div>}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {plans.map((p) => {
+            const yearly = p.interval === 'year';
+            return (
+              <div
+                key={p.id}
+                className={`relative flex flex-col overflow-hidden rounded-2xl bg-surface shadow-soft ring-1 transition hover:shadow-pop ${yearly ? 'ring-2 ring-brand-500' : 'ring-line'} ${p.is_active ? '' : 'opacity-70'}`}
+              >
+                <div className={`flex items-start justify-between gap-2 px-5 pb-4 pt-5 ${yearly ? 'admin-hero text-white' : 'bg-surface-2'}`}>
+                  <div className="min-w-0">
+                    <div className={`flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide ${yearly ? 'text-white/80' : 'text-muted'}`}>
+                      {yearly ? <Crown size={14} aria-hidden="true" /> : <CalendarDays size={14} aria-hidden="true" />}
+                      {yearly ? t('plans.yearly') : t('plans.monthly')}
+                    </div>
+                    <div className={`mt-1 truncate text-lg font-semibold ${yearly ? 'text-white' : 'text-ink'}`}>{p.name}</div>
+                    {p.name_mr && <div className={`truncate text-sm ${yearly ? 'text-white/80' : 'text-muted'}`}>{p.name_mr}</div>}
+                  </div>
+                  {p.is_active ? <Badge kind="active">{t('plans.active')}</Badge> : <Badge kind="inactive">{t('plans.hidden')}</Badge>}
                 </div>
-                {p.is_active ? <Badge kind="active">{t('plans.active')}</Badge> : <Badge kind="inactive">{t('plans.hidden')}</Badge>}
+                <div className="flex flex-1 flex-col gap-3 px-5 py-4">
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-4xl font-bold tracking-tight text-ink tabular-nums">{money(p.price)}</span>
+                    <span className="text-sm font-medium text-muted">/ {yearly ? t('bill.year') : t('bill.month')}</span>
+                  </div>
+                  {p.description && <p className="text-sm text-muted">{p.description}</p>}
+                  <div className="inline-flex w-fit items-center gap-1.5 rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700">
+                    <Building2 size={13} aria-hidden="true" /> {t('plans.companies', { n: p.companies })}
+                  </div>
+                  <div className="mt-auto flex gap-2 pt-2">
+                    <button className="btn-light btn-sm flex-1" onClick={() => setEditing(p)}>
+                      <Pencil size={14} /> {t('plans.edit')}
+                    </button>
+                    <button className="btn-light btn-sm text-red-600" onClick={() => remove(p)} aria-label={t('plans.delete')}>
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
               </div>
-              <div className="text-2xl font-bold tracking-tight text-ink">
-                {money(p.price)} <span className="text-sm font-medium text-muted">/ {p.interval === 'year' ? t('bill.year') : t('bill.month')}</span>
-              </div>
-              {p.description && <p className="text-sm text-muted">{p.description}</p>}
-              <div className="text-xs text-muted">{t('plans.companies', { n: p.companies })}</div>
-              <div className="mt-auto flex gap-2 pt-2">
-                <button className="btn-light btn-sm flex-1" onClick={() => setEditing(p)}>
-                  <Pencil size={14} /> {t('plans.edit')}
-                </button>
-                <button className="btn-light btn-sm text-red-600" onClick={() => remove(p)} aria-label={t('plans.delete')}>
-                  <Trash2 size={14} />
-                </button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
       <p className="text-xs text-muted">{t('plans.priceNote')}</p>
