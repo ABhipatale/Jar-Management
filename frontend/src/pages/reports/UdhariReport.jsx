@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { CircleCheck, Clock, HandCoins, Users } from 'lucide-react';
 import ExportBar from '../../components/ExportBar';
 import RangeFilter, { initialRange } from '../../components/RangeFilter';
@@ -78,9 +79,13 @@ export default function UdhariReport() {
                   <tbody>
                     {sort.rows.map((r) => (
                       <tr key={r.customer_id}>
-                        <td className="font-medium">{r.name}</td>
-                        <td className="num text-amber-700">{money(r.udhari)}</td>
-                        <td className="num text-emerald-700">{money(r.payments)}</td>
+                        <td>
+                          <Link to={`/customers/${r.customer_id}`} className="font-semibold text-ink hover:text-brand-700 transition-colors">
+                            {r.name}
+                          </Link>
+                        </td>
+                        <td className="num font-semibold text-amber-700 dark:text-amber-400">{money(r.udhari)}</td>
+                        <td className="num font-semibold text-emerald-700 dark:text-emerald-400">{money(r.payments)}</td>
                         <td className="num"><PendingText amount={r.pending_amount} /></td>
                       </tr>
                     ))}

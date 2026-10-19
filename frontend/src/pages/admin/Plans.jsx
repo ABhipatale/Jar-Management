@@ -43,7 +43,7 @@ export default function Plans() {
       />
 
       {!data.payments_enabled && (
-        <div className="flex items-start gap-3 rounded-xl bg-amber-50 p-4 text-sm text-amber-900 ring-1 ring-amber-200">
+        <div className="flex items-start gap-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 p-4 text-sm text-amber-900 dark:text-amber-200 ring-1 ring-amber-200 dark:ring-amber-900/40">
           <AlertTriangle size={18} className="mt-0.5 shrink-0" />
           <span>{t('plans.noKeys')}</span>
         </div>
@@ -77,14 +77,14 @@ export default function Plans() {
                     <span className="text-sm font-medium text-muted">/ {yearly ? t('bill.year') : t('bill.month')}</span>
                   </div>
                   {p.description && <p className="text-sm text-muted">{p.description}</p>}
-                  <div className="inline-flex w-fit items-center gap-1.5 rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700">
+                  <div className="inline-flex w-fit items-center gap-1.5 rounded-full bg-brand-50 dark:bg-brand-950/40 px-2.5 py-1 text-xs font-semibold text-brand-700 dark:text-brand-300">
                     <Building2 size={13} aria-hidden="true" /> {t('plans.companies', { n: p.companies })}
                   </div>
                   <div className="mt-auto flex gap-2 pt-2">
                     <button className="btn-light btn-sm flex-1" onClick={() => setEditing(p)}>
                       <Pencil size={14} /> {t('plans.edit')}
                     </button>
-                    <button className="btn-light btn-sm text-red-600" onClick={() => remove(p)} aria-label={t('plans.delete')}>
+                    <button className="btn-light btn-sm text-red-600 dark:text-red-400" onClick={() => remove(p)} aria-label={t('plans.delete')}>
                       <Trash2 size={14} />
                     </button>
                   </div>

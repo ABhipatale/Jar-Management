@@ -108,13 +108,13 @@ export default function JarStatusReport() {
                   <tbody>
                     {sort.rows.map((r) => (
                       <tr key={r.customer_id}>
-                        <td className="font-medium">
-                          <Link to={`/customers/${r.customer_id}`} className="hover:text-brand-700 hover:underline">
+                        <td>
+                          <Link to={`/customers/${r.customer_id}`} className="font-semibold text-ink hover:text-brand-700 transition-colors">
                             {r.name}
                           </Link>
                         </td>
                         <td className="text-muted tabular-nums">{r.mobile}</td>
-                        <td className="num text-base font-semibold text-brand-700">{r.current_jars}</td>
+                        <td className="num text-base font-bold text-brand-700 dark:text-brand-300">{r.current_jars}</td>
                         <td className="num"><PendingText amount={r.pending_amount} /></td>
                       </tr>
                     ))}

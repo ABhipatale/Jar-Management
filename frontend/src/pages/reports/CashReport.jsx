@@ -117,14 +117,14 @@ export default function CashReport() {
                   <tbody>
                     {sort.rows.map((d) => (
                       <tr key={d.date}>
-                        <td>{fmtDate(d.date)}</td>
+                        <td className="font-medium text-ink tabular-nums">{fmtDate(d.date)}</td>
                         <td className="num">{money(d.entry_cash)}</td>
                         <td className="num">{money(d.payments_cash)}</td>
-                        <td className="num font-semibold text-emerald-700">{money(d.cash)}</td>
+                        <td className="num font-semibold text-emerald-700 dark:text-emerald-400">{money(d.cash)}</td>
                         <td className="num">{money(d.upi)}</td>
                         <td className="num">{money(d.bank)}</td>
-                        <td className="num text-red-600">{money(d.expenses)}</td>
-                        <td className="num font-semibold">{money(d.net_cash)}</td>
+                        <td className="num font-semibold text-red-600 dark:text-red-400">{money(d.expenses)}</td>
+                        <td className="num font-semibold text-ink">{money(d.net_cash)}</td>
                       </tr>
                     ))}
                   </tbody>

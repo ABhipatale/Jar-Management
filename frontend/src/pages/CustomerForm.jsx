@@ -17,7 +17,7 @@ const req = (key) => (
 function WithIcon({ icon: I, children }) {
   return (
     <span className="relative block">
-      <I size={17} className="pointer-events-none absolute left-3 top-3.5 text-slate-400" aria-hidden="true" />
+      <I size={17} className="pointer-events-none absolute left-3 top-3.5 text-muted" aria-hidden="true" />
       {children}
     </span>
   );
@@ -70,7 +70,7 @@ export default function CustomerForm() {
 
       <section className="card space-y-4 sm:!p-6">
         <div className="flex items-center gap-3 border-b border-line pb-4">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-brand-50 text-[15px] font-semibold text-brand-700">
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-brand-50 dark:bg-brand-950/40 text-[16px] font-bold text-brand-700 dark:text-brand-300 ring-1 ring-brand-500/20 shadow-xs">
             {form.name.trim() ? form.name.trim().charAt(0).toUpperCase() : <UserPlus size={18} />}
           </span>
           <div className="min-w-0">
@@ -110,7 +110,7 @@ export default function CustomerForm() {
       </section>
 
       {error && (
-        <div className="flex animate-fade-in items-start gap-2.5 rounded-lg bg-red-50 p-3 text-sm font-medium text-red-700 ring-1 ring-red-200" role="alert">
+        <div className="flex animate-fade-in items-start gap-2.5 rounded-xl bg-red-50 dark:bg-red-950/30 p-3.5 text-sm font-medium text-red-700 dark:text-red-400 ring-1 ring-red-200 dark:ring-red-900/40" role="alert">
           <AlertTriangle size={17} className="mt-0.5 shrink-0" />
           <span>{error}</span>
         </div>
@@ -120,7 +120,7 @@ export default function CustomerForm() {
         <button type="button" className="btn-light sm:w-auto" onClick={() => navigate(-1)}>
           {t('common.cancel')}
         </button>
-        <button className="btn-primary w-full py-3.5 text-base sm:w-auto sm:px-6 sm:py-2.5" disabled={busy}>
+        <button className="btn-primary btn-glow w-full py-3.5 text-base sm:w-auto sm:px-7 sm:py-2.5" disabled={busy}>
           <Save size={18} /> {busy ? t('common.saving') : editing ? t('cust.saveChanges') : t('cust.add')}
         </button>
       </div>

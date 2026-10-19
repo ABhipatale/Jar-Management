@@ -51,13 +51,18 @@ export function CompanyAvatar({ company, size = 'h-11 w-11', text = 'text-base' 
 export function PlanPill({ company }) {
   if (!company.expires_at) {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
+      <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-xs font-semibold text-slate-600 dark:text-slate-300">
         <Forever size={13} aria-hidden="true" /> {t('adm.noExpiry')}
       </span>
     );
   }
   const days = daysUntil(company.expires_at);
-  const cls = days < 1 ? 'bg-red-50 text-red-700' : days <= 7 ? 'bg-amber-50 text-amber-800' : 'bg-emerald-50 text-emerald-700';
+  const cls =
+    days < 1
+      ? 'bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 ring-1 ring-red-200 dark:ring-red-900/40'
+      : days <= 7
+        ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-400 ring-1 ring-amber-200 dark:ring-amber-900/40'
+        : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 ring-1 ring-emerald-200 dark:ring-emerald-900/40';
   return (
     <span className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold tabular-nums ${cls}`}>
       <CalendarClock size={13} aria-hidden="true" />

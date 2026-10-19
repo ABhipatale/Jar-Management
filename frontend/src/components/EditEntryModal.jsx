@@ -97,11 +97,11 @@ export default function EditEntryModal({ kind, id, onClose, onSaved }) {
         <Loader />
       ) : (
         <div className="space-y-4">
-          <div className="flex items-center gap-3 rounded-lg bg-surface-2 px-3 py-2.5 ring-1 ring-inset ring-line">
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-50 text-brand-700">
+          <div className="flex items-center gap-3 rounded-xl bg-surface-2 px-3.5 py-2.5 ring-1 ring-inset ring-line">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand-50 dark:bg-brand-950/40 text-brand-700 dark:text-brand-300 ring-1 ring-brand-500/20">
               <UserRound size={18} />
             </span>
-            <span className="min-w-0 truncate font-medium text-ink">{rec.customer_name}</span>
+            <span className="min-w-0 truncate font-semibold text-ink">{rec.customer_name}</span>
           </div>
 
           {kind === 'jar' ? (
@@ -146,7 +146,7 @@ export default function EditEntryModal({ kind, id, onClose, onSaved }) {
                       />
                     </Field>
                     <Field group label={t('edit.udhariAuto')}>
-                      <div className={`input font-semibold tabular-nums ${amount - paid > 0 ? '!border-amber-300 !bg-amber-50 text-amber-800' : '!bg-surface-2'}`}>{money(round2(amount - paid))}</div>
+                      <div className={`input font-semibold tabular-nums ${amount - paid > 0 ? '!border-amber-300 !bg-amber-50 dark:!bg-amber-950/30 text-amber-800 dark:text-amber-300' : '!bg-surface-2'}`}>{money(round2(amount - paid))}</div>
                     </Field>
                   </div>
                   <Field label={t('edit.advance')}>
@@ -173,7 +173,7 @@ export default function EditEntryModal({ kind, id, onClose, onSaved }) {
                   { value: 'bank', label: t('edit.bank'), icon: Landmark },
                 ]}
               />
-              <label className="flex cursor-pointer items-center gap-3 rounded-lg bg-teal-50 px-3 py-2.5 text-sm font-medium text-teal-800 ring-1 ring-inset ring-teal-600/20">
+              <label className="flex cursor-pointer items-center gap-3 rounded-xl bg-teal-50 dark:bg-teal-950/30 px-3.5 py-3 text-sm font-medium text-teal-800 dark:text-teal-200 ring-1 ring-inset ring-teal-600/20">
                 <input type="checkbox" className="h-5 w-5 accent-teal-700" checked={form.is_advance} onChange={(e) => set('is_advance')(e.target.checked)} />
                 {t('edit.isAdvance')}
               </label>
@@ -188,7 +188,7 @@ export default function EditEntryModal({ kind, id, onClose, onSaved }) {
             <button type="button" className="btn-light" onClick={onClose}>
               {t('edit.cancel')}
             </button>
-            <button type="button" className="btn-primary" disabled={busy} onClick={save}>
+            <button type="button" className="btn-primary btn-glow" disabled={busy} onClick={save}>
               {!busy && <CheckCircle2 size={18} />}
               {busy ? t('edit.saving') : t('edit.save')}
             </button>

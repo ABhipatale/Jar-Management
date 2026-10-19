@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   AlertTriangle,
   ArrowDownLeft,
@@ -171,13 +172,17 @@ export default function PeriodReport({ kind }) {
                   <tbody>
                     {sort.rows.map((r) => (
                       <tr key={r.customer_id}>
-                        <td className="font-medium">{r.name}</td>
+                        <td>
+                          <Link to={`/customers/${r.customer_id}`} className="font-semibold text-ink hover:text-brand-700 transition-colors">
+                            {r.name}
+                          </Link>
+                        </td>
                         <td className="num">{r.given}</td>
                         <td className="num">{r.returned}</td>
-                        <td className="num font-semibold">{r.current_jars}</td>
+                        <td className="num font-semibold text-ink">{r.current_jars}</td>
                         <td className="num">{money(r.amount)}</td>
-                        <td className="num text-emerald-700">{money(r.paid_total)}</td>
-                        <td className="num text-amber-700">{money(r.udhari)}</td>
+                        <td className="num font-semibold text-emerald-700 dark:text-emerald-400">{money(r.paid_total)}</td>
+                        <td className="num font-semibold text-amber-700 dark:text-amber-400">{money(r.udhari)}</td>
                         <td className="num"><PendingText amount={r.pending_amount} /></td>
                       </tr>
                     ))}

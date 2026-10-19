@@ -39,12 +39,12 @@ export default function PendingReport() {
         <>
           <ExportBar onExcel={() => exportExcel(`${t('rep.pending.file')}-${today()}`, t('rep.pending.sheet'), cols, rows, [businessName(settings), t('rep.pending.titleLine', { date: fmtDate(today()) }), t('rep.pending.totalLine', { total: data.total })])} />
 
-          <div className="card flex items-center gap-3 !bg-red-50 !ring-red-200">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-red-100 text-red-600">
-              <Clock size={20} />
+          <div className="card flex items-center gap-3.5 !bg-red-50/80 dark:!bg-red-950/30 !ring-red-200 dark:!ring-red-900/40 p-4 sm:p-5">
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400">
+              <Clock size={22} />
             </span>
-            <span className="min-w-0 flex-1 text-sm font-medium text-red-700">{t('rep.pending.totalPending', { n: rows.length })}</span>
-            <span className="shrink-0 text-2xl font-semibold tracking-tight text-red-700 tabular-nums">{money(data.total)}</span>
+            <span className="min-w-0 flex-1 text-sm font-semibold text-red-700 dark:text-red-300">{t('rep.pending.totalPending', { n: rows.length })}</span>
+            <span className="shrink-0 text-2xl sm:text-3xl font-bold tracking-tight text-red-700 dark:text-red-400 tabular-nums">{money(data.total)}</span>
           </div>
 
           {rows.length === 0 && (
@@ -54,11 +54,11 @@ export default function PendingReport() {
             {rows.map((r) => (
               <div key={r.customer_id} className="card space-y-3 !py-3.5">
                 <div className="flex items-start gap-3">
-                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-50 text-sm font-semibold text-brand-700">
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-50 dark:bg-brand-950/40 text-[15px] font-bold text-brand-700 dark:text-brand-300 ring-1 ring-brand-500/20">
                     {(r.name || '?').charAt(0).toUpperCase()}
                   </span>
                   <Link to={`/customers/${r.customer_id}`} className="min-w-0 flex-1">
-                    <div className="truncate font-semibold text-ink hover:text-brand-700">{r.name}</div>
+                    <div className="truncate font-semibold text-ink hover:text-brand-700 transition-colors">{r.name}</div>
                     <div className="flex flex-wrap items-center gap-x-1.5 text-sm text-muted">
                       <span className="tabular-nums">{r.mobile}</span>
                       <span aria-hidden="true">·</span>
@@ -66,11 +66,11 @@ export default function PendingReport() {
                         <Droplets size={13} /> {t('rep.pending.jars', { n: r.current_jars })}
                       </span>
                     </div>
-                    <div className="mt-0.5 text-xs text-slate-400">{t('rep.pending.lastPaymentLine', { date: r.last_payment_date ? fmtDate(r.last_payment_date) : t('rep.pending.never') })}</div>
+                    <div className="mt-0.5 text-xs text-muted">{t('rep.pending.lastPaymentLine', { date: r.last_payment_date ? fmtDate(r.last_payment_date) : t('rep.pending.never') })}</div>
                   </Link>
-                  <div className="shrink-0 text-lg font-semibold tabular-nums text-red-600">{money(r.pending_amount)}</div>
+                  <div className="shrink-0 text-lg font-bold tabular-nums text-red-600 dark:text-red-400">{money(r.pending_amount)}</div>
                 </div>
-                <div className="no-print flex items-center gap-2 sm:pl-12">
+                <div className="no-print flex items-center gap-2 sm:pl-13">
                   <button className="btn-wa btn-sm h-9 min-w-0 flex-1 whitespace-nowrap" onClick={() => openWhatsApp(r.mobile, messages.reminder(settings, r))}>
                     <MessageCircle size={16} className="shrink-0" /> <span className="truncate">{t('rep.pending.remindBtn')}</span>
                   </button>

@@ -34,13 +34,13 @@ export default function LedgerTable({ rows, onEdit, flush = false }) {
         </thead>
         <tbody>
           {rows.map((r) => (
-            <tr key={r.id} className={r.entry_type === 'payment' ? 'bg-emerald-50/40' : ''}>
+            <tr key={r.id} className={r.entry_type === 'payment' ? 'bg-emerald-50/50 dark:bg-emerald-950/25' : ''}>
               <td>
                 <div className="flex items-center gap-2">
                   {onEdit && (
                     <button
                       type="button"
-                      className="icon-btn no-print -my-1 -ml-1.5 h-7 w-7"
+                      className="icon-btn no-print -my-1 -ml-1.5 h-7 w-7 text-muted hover:text-brand-600"
                       onClick={() => onEdit(r.payment_id ? { kind: 'payment', id: r.payment_id } : { kind: 'jar', id: r.jar_transaction_id })}
                       aria-label={t('edit.button')}
                       title={t('edit.button')}
@@ -48,7 +48,7 @@ export default function LedgerTable({ rows, onEdit, flush = false }) {
                       <Pencil size={14} />
                     </button>
                   )}
-                  <span className="tabular-nums">{fmtDate(r.entry_date)}</span>
+                  <span className="tabular-nums font-medium text-ink">{fmtDate(r.entry_date)}</span>
                   {r.entry_type === 'payment' && <Badge kind="cash">{t('ledger.payment')}</Badge>}
                 </div>
               </td>
@@ -56,10 +56,10 @@ export default function LedgerTable({ rows, onEdit, flush = false }) {
               <td className="num">{r.jars_returned || dash}</td>
               <td className="num">{r.entry_type === 'payment' ? dash : r.net_jars}</td>
               <td className="num">{r.amount ? money(r.amount) : dash}</td>
-              <td className="num text-emerald-700">{r.paid ? money(r.paid) : dash}</td>
-              <td className="num text-amber-700">{r.udhari ? money(r.udhari) : dash}</td>
-              <td className={`num font-semibold ${r.balance > 0 ? 'text-red-600' : 'text-emerald-700'}`}>{money(r.balance)}</td>
-              <td className="num font-medium">{r.jar_balance}</td>
+              <td className="num font-semibold text-emerald-700 dark:text-emerald-400">{r.paid ? money(r.paid) : dash}</td>
+              <td className="num font-semibold text-amber-700 dark:text-amber-400">{r.udhari ? money(r.udhari) : dash}</td>
+              <td className={`num font-semibold ${r.balance > 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-700 dark:text-emerald-400'}`}>{money(r.balance)}</td>
+              <td className="num font-semibold text-ink">{r.jar_balance}</td>
             </tr>
           ))}
         </tbody>

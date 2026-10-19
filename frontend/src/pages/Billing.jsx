@@ -51,12 +51,12 @@ export default function Billing({ locked = false }) {
       {!locked && <PageHeader title={t('bill.title')} back />}
 
       {/* Current status */}
-      <div className={`card flex items-start gap-3 ${company.expired ? 'ring-red-200' : ''}`}>
-        <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${company.expired ? 'bg-red-50 text-red-600' : 'bg-emerald-50 text-emerald-700'}`}>
-          {company.expired ? <CalendarClock size={20} /> : <BadgeCheck size={20} />}
+      <div className={`card flex items-start gap-3.5 ${company.expired ? 'ring-red-200 dark:ring-red-900/40 bg-red-50/50 dark:bg-red-950/20' : ''}`}>
+        <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl ${company.expired ? 'bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400' : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400'}`}>
+          {company.expired ? <CalendarClock size={22} /> : <BadgeCheck size={22} />}
         </span>
         <div className="min-w-0 flex-1">
-          <div className="font-semibold text-ink">
+          <div className="text-base font-semibold text-ink">
             {company.expired
               ? t('bill.expiredOn', { date: fmtDate(company.expires_at) })
               : company.expires_at
@@ -72,7 +72,7 @@ export default function Billing({ locked = false }) {
       </div>
 
       {!enabled && (
-        <div className="flex items-start gap-3 rounded-xl bg-amber-50 p-4 text-sm text-amber-900 ring-1 ring-amber-200">
+        <div className="flex items-start gap-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 p-4 text-sm text-amber-900 dark:text-amber-200 ring-1 ring-amber-200 dark:ring-amber-900/40">
           <Sparkles size={18} className="mt-0.5 shrink-0" />
           <div>
             <div className="font-semibold">{t('bill.soon')}</div>
@@ -91,30 +91,30 @@ export default function Billing({ locked = false }) {
           return (
             <div
               key={p.id}
-              className={`relative flex flex-col rounded-2xl bg-surface p-5 shadow-soft ring-1 ${yearly ? 'ring-2 ring-brand-500' : 'ring-line'}`}
+              className={`relative flex flex-col rounded-2xl bg-surface p-6 shadow-soft ring-1 transition-all ${yearly ? 'ring-2 ring-brand-500 shadow-md shadow-brand-500/10' : 'ring-line'}`}
             >
               {yearly && save > 0 && (
-                <span className="absolute -top-3 left-5 inline-flex items-center gap-1 rounded-full bg-brand-600 px-3 py-1 text-xs font-semibold text-white shadow-soft">
+                <span className="absolute -top-3 left-6 inline-flex items-center gap-1 rounded-full bg-brand-600 px-3.5 py-1 text-xs font-bold text-white shadow-soft">
                   <Crown size={13} /> {t('bill.bestValue')}
                 </span>
               )}
-              <div className="text-sm font-semibold uppercase tracking-wide text-muted">{planName(p)}</div>
+              <div className="text-xs font-bold uppercase tracking-wider text-muted">{planName(p)}</div>
               <div className="mt-2 flex items-baseline gap-1">
-                <span className="text-4xl font-bold tracking-tight text-ink">{money(p.price)}</span>
-                <span className="text-sm text-muted">/ {yearly ? t('bill.year') : t('bill.month')}</span>
+                <span className="text-4xl font-extrabold tracking-tight text-ink">{money(p.price)}</span>
+                <span className="text-sm font-medium text-muted">/ {yearly ? t('bill.year') : t('bill.month')}</span>
               </div>
               {yearly && monthly && <div className="mt-1 text-sm text-muted">{t('bill.perMonth', { amount: money(Math.round(p.price / 12)) })}</div>}
-              {save > 0 && <div className="mt-2 text-sm font-semibold text-emerald-700">{t('bill.save', { amount: money(save) })}</div>}
+              {save > 0 && <div className="mt-2 text-sm font-semibold text-emerald-700 dark:text-emerald-400">{t('bill.save', { amount: money(save) })}</div>}
               {p.description && <p className="mt-3 text-sm text-muted">{p.description}</p>}
-              <ul className="mt-4 space-y-1.5 text-sm text-ink">
+              <ul className="mt-4 space-y-2 text-sm text-ink">
                 {['bill.f1', 'bill.f2', 'bill.f3'].map((k) => (
                   <li key={k} className="flex items-center gap-2">
-                    <CheckCircle2 size={16} className="shrink-0 text-emerald-600" /> {t(k, { interval: yearly ? t('bill.year') : t('bill.month') })}
+                    <CheckCircle2 size={16} className="shrink-0 text-emerald-600 dark:text-emerald-400" /> {t(k, { interval: yearly ? t('bill.year') : t('bill.month') })}
                   </li>
                 ))}
               </ul>
               <button
-                className={`mt-5 w-full ${yearly ? 'btn-primary' : 'btn-light'}`}
+                className={`mt-6 w-full ${yearly ? 'btn-primary btn-glow' : 'btn-light'}`}
                 onClick={() => buy(p)}
                 disabled={!enabled || busy !== null}
               >

@@ -165,7 +165,11 @@ export default function PaymentForm() {
           </div>
         </Field>
         {previous > 0 && (
-          <button type="button" className="chip" onClick={() => setAmount(String(previous))}>
+          <button
+            type="button"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-brand-50 dark:bg-brand-950/40 px-3 py-1.5 text-xs font-semibold text-brand-700 dark:text-brand-300 ring-1 ring-inset ring-brand-500/20 hover:bg-brand-100 transition-colors"
+            onClick={() => setAmount(String(previous))}
+          >
             <ArrowDownLeft size={14} /> {t('pay.fullPending', { amount: money(previous) })}
           </button>
         )}
@@ -182,7 +186,7 @@ export default function PaymentForm() {
           />
         </Field>
         {overPaying && paid > 0 && (
-          <label className="flex cursor-pointer items-start gap-3 rounded-lg bg-teal-50 p-3 text-sm text-teal-800 ring-1 ring-inset ring-teal-600/20">
+          <label className="flex cursor-pointer items-start gap-3 rounded-xl bg-teal-50 dark:bg-teal-950/30 p-3.5 text-sm text-teal-800 dark:text-teal-200 ring-1 ring-inset ring-teal-600/20">
             <input type="checkbox" className="mt-0.5 h-5 w-5 shrink-0 accent-teal-700" checked={isAdvance} onChange={(e) => setIsAdvance(e.target.checked)} />
             <span className="leading-relaxed">
               <b className="font-semibold">{t('pay.advancePayment')}</b> {t('pay.advanceNote', { amount: money(paid - Math.max(previous, 0)) })}
@@ -195,14 +199,14 @@ export default function PaymentForm() {
       </section>
 
       {error && (
-        <div className="flex items-start gap-2.5 rounded-lg bg-red-50 px-3 py-2.5 text-sm text-red-700 ring-1 ring-inset ring-red-200" role="alert">
+        <div className="flex animate-fade-in items-start gap-2.5 rounded-xl bg-red-50 dark:bg-red-950/30 p-3.5 text-sm font-medium text-red-700 dark:text-red-400 ring-1 ring-inset ring-red-200 dark:ring-red-900/40" role="alert">
           <AlertTriangle size={16} className="mt-0.5 shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
       <div className="no-print sticky-above-nav sticky z-20">
-        <button className="btn w-full bg-emerald-600 py-4 text-base text-white shadow-pop ring-4 ring-app hover:bg-emerald-700" disabled={busy}>
+        <button className="btn-glow w-full rounded-2xl bg-emerald-600 py-3.5 text-base font-semibold text-white shadow-lg shadow-emerald-600/25 ring-4 ring-app hover:bg-emerald-700 active:scale-[0.99] transition-all" disabled={busy}>
           {!busy && <CheckCircle2 size={20} />}
           {busy ? t('entry.saving') : t('pay.save', { amount: paid > 0 ? money(paid) : '' }).trim()}
         </button>
@@ -213,19 +217,19 @@ export default function PaymentForm() {
 
 const TILE_TONES = {
   neutral: 'text-ink',
-  red: 'text-red-600',
-  amber: 'text-amber-800',
-  green: 'text-emerald-700',
+  red: 'text-red-600 dark:text-red-400',
+  amber: 'text-amber-800 dark:text-amber-400',
+  green: 'text-emerald-700 dark:text-emerald-400',
 };
 
 function Tile({ icon, label, value, tone = 'neutral' }) {
   return (
-    <div className="rounded-lg bg-surface-2 p-3 ring-1 ring-inset ring-line">
+    <div className="rounded-xl bg-surface-2 p-3.5 ring-1 ring-inset ring-line">
       <div className="flex items-center gap-1.5 text-xs font-medium text-muted">
         <Icon icon={icon} size={14} />
         <span className="truncate">{label}</span>
       </div>
-      <div className={`mt-1 truncate text-lg font-semibold tabular-nums ${TILE_TONES[tone]}`}>{value}</div>
+      <div className={`mt-1 truncate text-lg font-bold tabular-nums ${TILE_TONES[tone]}`}>{value}</div>
     </div>
   );
 }

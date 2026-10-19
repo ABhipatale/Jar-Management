@@ -50,14 +50,14 @@ export default function CustomerPicker({ value, onChange, placeholder = t('cust.
 
   if (selected && !open) {
     return (
-      <div className="flex animate-fade-in items-center gap-3 rounded-xl bg-brand-50 px-3 py-2.5 ring-1 ring-inset ring-brand-500/40">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-surface text-[15px] font-semibold text-brand-700 ring-1 ring-brand-500/20">
+      <div className="flex animate-fade-in items-center gap-3 rounded-xl bg-brand-50/70 dark:bg-brand-950/40 px-3.5 py-2.5 ring-1 ring-inset ring-brand-500/30">
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-surface text-[15px] font-bold text-brand-700 dark:text-brand-300 ring-1 ring-brand-500/20 shadow-xs">
           {selected.name.charAt(0).toUpperCase()}
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
             <span className="truncate font-semibold text-ink">{selected.name}</span>
-            <Check size={15} className="shrink-0 text-brand-600" aria-hidden="true" />
+            <Check size={15} className="shrink-0 text-brand-600 dark:text-brand-400" aria-hidden="true" />
           </div>
           <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-sm text-muted">
             <span className="inline-flex items-center gap-1 tabular-nums">
@@ -101,7 +101,7 @@ export default function CustomerPicker({ value, onChange, placeholder = t('cust.
         aria-hidden="true"
       />
       {open && (
-        <div className="absolute z-40 mt-1.5 max-h-72 w-full animate-pop-in overflow-y-auto rounded-xl bg-surface p-1 shadow-pop ring-1 ring-line" role="listbox">
+        <div className="absolute z-40 mt-1.5 max-h-72 w-full animate-pop-in overflow-y-auto rounded-2xl bg-surface p-1.5 shadow-pop ring-1 ring-line backdrop-blur-md" role="listbox">
           {matches.length === 0 && (
             <div className="flex flex-col items-center gap-2 px-4 py-6 text-center text-sm text-muted">
               <Search size={18} className="text-slate-400" aria-hidden="true" />
@@ -116,10 +116,10 @@ export default function CustomerPicker({ value, onChange, placeholder = t('cust.
                 role="option"
                 aria-selected={isSel}
                 key={c.id}
-                className={`flex w-full items-center gap-3 rounded-lg px-2.5 py-2.5 text-left transition hover:bg-surface-2 ${isSel ? 'bg-brand-50' : ''}`}
+                className={`flex w-full items-center gap-3 rounded-xl px-2.5 py-2.5 text-left transition hover:bg-surface-2 ${isSel ? 'bg-brand-50/80 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 ring-1 ring-brand-500/20' : ''}`}
                 onClick={() => { onChange(c.id, c); setOpen(false); setQ(''); }}
               >
-                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-50 text-sm font-semibold text-brand-700">
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand-50 dark:bg-brand-950/50 text-sm font-bold text-brand-700 dark:text-brand-300">
                   {c.name.charAt(0).toUpperCase()}
                 </span>
                 <span className="min-w-0 flex-1">
