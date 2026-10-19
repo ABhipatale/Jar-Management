@@ -38,7 +38,7 @@
   --color-slate-50: #131722;
   --color-slate-100: #181e2b;
   --color-slate-200: #232a3c;
-  --color-slate-300: #2f384f;
+  --color-slate-300: #cbd5e1;
   --color-slate-400: #64748b;
   --color-slate-500: #94a3b8;
   --color-slate-600: #cbd5e1;
@@ -164,7 +164,7 @@ input[type="date"]::-webkit-calendar-picker-indicator { opacity: 0.65; cursor: p
 
   /* Form controls */
   .label {
-    @apply mb-1.5 block text-[13.5px] font-semibold tracking-[-0.01em] text-slate-700 dark:text-slate-300;
+    @apply mb-1.5 block text-[13.5px] font-semibold tracking-[-0.01em] text-slate-700 dark:text-slate-700;
   }
   .input {
     @apply w-full rounded-xl border border-line-strong bg-surface px-3.5 py-2.5 text-[15px] text-ink shadow-[0_1px_2px_rgb(15_23_42/0.03)] outline-none transition placeholder:text-slate-400 hover:border-slate-400 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 disabled:bg-surface-2 disabled:text-muted disabled:shadow-none;
@@ -178,7 +178,7 @@ input[type="date"]::-webkit-calendar-picker-indicator { opacity: 0.65; cursor: p
     @apply btn bg-surface text-ink shadow-[0_1px_2px_rgb(15_23_42/0.04)] ring-1 ring-line-strong hover:bg-surface-2 hover:ring-slate-400 active:bg-surface-2;
   }
   .btn-ghost {
-    @apply btn text-slate-700 hover:bg-surface-2 dark:text-slate-300;
+    @apply btn text-slate-700 hover:bg-surface-2 dark:text-slate-700;
   }
   .btn-danger {
     @apply btn bg-red-600 text-white shadow-[0_2px_4px_rgb(239_68_68/0.25)] hover:bg-red-500;
@@ -190,12 +190,12 @@ input[type="date"]::-webkit-calendar-picker-indicator { opacity: 0.65; cursor: p
     @apply gap-1.5 rounded-lg px-3 py-1.5 text-[13.5px];
   }
   .icon-btn {
-    @apply grid h-9 w-9 place-items-center rounded-xl text-slate-600 transition hover:bg-surface-2 hover:text-ink active:scale-95 dark:text-slate-300;
+    @apply grid h-9 w-9 place-items-center rounded-xl text-slate-600 transition hover:bg-surface-2 hover:text-ink active:scale-95 dark:text-slate-600 dark:hover:text-ink;
   }
 
   /* Filter chips */
   .chip {
-    @apply inline-flex shrink-0 items-center gap-1.5 rounded-full bg-surface px-3.5 py-1.5 text-xs font-semibold tracking-[-0.01em] text-slate-700 shadow-[0_1px_2px_rgb(15_23_42/0.03)] ring-1 ring-line-strong transition hover:bg-surface-2 active:scale-95 dark:text-slate-300;
+    @apply inline-flex shrink-0 items-center gap-1.5 rounded-full bg-surface px-3.5 py-1.5 text-xs font-semibold tracking-[-0.01em] text-slate-700 shadow-[0_1px_2px_rgb(15_23_42/0.03)] ring-1 ring-line-strong transition hover:bg-surface-2 active:scale-95 dark:text-slate-700;
   }
   .chip-active {
     @apply bg-ink text-surface ring-ink hover:bg-ink dark:bg-brand-600 dark:text-white dark:ring-brand-600;

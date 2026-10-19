@@ -342,7 +342,7 @@ export default function Layout() {
             <nav className="flex-1 space-y-4 overflow-y-auto p-3.5">
               {GROUPS.map((g, gi) => (
                 <div key={gi}>
-                  {g.title && <div className="mb-1 px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400">{g.title}</div>}
+                  {g.title && <div className="mb-1 px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">{g.title}</div>}
                   <div className="space-y-1">
                     {g.items.map((it) => (
                       <SideLink key={it.to} item={it} badge={it.badge ? unread : 0} />
@@ -405,7 +405,7 @@ function SummaryButton({ collapsed = false, onDone }) {
       disabled={busy}
       title={collapsed ? t('dash.sendSummary') : undefined}
       aria-label={collapsed ? t('dash.sendSummary') : undefined}
-      className={`flex w-full items-center gap-3 rounded-lg px-2.5 py-2.5 text-sm font-semibold text-[#128c4a] ring-1 ring-[#1fae55]/25 transition hover:bg-[#1fae55]/10 disabled:opacity-60 ${collapsed ? 'justify-center' : ''}`}
+      className={`flex w-full items-center gap-3 rounded-lg px-2.5 py-2.5 text-sm font-semibold text-[#128c4a] ring-1 ring-[#1fae55]/25 transition hover:bg-[#1fae55]/10 disabled:opacity-60 dark:text-emerald-400 dark:ring-emerald-500/30 dark:hover:bg-emerald-500/10 ${collapsed ? 'justify-center' : ''}`}
     >
       {busy ? (
         <span className="h-[18px] w-[18px] shrink-0 animate-spin rounded-full border-2 border-current/30 border-t-current" aria-hidden="true" />
@@ -428,7 +428,7 @@ function SideLink({ item, collapsed = false, badge = 0 }) {
         `group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-[14px] font-medium transition-all duration-150 ${collapsed ? 'justify-center px-2' : ''} ${
           isActive
             ? 'bg-brand-50 text-brand-700 font-semibold shadow-xs ring-1 ring-brand-500/15 dark:bg-brand-500/15 dark:text-brand-300 dark:ring-brand-500/20'
-            : 'text-slate-600 hover:bg-surface-2 hover:text-ink active:scale-[0.98] dark:text-slate-300 dark:hover:text-white'
+            : 'text-slate-600 hover:bg-surface-2 hover:text-ink active:scale-[0.98] dark:text-slate-700 dark:hover:text-white'
         }`
       }
     >
