@@ -359,7 +359,12 @@ export default function DailyEntry() {
       </Section>
 
       <div className="no-print sticky-above-nav sticky z-20">
-        <button className={`${isGive ? 'btn-primary' : 'btn bg-sky-600 text-white hover:bg-sky-700'} w-full py-4 text-base shadow-pop ring-4 ring-app`} disabled={busy}>
+        <button
+          className={`${
+            isGive ? 'btn-primary' : 'btn bg-sky-600 text-white hover:bg-sky-500'
+          } w-full py-4 text-base font-bold shadow-[0_12px_28px_-6px_rgb(29_69_216/0.4)] ring-4 ring-app active:scale-[0.98]`}
+          disabled={busy}
+        >
           {!busy && <CheckCircle2 size={20} />}
           {busy ? t('entry.saving') : r > 0 ? t('entry.saveGiveReturn', { q, r }) : t(isGive ? 'entry.saveGive' : 'entry.saveReturn', { q })}
         </button>
@@ -369,16 +374,16 @@ export default function DailyEntry() {
 }
 
 const CALLOUT_TONES = {
-  neutral: 'bg-surface-2 text-slate-700 ring-line',
-  red: 'bg-red-50 text-red-700 ring-red-200',
-  green: 'bg-emerald-50 text-emerald-800 ring-emerald-200',
-  violet: 'bg-violet-50 text-violet-800 ring-violet-200',
+  neutral: 'bg-surface-2 text-slate-700 ring-line dark:text-slate-300',
+  red: 'bg-red-50 text-red-700 ring-red-200 dark:bg-red-950/40 dark:text-red-300 dark:ring-red-900/50',
+  green: 'bg-emerald-50 text-emerald-800 ring-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:ring-emerald-900/50',
+  violet: 'bg-violet-50 text-violet-800 ring-violet-200 dark:bg-violet-950/40 dark:text-violet-300 dark:ring-violet-900/50',
 };
 
 /** Subtle inline info line with an icon. */
 function Callout({ tone = 'neutral', icon, children }) {
   return (
-    <div className={`flex items-start gap-2.5 rounded-lg px-3 py-2.5 text-sm ring-1 ring-inset ${CALLOUT_TONES[tone]}`}>
+    <div className={`flex items-start gap-2.5 rounded-xl px-3.5 py-2.5 text-sm ring-1 ring-inset ${CALLOUT_TONES[tone]}`}>
       <Icon icon={icon} size={16} className="mt-0.5 shrink-0 opacity-80" />
       <div className="min-w-0 flex-1 leading-relaxed">{children}</div>
     </div>
@@ -388,7 +393,7 @@ function Callout({ tone = 'neutral', icon, children }) {
 /** Form card with a small uppercase section title. */
 function Section({ title, icon, children }) {
   return (
-    <section className="card space-y-4">
+    <section className="card space-y-4 shadow-soft ring-1 ring-line">
       <h2 className="section-title flex items-center gap-2">
         <Icon icon={icon} size={15} />
         {title}
@@ -408,21 +413,25 @@ function SavedCard({ result, settings, onNew }) {
 
   return (
     <div className="mx-auto max-w-2xl space-y-4">
-      <div className="card animate-pop-in overflow-hidden !p-0">
-        <div className={`flex items-center gap-3 px-4 py-4 ${result.queued ? 'bg-amber-50' : 'bg-emerald-50'}`}>
-          <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-full bg-surface ring-1 ${result.queued ? 'text-amber-700 ring-amber-200' : 'text-emerald-700 ring-emerald-200'}`}>
+      <div className="card animate-pop-in overflow-hidden !p-0 shadow-soft ring-1 ring-line">
+        <div className={`flex items-center gap-3.5 px-5 py-4 ${result.queued ? 'bg-amber-50 dark:bg-amber-950/40' : 'bg-emerald-50 dark:bg-emerald-950/40'}`}>
+          <span
+            className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-surface ring-1 shadow-xs ${
+              result.queued ? 'text-amber-700 ring-amber-200 dark:text-amber-300 dark:ring-amber-800' : 'text-emerald-700 ring-emerald-200 dark:text-emerald-300 dark:ring-emerald-800'
+            }`}
+          >
             {result.queued ? <CloudOff size={22} /> : <CheckCircle2 size={22} />}
           </span>
           <div className="min-w-0">
-            <h1 className="text-lg font-semibold text-ink">{result.queued ? t('entry.savedOnPhone') : t('entry.savedOk')}</h1>
+            <h1 className="text-lg font-bold text-ink">{result.queued ? t('entry.savedOnPhone') : t('entry.savedOk')}</h1>
             <p className="truncate text-sm text-muted">
               {result.customer_name} · {fmtDate(result.transaction_date)}
             </p>
-            {result.queued && <p className="text-sm text-amber-800">{t('entry.willSync')}</p>}
+            {result.queued && <p className="text-sm font-medium text-amber-800 dark:text-amber-300">{t('entry.willSync')}</p>}
           </div>
         </div>
 
-        <dl className="divide-y divide-line px-4 text-sm">
+        <dl className="divide-y divide-line px-5 text-sm">
           <Row label={t('entry.customer')} value={result.customer_name} />
           <Row label={isGive ? t('entry.given') : t('entry.returned')} value={t('entry.jarsN', { n: result.jar_quantity })} />
           {isGive && result.returned_quantity > 0 && <Row label={t('entry.takenBack')} value={t('entry.jarsN', { n: result.returned_quantity })} />}
@@ -441,14 +450,14 @@ function SavedCard({ result, settings, onNew }) {
             <>
               <Row label={t('entry.rateShort')} value={money(result.rate)} />
               <Row label={t('entry.total')} value={money(result.amount)} />
-              <Row label={t('entry.paid')} value={<span className="text-emerald-700">{money(result.paid_amount + result.advance_amount)}</span>} />
-              <Row label={t('entry.udhari')} value={<span className={result.udhari_amount > 0 ? 'text-amber-800' : ''}>{money(result.udhari_amount)}</span>} />
+              <Row label={t('entry.paid')} value={<span className="font-semibold text-emerald-700 dark:text-emerald-400">{money(result.paid_amount + result.advance_amount)}</span>} />
+              <Row label={t('entry.udhari')} value={<span className={result.udhari_amount > 0 ? 'font-semibold text-amber-800 dark:text-amber-300' : ''}>{money(result.udhari_amount)}</span>} />
             </>
           )}
         </dl>
 
         {!result.queued && (
-          <div className="grid grid-cols-2 gap-3 border-t border-line bg-surface-2 p-4">
+          <div className="grid grid-cols-2 gap-3 border-t border-line bg-surface-2/60 p-4">
             <Tile icon={Droplets} label={t('entry.currentJarsRow')} value={result.current_jars} />
             <Tile icon={Wallet} label={t('entry.totalPending')} value={money(result.pending_amount)} danger={result.pending_amount > 0} />
           </div>
@@ -456,7 +465,7 @@ function SavedCard({ result, settings, onNew }) {
       </div>
 
       {!result.queued && (
-        <button className="btn-wa w-full py-3.5 text-base" onClick={sendWa}>
+        <button className="btn-wa w-full py-3.5 text-base font-bold" onClick={sendWa}>
           <MessageCircle size={20} /> {t('entry.sendWaLbl')}
         </button>
       )}
@@ -479,11 +488,11 @@ function SavedCard({ result, settings, onNew }) {
 
 function Tile({ icon, label, value, danger }) {
   return (
-    <div className="rounded-lg bg-surface p-3 ring-1 ring-line">
-      <div className="flex items-center gap-1.5 text-xs font-medium text-muted">
+    <div className="rounded-xl bg-surface p-3.5 shadow-xs ring-1 ring-line">
+      <div className="flex items-center gap-1.5 text-xs font-semibold text-muted">
         <Icon icon={icon} size={14} /> {label}
       </div>
-      <div className={`mt-1 text-xl font-semibold tabular-nums ${danger ? 'text-red-600' : 'text-ink'}`}>{value}</div>
+      <div className={`mt-1 text-xl font-bold tabular-nums ${danger ? 'text-red-600 dark:text-red-400' : 'text-ink'}`}>{value}</div>
     </div>
   );
 }

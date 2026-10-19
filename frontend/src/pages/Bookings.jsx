@@ -87,45 +87,45 @@ export default function Bookings() {
                   {label} {!late && !isToday && date !== tomorrow ? '' : `· ${fmtDate(date)}`}
                 </span>
               </span>
-              <span className="shrink-0 rounded-md bg-slate-100 px-1.5 py-0.5 text-xs font-semibold normal-case tracking-normal text-slate-600 tabular-nums">
+              <span className="shrink-0 rounded-full bg-surface-2 px-2.5 py-0.5 text-xs font-bold text-muted ring-1 ring-line tabular-nums">
                 {t('book.dayTotal', { n: items.length, jars })}
               </span>
             </h2>
             <div className="grid gap-3 lg:grid-cols-2">
               {items.map((b) => (
-                <div key={b.id} className={`card !py-3.5 ${late ? '!ring-red-300' : isToday ? '!ring-amber-300' : ''}`}>
-                  <div className="flex items-start gap-3">
-                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-50 text-sm font-semibold text-brand-700">
+                <div key={b.id} className={`card !py-4 shadow-soft ring-1 ${late ? '!ring-red-400/50 bg-red-50/15 dark:bg-red-950/20' : isToday ? '!ring-amber-400/50 bg-amber-50/15 dark:bg-amber-950/20' : 'ring-line'}`}>
+                  <div className="flex items-start gap-3.5">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-brand-50 text-sm font-bold text-brand-700 ring-1 ring-brand-500/15 dark:bg-brand-500/15 dark:text-brand-300">
                       {(b.customer_name || '?').charAt(0).toUpperCase()}
                     </span>
                     <Link to={`/customers/${b.customer_id}`} className="min-w-0 flex-1">
-                      <div className="truncate font-semibold text-ink hover:text-brand-700">{b.customer_name}</div>
-                      <div className="flex flex-wrap items-center gap-x-1.5 text-xs text-muted">
-                        <span className="inline-flex items-center gap-1">
+                      <div className="truncate font-bold text-ink hover:text-brand-700 dark:hover:text-brand-400">{b.customer_name}</div>
+                      <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-xs text-muted">
+                        <span className="inline-flex items-center gap-1 font-medium">
                           <CalendarClock size={12} /> {fmtDate(b.delivery_date)}
                         </span>
                         {b.customer_mobile && (
                           <>
                             <span aria-hidden="true">·</span>
-                            <span className="inline-flex items-center gap-1 tabular-nums">
+                            <span className="inline-flex items-center gap-1 tabular-nums font-medium">
                               <Phone size={12} /> {b.customer_mobile}
                             </span>
                           </>
                         )}
                       </div>
                       {b.notes && (
-                        <div className="mt-1 flex items-start gap-1.5 text-sm text-slate-600">
-                          <StickyNote size={14} className="mt-0.5 shrink-0 text-slate-400" /> <span className="min-w-0">{b.notes}</span>
+                        <div className="mt-1.5 flex items-start gap-1.5 rounded-lg bg-surface-2/60 px-2.5 py-1 text-xs text-slate-600 dark:text-slate-300">
+                          <StickyNote size={13} className="mt-0.5 shrink-0 text-slate-400" /> <span className="min-w-0">{b.notes}</span>
                         </div>
                       )}
                     </Link>
                     <div className="shrink-0 text-right">
-                      <div className="text-2xl font-semibold leading-none tracking-tight text-brand-700 tabular-nums">{b.jar_quantity}</div>
-                      <div className="mt-1 text-xs font-medium text-muted">{t('book.jars')}</div>
+                      <div className="text-2xl font-bold leading-none tracking-tight text-brand-700 dark:text-brand-400 tabular-nums">{b.jar_quantity}</div>
+                      <div className="mt-1 text-xs font-semibold text-muted">{t('book.jars')}</div>
                     </div>
                   </div>
-                  <div className="mt-3 flex flex-wrap items-center justify-end gap-2 border-t border-line pt-3">
-                    <button className="btn-light btn-sm text-red-600" onClick={() => cancel(b)}>
+                  <div className="mt-3.5 flex flex-wrap items-center justify-end gap-2 border-t border-line pt-3">
+                    <button className="btn-light btn-sm text-red-600 font-semibold hover:!bg-red-50 dark:hover:!bg-red-950/30" onClick={() => cancel(b)}>
                       <X size={15} /> {t('book.ui.cancel')}
                     </button>
                     <button className="icon-btn" onClick={() => setEditing(b)} aria-label={t('book.edit')} title={t('book.edit')}>
@@ -135,7 +135,7 @@ export default function Bookings() {
                       <MessageCircle size={16} />
                     </button>
                     {date <= today() && (
-                      <Link to={`/entry?type=given&customer=${b.customer_id}&qty=${b.jar_quantity}&booking=${b.id}`} className="btn-primary btn-sm">
+                      <Link to={`/entry?type=given&customer=${b.customer_id}&qty=${b.jar_quantity}&booking=${b.id}`} className="btn-primary btn-sm font-semibold shadow-xs">
                         <Truck size={16} /> {t('book.ui.deliver')}
                       </Link>
                     )}
@@ -150,19 +150,19 @@ export default function Bookings() {
       {data && data.closed.length > 0 && (
         <section className="space-y-3">
           <h2 className="section-title">{t('book.closed')}</h2>
-          <div className="card divide-y divide-line !p-0">
+          <div className="card divide-y divide-line overflow-hidden !p-0 shadow-soft ring-1 ring-line">
             {data.closed.map((b) => (
-              <div key={b.id} className="flex items-center gap-3 px-4 py-3">
-                <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full ${b.status === 'delivered' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+              <div key={b.id} className="flex items-center gap-3.5 px-4.5 py-3 transition-colors hover:bg-surface-2/60">
+                <span className={`grid h-8.5 w-8.5 shrink-0 place-items-center rounded-xl ${b.status === 'delivered' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300' : 'bg-surface-2 text-slate-500'}`}>
                   {b.status === 'delivered' ? <CheckCircle2 size={16} /> : <XCircle size={16} />}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-medium text-ink">{b.customer_name}</span>
+                  <span className="block truncate text-sm font-semibold text-ink">{b.customer_name}</span>
                   <span className="block text-xs text-muted tabular-nums">
                     {b.jar_quantity} {t('book.jars')} · {fmtDate(b.delivery_date)}
                   </span>
                 </span>
-                <span className={`shrink-0 text-xs font-semibold ${b.status === 'delivered' ? 'text-emerald-700' : 'text-slate-500'}`}>
+                <span className={`shrink-0 text-xs font-bold ${b.status === 'delivered' ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-500'}`}>
                   {b.status === 'delivered' ? t('book.ui.delivered') : t('book.cancelledLabel')}
                 </span>
               </div>

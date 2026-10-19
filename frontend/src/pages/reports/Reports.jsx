@@ -27,17 +27,17 @@ export default function Reports() {
         {REPORTS.map((r) => {
           const inner = (
             <>
-              <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-lg ${r.tone}`}>
+              <span className={`grid h-10.5 w-10.5 shrink-0 place-items-center rounded-2xl transition-transform duration-150 group-hover:scale-105 ${r.tone}`}>
                 <r.icon size={20} />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block truncate font-semibold text-ink">{r.title}</span>
-                <span className="mt-0.5 block truncate text-sm text-muted">{r.sub}</span>
+                <span className="block truncate font-bold text-ink">{r.title}</span>
+                <span className="mt-0.5 block truncate text-xs font-medium text-muted">{r.sub}</span>
               </span>
-              <ChevronRight size={18} className="shrink-0 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-ink" />
+              <ChevronRight size={18} className="shrink-0 text-slate-400 transition-transform duration-150 group-hover:translate-x-1 group-hover:text-ink" />
             </>
           );
-          const cls = 'card card-hover group flex w-full items-center gap-3 text-left active:scale-[.99]';
+          const cls = 'card card-hover group flex w-full items-center gap-3.5 text-left active:scale-[.98] shadow-soft ring-1 ring-line rounded-2xl !p-4';
           return r.ledger ? (
             <button key={r.title} type="button" className={cls} onClick={() => setPickLedger(true)}>
               {inner}

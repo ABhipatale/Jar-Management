@@ -56,7 +56,7 @@ export default function Expenses() {
       <PageHeader title={t('exp.title')} back />
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] lg:items-start">
-        <form onSubmit={save} className="card space-y-4 lg:sticky lg:top-20">
+        <form onSubmit={save} className="card space-y-4 shadow-soft ring-1 ring-line lg:sticky lg:top-20">
           <h2 className="section-title flex items-center gap-2">
             <Plus size={15} /> {t('exp.addTitle')}
           </h2>
@@ -66,7 +66,7 @@ export default function Expenses() {
             </Field>
             <Field label={t('exp.amount')}>
               <input
-                className="input font-semibold tabular-nums"
+                className="input font-bold tabular-nums"
                 inputMode="decimal"
                 value={form.amount}
                 placeholder="0"
@@ -94,11 +94,11 @@ export default function Expenses() {
           />
           <input className="input" placeholder={t('exp.notesPh')} aria-label={t('exp.notesPh')} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} maxLength={500} />
           {formError && (
-            <p className="flex items-start gap-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 ring-1 ring-inset ring-red-200" role="alert">
+            <p className="flex items-start gap-2 rounded-xl bg-red-50 p-3 text-sm font-medium text-red-700 ring-1 ring-inset ring-red-200 dark:bg-red-950/40 dark:text-red-300 dark:ring-red-900/40" role="alert">
               <AlertTriangle size={16} className="mt-0.5 shrink-0" /> {formError}
             </p>
           )}
-          <button className="btn-primary w-full" disabled={busy}>
+          <button className="btn-primary w-full font-bold shadow-xs" disabled={busy}>
             {!busy && <Plus size={18} />}
             {busy ? t('entry.saving') : t('exp.save')}
           </button>
@@ -109,32 +109,32 @@ export default function Expenses() {
           {error && <ErrorBox message={error} onRetry={reload} />}
           {loading && !data && <Loader />}
           {data && (
-            <div className="card flex items-center gap-3 !p-3.5">
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-red-50 text-red-600">
+            <div className="card flex items-center gap-3.5 !p-4 shadow-soft ring-1 ring-line">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-red-50 text-red-600 ring-1 ring-red-500/15 dark:bg-red-950/40 dark:text-red-300">
                 <Wallet size={20} />
               </span>
-              <span className="flex-1 text-sm font-medium text-muted">{t('exp.total')}</span>
-              <span className="text-2xl font-semibold tracking-tight tabular-nums text-ink">{money(data.total)}</span>
+              <span className="flex-1 text-sm font-semibold text-muted">{t('exp.total')}</span>
+              <span className="text-2xl font-bold tracking-tight tabular-nums text-ink">{money(data.total)}</span>
             </div>
           )}
           {data && data.data.length === 0 && <Empty icon={Receipt}>{t('exp.empty')}</Empty>}
           {data && data.data.length > 0 && (
-            <div className="card divide-y divide-line overflow-hidden !p-0">
+            <div className="card divide-y divide-line overflow-hidden !p-0 shadow-soft ring-1 ring-line">
               {data.data.map((x) => (
-                <div key={x.id} className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-surface-2">
-                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-slate-100 text-slate-600">
+                <div key={x.id} className="flex items-center gap-3.5 px-4.5 py-3.5 transition-colors hover:bg-surface-2/60">
+                  <span className="grid h-9.5 w-9.5 shrink-0 place-items-center rounded-2xl bg-surface-2 text-slate-600 ring-1 ring-line dark:text-slate-300">
                     <Receipt size={16} />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <div className="truncate font-medium text-ink">{x.expense_type}</div>
-                    <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted">
+                    <div className="truncate font-semibold text-ink">{x.expense_type}</div>
+                    <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted font-medium">
                       <span>{fmtDate(x.expense_date)}</span>
                       <Badge kind={x.payment_mode}>{{ cash: t('entry.modeCash'), upi: 'UPI', bank: t('entry.modeBank') }[x.payment_mode] || x.payment_mode.toUpperCase()}</Badge>
                       {x.notes && <span className="truncate">{x.notes}</span>}
                     </div>
                   </div>
-                  <span className="shrink-0 font-semibold tabular-nums text-ink">{money(x.amount)}</span>
-                  <button className="icon-btn shrink-0 text-red-600 hover:bg-red-50 hover:text-red-700" onClick={() => remove(x)} aria-label={t('entry.delete')} title={t('entry.delete')}>
+                  <span className="shrink-0 font-bold tabular-nums text-ink">{money(x.amount)}</span>
+                  <button className="icon-btn shrink-0 text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950/30" onClick={() => remove(x)} aria-label={t('entry.delete')} title={t('entry.delete')}>
                     <Trash2 size={16} />
                   </button>
                 </div>

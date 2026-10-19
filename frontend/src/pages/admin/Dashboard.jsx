@@ -123,14 +123,14 @@ export default function Dashboard() {
         </section>
 
         {/* Recent payments */}
-        <section className="card p-0!">
-          <div className="flex items-center justify-between border-b border-line px-4 py-3">
-            <h2 className="font-semibold text-ink">{t('adm.rev.recent')}</h2>
+        <section className="card overflow-hidden !p-0 shadow-soft ring-1 ring-line">
+          <div className="flex items-center justify-between border-b border-line px-4.5 py-3.5">
+            <h2 className="font-bold text-ink">{t('adm.rev.recent')}</h2>
             <Receipt size={17} className="text-muted" aria-hidden="true" />
           </div>
           {recent.length === 0 ? (
             <div className="flex flex-col items-center gap-2 px-4 py-10 text-center text-sm text-muted">
-              <span className="grid h-11 w-11 place-items-center rounded-full bg-surface-2">
+              <span className="grid h-11 w-11 place-items-center rounded-2xl bg-surface-2 ring-1 ring-line">
                 <Wallet size={20} aria-hidden="true" />
               </span>
               {t('adm.rev.none')}
@@ -138,21 +138,21 @@ export default function Dashboard() {
           ) : (
             <ul className="divide-y divide-line">
               {recent.map((p) => (
-                <li key={p.id} className="flex items-center gap-3 px-4 py-3">
-                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-emerald-50 text-emerald-700">
+                <li key={p.id} className="flex items-center gap-3.5 px-4.5 py-3 transition-colors hover:bg-surface-2/60">
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-emerald-50 text-emerald-700 ring-1 ring-emerald-500/20 dark:bg-emerald-950/40 dark:text-emerald-300">
                     <IndianRupee size={16} aria-hidden="true" />
                   </span>
                   <div className="min-w-0 flex-1">
                     {p.company ? (
-                      <Link to={`/admin/companies/${p.company.id}`} className="block truncate text-sm font-medium text-ink hover:text-brand-700">
+                      <Link to={`/admin/companies/${p.company.id}`} className="block truncate text-sm font-semibold text-ink hover:text-brand-700 dark:hover:text-brand-400">
                         {p.company.name}
                       </Link>
                     ) : (
                       <span className="text-sm text-muted">—</span>
                     )}
-                    <div className="text-xs text-muted">{[p.plan, fmtDate(p.date)].filter(Boolean).join(' · ')}</div>
+                    <div className="text-xs text-muted font-medium">{[p.plan, fmtDate(p.date)].filter(Boolean).join(' · ')}</div>
                   </div>
-                  <span className="text-sm font-semibold tabular-nums text-emerald-700">+{money(p.amount)}</span>
+                  <span className="text-sm font-bold tabular-nums text-emerald-700 dark:text-emerald-400">+{money(p.amount)}</span>
                 </li>
               ))}
             </ul>
@@ -162,25 +162,25 @@ export default function Dashboard() {
 
       <div className="grid gap-4 lg:grid-cols-2">
         {/* Plans ending soon: time to collect payment */}
-        <section className="card p-0!">
-          <div className="flex items-center justify-between border-b border-line px-4 py-3">
-            <h2 className="flex items-center gap-2 font-semibold text-ink">
+        <section className="card overflow-hidden !p-0 shadow-soft ring-1 ring-line">
+          <div className="flex items-center justify-between border-b border-line px-4.5 py-3.5">
+            <h2 className="flex items-center gap-2 font-bold text-ink">
               <AlertTriangle size={17} className="text-amber-600" aria-hidden="true" /> {t('adm.endingSoon')}
             </h2>
-            {ending.length > 0 && <span className="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-800">{ending.length}</span>}
+            {ending.length > 0 && <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-bold text-amber-800 ring-1 ring-amber-600/20 dark:bg-amber-950/40 dark:text-amber-300">{ending.length}</span>}
           </div>
           {ending.length === 0 ? (
-            <div className="flex items-center gap-3 px-4 py-6 text-sm text-muted">
+            <div className="flex items-center gap-3 px-4.5 py-6 text-sm text-muted">
               <CheckCircle2 size={18} className="text-emerald-600" aria-hidden="true" /> {t('adm.endingNone')}
             </div>
           ) : (
             <ul className="divide-y divide-line">
               {ending.slice(0, 6).map((c) => (
-                <li key={c.id} className="flex items-center gap-3 px-4 py-3">
+                <li key={c.id} className="flex items-center gap-3.5 px-4.5 py-3 transition-colors hover:bg-surface-2/60">
                   <CompanyAvatar company={c} size="h-9 w-9" text="text-sm" />
                   <Link to={`/admin/companies/${c.id}`} className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-medium text-ink">{c.name_mr || c.name}</div>
-                    <div className="text-xs text-muted">{fmtDate(c.expires_at)}</div>
+                    <div className="truncate text-sm font-semibold text-ink">{c.name_mr || c.name}</div>
+                    <div className="text-xs text-muted font-medium">{fmtDate(c.expires_at)}</div>
                   </Link>
                   <PlanPill company={c} />
                   {c.owner?.mobile && (
@@ -195,24 +195,24 @@ export default function Dashboard() {
         </section>
 
         {/* Newest companies */}
-        <section className="card p-0!">
-          <div className="flex items-center justify-between border-b border-line px-4 py-3">
-            <h2 className="font-semibold text-ink">{t('adm.newest')}</h2>
-            <Link to="/admin/companies" className="inline-flex items-center gap-1 text-sm font-medium text-brand-700 hover:underline">
-              {t('adm.viewAll')} <ArrowRight size={15} aria-hidden="true" />
+        <section className="card overflow-hidden !p-0 shadow-soft ring-1 ring-line">
+          <div className="flex items-center justify-between border-b border-line px-4.5 py-3.5">
+            <h2 className="font-bold text-ink">{t('adm.newest')}</h2>
+            <Link to="/admin/companies" className="inline-flex items-center gap-1 text-xs font-bold text-brand-700 hover:underline dark:text-brand-400">
+              {t('adm.viewAll')} <ArrowRight size={14} aria-hidden="true" />
             </Link>
           </div>
           {newest.length === 0 ? (
-            <div className="px-4 py-6 text-sm text-muted">{t('adm.empty')}</div>
+            <div className="px-4.5 py-6 text-sm text-muted">{t('adm.empty')}</div>
           ) : (
             <ul className="divide-y divide-line">
               {newest.map((c) => (
                 <li key={c.id}>
-                  <Link to={`/admin/companies/${c.id}`} className="flex items-center gap-3 px-4 py-3 transition hover:bg-surface-2">
+                  <Link to={`/admin/companies/${c.id}`} className="flex items-center gap-3.5 px-4.5 py-3 transition-colors hover:bg-surface-2/60">
                     <CompanyAvatar company={c} size="h-9 w-9" text="text-sm" />
                     <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-medium text-ink">{c.name_mr || c.name}</div>
-                      <div className="text-xs text-muted">
+                      <div className="truncate text-sm font-semibold text-ink">{c.name_mr || c.name}</div>
+                      <div className="text-xs text-muted font-medium">
                         {t('adm.created')}: {fmtDate(c.created_at)} · {c.customers} {t('adm.customers')}
                       </div>
                     </div>

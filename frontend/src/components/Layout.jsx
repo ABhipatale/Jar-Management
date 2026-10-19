@@ -152,64 +152,68 @@ export default function Layout() {
     <div className="min-h-dvh bg-app" style={{ '--sb': collapsed ? '72px' : '248px' }}>
       {/* ── Desktop sidebar ─────────────────────────────────────────── */}
       <aside className="no-print fixed inset-y-0 left-0 z-40 hidden w-[var(--sb)] flex-col border-r border-line bg-surface transition-[width] duration-200 lg:flex">
-        <div className={`flex h-16 items-center gap-2.5 border-b border-line ${collapsed ? 'justify-center px-2' : 'px-4'}`}>
-          <img src={logoSrc(branding)} alt="" className="h-9 w-8 shrink-0 rounded-md object-contain" />
+        <div className={`flex h-16 items-center gap-3 border-b border-line ${collapsed ? 'justify-center px-2' : 'px-4.5'}`}>
+          <div className="grid h-10 w-9.5 shrink-0 place-items-center rounded-xl bg-surface-2 p-1 ring-1 ring-line shadow-xs">
+            <img src={logoSrc(branding)} alt="" className="h-full w-full object-contain" />
+          </div>
           {!collapsed && (
             <div className="min-w-0 leading-tight">
-              <div className="truncate text-[15px] font-semibold text-ink">{businessName(settings)}</div>
-              <div className="truncate text-xs text-muted">{place}</div>
+              <div className="truncate text-[15px] font-bold tracking-tight text-ink">{businessName(settings)}</div>
+              <div className="truncate text-xs font-medium text-muted">{place}</div>
             </div>
           )}
         </div>
-        <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-4" aria-label={t('layout.menu')}>
+        <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-4.5" aria-label={t('layout.menu')}>
           {GROUPS.map((g, gi) => (
             <div key={gi}>
-              {g.title && !collapsed && <div className="mb-1.5 px-2.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400">{g.title}</div>}
+              {g.title && !collapsed && <div className="mb-2 px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">{g.title}</div>}
               {g.title && collapsed && <div className="mx-auto mb-2 h-px w-6 bg-line" />}
-              <div className="space-y-0.5">
+              <div className="space-y-1">
                 {g.items.map((it) => (
                   <SideLink key={it.to} item={it} collapsed={collapsed} badge={it.badge ? unread : 0} />
                 ))}
               </div>
             </div>
           ))}
-          <SummaryButton collapsed={collapsed} />
+          <div className="pt-1">
+            <SummaryButton collapsed={collapsed} />
+          </div>
         </nav>
-        <div className="space-y-1 border-t border-line p-3">
+        <div className="space-y-1.5 border-t border-line p-3">
           {!collapsed && <ThemeSwitch />}
-          <div className={`flex items-center gap-2.5 rounded-lg p-1.5 ${collapsed ? 'flex-col' : ''}`}>
-            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-brand-600 text-sm font-semibold text-white">
+          <div className={`flex items-center gap-2.5 rounded-xl bg-surface-2/60 p-2 ring-1 ring-line/60 ${collapsed ? 'flex-col' : ''}`}>
+            <span className="grid h-8.5 w-8.5 shrink-0 place-items-center rounded-xl bg-gradient-to-tr from-brand-600 to-sky-500 text-sm font-bold text-white shadow-xs">
               {(user?.name || 'A').charAt(0).toUpperCase()}
             </span>
             {!collapsed && (
               <div className="min-w-0 flex-1 leading-tight">
-                <div className="truncate text-sm font-medium text-ink">{user?.name || 'Admin'}</div>
+                <div className="truncate text-sm font-semibold text-ink">{user?.name || 'Admin'}</div>
                 <div className="truncate text-xs text-muted">{user?.email}</div>
               </div>
             )}
-            <button className="icon-btn" onClick={doLogout} title={t('nav.logout')} aria-label={t('nav.logout')}>
-              <LogOut size={17} />
+            <button className="icon-btn hover:text-red-600" onClick={doLogout} title={t('nav.logout')} aria-label={t('nav.logout')}>
+              <LogOut size={16} />
             </button>
           </div>
           <button className="icon-btn w-full" onClick={toggleCollapsed} title={collapsed ? t('layout.expand') : t('layout.collapse')} aria-label={collapsed ? t('layout.expand') : t('layout.collapse')}>
-            {collapsed ? <ChevronsRight size={18} /> : <ChevronsLeft size={18} />}
+            {collapsed ? <ChevronsRight size={17} /> : <ChevronsLeft size={17} />}
           </button>
         </div>
       </aside>
 
       <div className="transition-[padding] duration-200 lg:pl-[var(--sb)]">
         {planEnding && (
-          <div className="no-print pt-safe flex items-center justify-center gap-2 bg-amber-400 px-4 py-1.5 text-center text-[13px] font-semibold text-amber-950" role="status">
+          <div className="no-print pt-safe flex items-center justify-center gap-2 bg-amber-400 px-4 py-2 text-center text-[13px] font-semibold text-amber-950 shadow-xs" role="status">
             <AlertTriangle size={15} className="shrink-0" aria-hidden="true" />
             <span>{planDays === 1 ? t('plan.endsTomorrow', { date: fmtDate(planEnd) }) : t('plan.endsIn', { days: planDays, date: fmtDate(planEnd) })}</span>
-            <Link to="/billing" className="ml-1 shrink-0 rounded-full bg-amber-950 px-2.5 py-0.5 text-xs font-semibold text-amber-50 hover:bg-amber-900">
+            <Link to="/billing" className="ml-1 shrink-0 rounded-full bg-amber-950 px-3 py-0.5 text-xs font-bold text-amber-50 hover:bg-amber-900 transition-colors">
               {t('bill.payNow')}
             </Link>
           </div>
         )}
         {/* Super admin "logged in as" this company (support). */}
         {user?.impersonating && (
-          <div className="no-print pt-safe flex flex-wrap items-center justify-center gap-x-3 gap-y-1 bg-amber-100 px-4 py-2 text-center text-sm font-medium text-amber-900 ring-1 ring-amber-300">
+          <div className="no-print pt-safe flex flex-wrap items-center justify-center gap-x-3 gap-y-1 bg-amber-100 px-4 py-2.5 text-center text-sm font-semibold text-amber-900 ring-1 ring-amber-300">
             <span>{t('imp.banner', { name: businessName(settings) })}</span>
             <button className="btn-light btn-sm" onClick={stopImpersonating}>
               {t('imp.exit')}
@@ -217,35 +221,37 @@ export default function Layout() {
           </div>
         )}
         {/* ── Top bar ───────────────────────────────────────────────── */}
-        <header className="no-print pt-safe sticky top-0 z-30 border-b border-line bg-surface/85 backdrop-blur-md">
-          <div className="mx-auto flex h-14 max-w-6xl items-center gap-2 px-4 lg:h-16 lg:px-8">
+        <header className="no-print pt-safe sticky top-0 z-30 border-b border-line bg-surface/80 backdrop-blur-lg">
+          <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4 lg:h-16 lg:px-8">
             <Link to="/" className="flex min-w-0 flex-1 items-center gap-2.5 lg:hidden">
-              <img src={logoSrc(branding)} alt="" className="h-9 w-8 shrink-0 rounded-md object-contain" />
+              <div className="grid h-9 w-8.5 shrink-0 place-items-center rounded-xl bg-surface-2 p-1 ring-1 ring-line shadow-xs">
+                <img src={logoSrc(branding)} alt="" className="h-full w-full object-contain" />
+              </div>
               <div className="min-w-0 leading-tight">
-                <div className="truncate text-[15px] font-semibold text-ink">{businessName(settings)}</div>
-                <div className="truncate text-xs text-muted">{place}</div>
+                <div className="truncate text-[15px] font-bold tracking-tight text-ink">{businessName(settings)}</div>
+                <div className="truncate text-xs font-medium text-muted">{place}</div>
               </div>
             </Link>
             <div className="hidden max-w-md flex-1 lg:block">
               <CustomerSearch />
             </div>
-            <div className="ml-auto flex items-center gap-1">
+            <div className="ml-auto flex items-center gap-1.5">
               <button className="icon-btn lg:hidden" onClick={() => setSearchOpen(true)} aria-label={t('layout.search')}>
-                <Search size={20} />
+                <Search size={19} />
               </button>
               <Link to="/notifications" className="icon-btn relative" aria-label={t('notif.title')}>
-                <Bell size={20} />
+                <Bell size={19} />
                 {unread > 0 && (
-                  <span className="absolute -right-0.5 -top-0.5 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white ring-2 ring-surface">
+                  <span className="absolute -right-0.5 -top-0.5 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white ring-2 ring-surface shadow-xs">
                     {unread > 99 ? '99+' : unread}
                   </span>
                 )}
               </Link>
               <Link to="/entry" className="btn-primary btn-sm ml-1 hidden lg:inline-flex">
-                <Plus size={16} /> {t('layout.newEntry')}
+                <Plus size={16} strokeWidth={2.5} /> {t('layout.newEntry')}
               </Link>
               <button className="icon-btn lg:hidden" onClick={() => setDrawer(true)} aria-label={t('layout.menu')}>
-                <Menu size={21} />
+                <Menu size={20} />
               </button>
             </div>
           </div>
@@ -253,7 +259,7 @@ export default function Layout() {
           {(!online || queue.length > 0) && (
             <button
               onClick={() => setShowQueue((s) => !s)}
-              className={`flex w-full items-center justify-center gap-2 px-4 py-1.5 text-sm font-medium text-white ${failed.length ? 'bg-red-600' : 'bg-amber-500'}`}
+              className={`flex w-full items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-white transition-colors ${failed.length ? 'bg-red-600' : 'bg-amber-500'}`}
             >
               <CloudOff size={15} />
               {!online ? tx('layout.offline') : ''}
@@ -265,12 +271,12 @@ export default function Layout() {
         {showQueue && queue.length > 0 && (
           <div className="no-print mx-auto mt-4 max-w-6xl px-4 lg:px-8">
             <div className="card ring-amber-300">
-              <div className="mb-2 font-semibold">{t('layout.waitingTitle')}</div>
+              <div className="mb-2 font-bold text-ink">{t('layout.waitingTitle')}</div>
               {queue.map((q) => (
-                <div key={q.id} className="flex items-start justify-between gap-2 border-t border-line py-2 text-sm">
+                <div key={q.id} className="flex items-start justify-between gap-2 border-t border-line py-2.5 text-sm">
                   <div>
-                    <div>{q.label}</div>
-                    {q.error && <div className="text-red-600">{t('layout.notSaved', { error: q.error })}</div>}
+                    <div className="font-medium text-ink">{q.label}</div>
+                    {q.error && <div className="text-red-600 font-medium">{t('layout.notSaved', { error: q.error })}</div>}
                   </div>
                   {q.error && (
                     <button className="btn-light btn-sm" onClick={() => discard(q.id)}>
@@ -288,28 +294,28 @@ export default function Layout() {
           <div key={location.pathname} className="animate-fade-in">
             <Outlet />
           </div>
-          <DevCredit className="mt-10" />
+          <DevCredit className="mt-12" />
         </main>
       </div>
 
       {/* ── Phone bottom menu ─────────────────────────────────────── */}
-      <nav className="no-print pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface/95 backdrop-blur-md lg:hidden" aria-label={t('layout.menu')}>
+      <nav className="no-print pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-line/80 bg-surface/90 backdrop-blur-xl lg:hidden shadow-[0_-4px_24px_rgb(0_0_0/0.06)]" aria-label={t('layout.menu')}>
         <div className="mx-auto grid h-16 max-w-2xl grid-cols-5">
           {BOTTOM.map((n) => (
-            <NavLink key={n.to} to={n.to} end={n.end} className={({ isActive }) => `relative flex h-16 flex-col items-center justify-end pb-2 text-[11px] font-medium leading-none ${isActive ? 'text-brand-600' : 'text-slate-500'}`}>
+            <NavLink key={n.to} to={n.to} end={n.end} className={({ isActive }) => `relative flex h-16 flex-col items-center justify-end pb-2 text-[11px] font-semibold leading-none transition-colors ${isActive ? 'text-brand-600 dark:text-brand-400' : 'text-slate-500 hover:text-slate-800'}`}>
               {({ isActive }) => (
                 <>
-                  {isActive && !n.main && <span className="absolute inset-x-5 top-0 h-[2.5px] rounded-b-full bg-brand-600" />}
+                  {isActive && !n.main && <span className="absolute inset-x-6 top-0 h-[2.5px] rounded-b-full bg-brand-600 shadow-[0_1px_4px_rgb(29_69_216/0.5)]" />}
                   {n.main ? (
                     <span
-                      className={`btn-glow absolute -top-5 left-1/2 grid h-14 w-14 -translate-x-1/2 place-items-center rounded-full text-white ring-4 ring-surface transition active:scale-95 ${isActive ? 'brightness-110' : ''}`}
+                      className={`btn-glow absolute -top-5.5 left-1/2 grid h-14 w-14 -translate-x-1/2 place-items-center rounded-full text-white ring-4 ring-app shadow-[0_10px_22px_-4px_rgb(29_69_216/0.5)] transition active:scale-95 ${isActive ? 'brightness-110' : ''}`}
                     >
-                      <Plus size={26} strokeWidth={2.6} />
+                      <Plus size={26} strokeWidth={2.8} />
                     </span>
                   ) : (
-                    <n.icon size={21} strokeWidth={isActive ? 2.3 : 1.9} className="mb-1.5" />
+                    <n.icon size={20} strokeWidth={isActive ? 2.4 : 1.9} className="mb-1.5" />
                   )}
-                  <span className={isActive ? 'font-semibold' : ''}>{n.label}</span>
+                  <span>{n.label}</span>
                 </>
               )}
             </NavLink>
@@ -319,13 +325,13 @@ export default function Layout() {
 
       {/* ── Phone drawer ──────────────────────────────────────────── */}
       {drawer && (
-        <div className="no-print fixed inset-0 z-50 animate-fade-in bg-slate-950/40 backdrop-blur-[2px] lg:hidden" onClick={() => setDrawer(false)}>
-          <div className="pt-safe ml-auto flex h-full w-[82%] max-w-xs animate-sheet-in flex-col bg-surface shadow-pop" onClick={(e) => e.stopPropagation()}>
-            <div className="flex h-14 items-center justify-between border-b border-line px-4">
+        <div className="no-print fixed inset-0 z-50 animate-fade-in bg-slate-950/50 backdrop-blur-xs lg:hidden" onClick={() => setDrawer(false)}>
+          <div className="pt-safe ml-auto flex h-full w-[84%] max-w-xs animate-sheet-in flex-col rounded-l-3xl bg-surface shadow-pop ring-1 ring-line" onClick={(e) => e.stopPropagation()}>
+            <div className="flex h-15 items-center justify-between border-b border-line px-4.5">
               <div className="flex items-center gap-2.5">
-                <span className="grid h-8 w-8 place-items-center rounded-full bg-brand-600 text-sm font-semibold text-white">{(user?.name || 'A').charAt(0).toUpperCase()}</span>
+                <span className="grid h-8.5 w-8.5 place-items-center rounded-xl bg-gradient-to-tr from-brand-600 to-sky-500 text-sm font-bold text-white shadow-xs">{(user?.name || 'A').charAt(0).toUpperCase()}</span>
                 <div className="min-w-0 leading-tight">
-                  <div className="truncate text-sm font-semibold text-ink">{user?.name || 'Admin'}</div>
+                  <div className="truncate text-sm font-bold text-ink">{user?.name || 'Admin'}</div>
                   <div className="truncate text-xs text-muted">{user?.email}</div>
                 </div>
               </div>
@@ -333,21 +339,25 @@ export default function Layout() {
                 <X size={20} />
               </button>
             </div>
-            <nav className="flex-1 space-y-4 overflow-y-auto p-3">
+            <nav className="flex-1 space-y-4 overflow-y-auto p-3.5">
               {GROUPS.map((g, gi) => (
                 <div key={gi}>
-                  {g.title && <div className="mb-1 px-2.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400">{g.title}</div>}
-                  {g.items.map((it) => (
-                    <SideLink key={it.to} item={it} badge={it.badge ? unread : 0} />
-                  ))}
+                  {g.title && <div className="mb-1 px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400">{g.title}</div>}
+                  <div className="space-y-1">
+                    {g.items.map((it) => (
+                      <SideLink key={it.to} item={it} badge={it.badge ? unread : 0} />
+                    ))}
+                  </div>
                 </div>
               ))}
-              <SummaryButton onDone={() => setDrawer(false)} />
+              <div className="pt-1">
+                <SummaryButton onDone={() => setDrawer(false)} />
+              </div>
             </nav>
-            <div className="space-y-2 border-t border-line p-3 pb-6">
+            <div className="space-y-2.5 border-t border-line p-3.5 pb-6">
               <ThemeSwitch />
-              <button className="flex w-full items-center gap-3 rounded-lg px-2.5 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50" onClick={doLogout}>
-                <LogOut size={18} /> {t('nav.logout')}
+              <button className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-red-600 transition hover:bg-red-50 dark:hover:bg-red-950/30" onClick={doLogout}>
+                <LogOut size={17} /> {t('nav.logout')}
               </button>
             </div>
           </div>
@@ -356,8 +366,8 @@ export default function Layout() {
 
       {/* ── Phone search overlay ──────────────────────────────────── */}
       {searchOpen && (
-        <div className="no-print fixed inset-0 z-50 animate-fade-in bg-slate-950/40 backdrop-blur-[2px] lg:hidden" onClick={() => setSearchOpen(false)}>
-          <div className="pt-safe animate-toast-in bg-surface p-3 shadow-pop" onClick={(e) => e.stopPropagation()}>
+        <div className="no-print fixed inset-0 z-50 animate-fade-in bg-slate-950/50 backdrop-blur-xs lg:hidden" onClick={() => setSearchOpen(false)}>
+          <div className="pt-safe animate-toast-in bg-surface p-3.5 shadow-pop rounded-b-2xl" onClick={(e) => e.stopPropagation()}>
             <CustomerSearch autoFocus onDone={() => setSearchOpen(false)} />
           </div>
         </div>
@@ -415,15 +425,17 @@ function SideLink({ item, collapsed = false, badge = 0 }) {
       end={item.end}
       title={collapsed ? item.label : undefined}
       className={({ isActive }) =>
-        `group relative flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm font-medium transition ${collapsed ? 'justify-center' : ''} ${
-          isActive ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-surface-2 hover:text-ink'
+        `group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-[14px] font-medium transition-all duration-150 ${collapsed ? 'justify-center px-2' : ''} ${
+          isActive
+            ? 'bg-brand-50 text-brand-700 font-semibold shadow-xs ring-1 ring-brand-500/15 dark:bg-brand-500/15 dark:text-brand-300 dark:ring-brand-500/20'
+            : 'text-slate-600 hover:bg-surface-2 hover:text-ink active:scale-[0.98] dark:text-slate-300 dark:hover:text-white'
         }`
       }
     >
-      <I size={18} className="shrink-0" />
+      <I size={18} className="shrink-0 transition-transform duration-150 group-hover:scale-105" />
       {!collapsed && <span className="truncate">{item.label}</span>}
       {badge > 0 && (
-        <span className={`grid h-5 min-w-5 place-items-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white ${collapsed ? 'absolute right-1 top-0.5' : 'ml-auto'}`}>
+        <span className={`grid h-5 min-w-5 place-items-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white shadow-xs ${collapsed ? 'absolute right-1 top-1' : 'ml-auto'}`}>
           {badge > 99 ? '99+' : badge}
         </span>
       )}
@@ -440,7 +452,7 @@ export function ThemeSwitch() {
     { v: 'auto', icon: Monitor, label: t('theme.auto') },
   ];
   return (
-    <div className="grid grid-cols-3 gap-1 rounded-lg bg-slate-100 p-1 ring-1 ring-line" role="radiogroup" aria-label={t('theme.title')}>
+    <div className="grid grid-cols-3 gap-1 rounded-xl bg-surface-2 p-1 ring-1 ring-line" role="radiogroup" aria-label={t('theme.title')}>
       {opts.map((o) => (
         <button
           key={o.v}
@@ -452,9 +464,13 @@ export function ThemeSwitch() {
             setTheme(o.v);
             setThemeState(o.v);
           }}
-          className={`flex items-center justify-center gap-1.5 rounded-md py-1.5 text-xs font-medium transition ${theme === o.v ? 'bg-surface text-ink shadow-soft ring-1 ring-line' : 'text-slate-500 hover:text-ink'}`}
+          className={`flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-semibold transition ${
+            theme === o.v
+              ? 'bg-surface text-ink shadow-xs ring-1 ring-line'
+              : 'text-muted hover:text-ink'
+          }`}
         >
-          <o.icon size={14} /> {o.label}
+          <o.icon size={13.5} /> {o.label}
         </button>
       ))}
     </div>
@@ -501,9 +517,9 @@ function CustomerSearch({ autoFocus = false, onDone }) {
 
   return (
     <div className="relative" ref={box}>
-      <Search size={17} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+      <Search size={17} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
       <input
-        className="input !py-2 !pl-9 text-[15px]"
+        className="input !h-10 !py-2 !pl-10 text-[14.5px] rounded-xl"
         type="search"
         autoFocus={autoFocus}
         value={q}
@@ -517,11 +533,14 @@ function CustomerSearch({ autoFocus = false, onDone }) {
           if (e.key === 'ArrowDown') setHi((h) => Math.min(h + 1, results.length - 1));
           if (e.key === 'ArrowUp') setHi((h) => Math.max(h - 1, 0));
           if (e.key === 'Enter' && results[hi]) go(results[hi]);
-          if (e.key === 'Escape') (setOpen(false), onDone?.());
+          if (e.key === 'Escape') {
+            setOpen(false);
+            onDone?.();
+          }
         }}
       />
       {open && q.trim() && (
-        <div className="absolute z-50 mt-1.5 w-full animate-pop-in overflow-hidden rounded-xl bg-surface shadow-pop ring-1 ring-line">
+        <div className="absolute z-50 mt-2 w-full animate-pop-in overflow-hidden rounded-2xl bg-surface shadow-pop ring-1 ring-line">
           {results.length === 0 ? (
             <div className="px-4 py-3 text-sm text-muted">{t('layout.searchEmpty')}</div>
           ) : (
@@ -531,11 +550,13 @@ function CustomerSearch({ autoFocus = false, onDone }) {
                 type="button"
                 onMouseEnter={() => setHi(i)}
                 onClick={() => go(c)}
-                className={`flex w-full items-center gap-3 px-3.5 py-2.5 text-left ${i === hi ? 'bg-surface-2' : ''}`}
+                className={`flex w-full items-center gap-3 px-3.5 py-2.5 text-left transition-colors ${i === hi ? 'bg-surface-2' : ''}`}
               >
-                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-brand-50 text-sm font-semibold text-brand-700">{c.name.charAt(0).toUpperCase()}</span>
+                <span className="grid h-8.5 w-8.5 shrink-0 place-items-center rounded-xl bg-brand-50 text-sm font-bold text-brand-700 ring-1 ring-brand-500/15 dark:bg-brand-500/15 dark:text-brand-300">
+                  {c.name.charAt(0).toUpperCase()}
+                </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-medium text-ink">{c.name}</span>
+                  <span className="block truncate text-sm font-semibold text-ink">{c.name}</span>
                   <span className="block text-xs text-muted">{c.mobile}</span>
                 </span>
                 <span className="shrink-0 text-right text-xs">

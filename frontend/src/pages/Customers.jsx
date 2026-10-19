@@ -90,8 +90,8 @@ export default function Customers() {
       )}
 
       {list.length > 0 && (
-        <div className={`card overflow-hidden !p-0 transition-opacity ${loading ? 'opacity-60' : ''}`}>
-          <div className={`hidden border-b border-line bg-surface-2 px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-muted ${COLS}`}>
+        <div className={`card overflow-hidden !p-0 shadow-soft ring-1 ring-line transition-opacity ${loading ? 'opacity-60' : ''}`}>
+          <div className={`hidden border-b border-line bg-surface-2/80 px-4.5 py-3 text-[11.5px] font-bold uppercase tracking-wider text-muted ${COLS}`}>
             <span>{t('ledger.customer')}</span>
             <span>{t('cust.colMobile')}</span>
             <span className="text-right">{t('common.currentJars')}</span>
@@ -100,40 +100,42 @@ export default function Customers() {
           </div>
           <div className="divide-y divide-line">
             {list.map((c) => (
-              <Link key={c.id} to={`/customers/${c.id}`} className={`flex items-center gap-3 px-4 py-3 transition hover:bg-surface-2 active:bg-surface-2 ${COLS}`}>
+              <Link key={c.id} to={`/customers/${c.id}`} className={`flex items-center gap-3.5 px-4.5 py-3.5 transition-colors hover:bg-surface-2/60 active:bg-surface-2/70 ${COLS}`}>
                 <div className="flex min-w-0 flex-1 items-center gap-3">
                   <span
-                    className={`grid h-10 w-10 shrink-0 place-items-center rounded-full text-[15px] font-semibold ${
-                      c.status === 'inactive' ? 'bg-slate-100 text-slate-500' : 'bg-brand-50 text-brand-700'
+                    className={`grid h-10 w-10 shrink-0 place-items-center rounded-2xl text-[15px] font-bold ring-1 ${
+                      c.status === 'inactive'
+                        ? 'bg-surface-2 text-slate-500 ring-line'
+                        : 'bg-brand-50 text-brand-700 ring-brand-500/15 dark:bg-brand-500/15 dark:text-brand-300'
                     }`}
                   >
                     {c.name.charAt(0).toUpperCase()}
                   </span>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="truncate font-medium text-ink">{c.name}</span>
+                      <span className="truncate font-semibold text-ink">{c.name}</span>
                       {c.status === 'inactive' && <Badge kind="inactive" />}
                     </div>
-                    <div className="flex items-center gap-1 text-sm text-muted lg:hidden">
-                      <Phone size={12} aria-hidden="true" /> <span className="tabular-nums">{c.mobile}</span>
+                    <div className="flex items-center gap-1 text-xs text-muted lg:hidden mt-0.5">
+                      <Phone size={12} aria-hidden="true" /> <span className="tabular-nums font-medium">{c.mobile}</span>
                     </div>
                   </div>
                 </div>
-                <span className="hidden text-sm tabular-nums text-muted lg:block">{c.mobile}</span>
+                <span className="hidden text-sm tabular-nums font-medium text-muted lg:block">{c.mobile}</span>
                 {/* phone: jars + pending stacked on the right */}
-                <div className="shrink-0 text-right text-sm lg:hidden">
+                <div className="shrink-0 text-right text-xs lg:hidden">
                   <div className="inline-flex items-center gap-1 text-muted">
-                    <Droplets size={13} className="text-brand-600" aria-hidden="true" />
-                    <span className="font-semibold tabular-nums text-ink">{c.current_jars}</span> {t('common.jarsWord')}
+                    <Droplets size={12} className="text-brand-600" aria-hidden="true" />
+                    <span className="font-bold tabular-nums text-ink">{c.current_jars}</span> {t('common.jarsWord')}
                   </div>
-                  <div>
-                    <PendingText amount={c.pending_amount} />
+                  <div className="mt-0.5">
+                    <PendingText amount={c.pending_amount} className="font-semibold" />
                   </div>
                 </div>
                 <span className="hidden text-right tabular-nums lg:block">
-                  <span className="font-semibold text-ink">{c.current_jars}</span> <span className="text-muted">{t('common.jarsWord')}</span>
+                  <span className="font-bold text-ink">{c.current_jars}</span> <span className="text-xs text-muted">{t('common.jarsWord')}</span>
                 </span>
-                <span className="hidden text-right lg:block">
+                <span className="hidden text-right font-semibold lg:block">
                   <PendingText amount={c.pending_amount} />
                 </span>
                 <ChevronRight size={18} className="hidden shrink-0 text-slate-400 lg:block" aria-hidden="true" />

@@ -21,16 +21,16 @@ const TEMPLATES = [
 ];
 
 /** Card with an icon + title header. */
-function Section({ icon: I, tone = 'bg-brand-50 text-brand-700', title, hint, children, as: Tag = 'section', ...rest }) {
+function Section({ icon: I, tone = 'bg-brand-50 text-brand-700 ring-1 ring-brand-500/15 dark:bg-brand-500/15 dark:text-brand-300', title, hint, children, as: Tag = 'section', ...rest }) {
   return (
-    <Tag className="card space-y-4" {...rest}>
-      <div className="flex items-start gap-3">
-        <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg ${tone}`}>
+    <Tag className="card space-y-4 shadow-soft ring-1 ring-line" {...rest}>
+      <div className="flex items-start gap-3.5">
+        <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-2xl ${tone}`}>
           <I size={18} />
         </span>
         <div className="min-w-0 pt-0.5">
-          <h2 className="font-semibold text-ink">{title}</h2>
-          {hint && <p className="mt-0.5 text-sm text-muted">{hint}</p>}
+          <h2 className="font-bold text-ink">{title}</h2>
+          {hint && <p className="mt-0.5 text-xs text-muted font-medium">{hint}</p>}
         </div>
       </div>
       {children}

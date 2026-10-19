@@ -73,34 +73,34 @@ export default function Payments() {
       {list.length > 0 && (
         <div className="grid gap-3 lg:grid-cols-2">
           {list.map((p) => (
-            <div key={p.id} className="card flex flex-col gap-3 !p-3.5">
-              <div className="flex items-start gap-3">
-                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-50 text-sm font-semibold text-brand-700">
+            <div key={p.id} className="card flex flex-col gap-3 !p-4 shadow-soft ring-1 ring-line">
+              <div className="flex items-start gap-3.5">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-brand-50 text-sm font-bold text-brand-700 ring-1 ring-brand-500/15 dark:bg-brand-500/15 dark:text-brand-300">
                   {(p.customer_name || '?').charAt(0).toUpperCase()}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <div className="truncate font-medium text-ink">{p.customer_name}</div>
-                  <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted">
-                    <span>{fmtDate(p.payment_date)}</span>
+                  <div className="truncate font-semibold text-ink">{p.customer_name}</div>
+                  <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-muted">
+                    <span className="font-medium">{fmtDate(p.payment_date)}</span>
                     <Badge kind={p.payment_mode}>{{ cash: t('entry.modeCash'), upi: 'UPI', bank: t('entry.modeBank') }[p.payment_mode] || p.payment_mode.toUpperCase()}</Badge>
                     {p.is_advance && <Badge kind="advance">{t('entry.advance')}</Badge>}
                   </div>
                 </div>
                 <div className="shrink-0 text-right">
-                  <div className="text-lg font-semibold tabular-nums text-emerald-700">{money(p.amount)}</div>
-                  <div className="flex items-center justify-end gap-1 text-xs tabular-nums text-muted">
+                  <div className="text-lg font-bold tabular-nums text-emerald-700 dark:text-emerald-400">{money(p.amount)}</div>
+                  <div className="mt-0.5 flex items-center justify-end gap-1 text-xs tabular-nums text-muted font-medium">
                     {money(p.previous_pending)} <ArrowRight size={11} /> {money(p.remaining_pending)}
                   </div>
                 </div>
               </div>
               <div className="flex items-center gap-2 border-t border-line pt-3">
-                <button className="btn-wa btn-sm flex-1" onClick={() => openWhatsApp(p.customer_mobile, messages.payment(settings, p))}>
+                <button className="btn-wa btn-sm flex-1 font-semibold" onClick={() => openWhatsApp(p.customer_mobile, messages.payment(settings, p))}>
                   <MessageCircle size={16} /> {t('payments.receiptLbl')}
                 </button>
                 <button className="icon-btn ring-1 ring-line" onClick={() => setEditId(p.id)} aria-label={t('common.edit')} title={t('common.edit')}>
                   <Pencil size={16} />
                 </button>
-                <button className="icon-btn text-red-600 ring-1 ring-line hover:bg-red-50 hover:text-red-700" onClick={() => remove(p)} aria-label={t('entry.delete')} title={t('entry.delete')}>
+                <button className="icon-btn text-red-600 ring-1 ring-line hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950/30" onClick={() => remove(p)} aria-label={t('entry.delete')} title={t('entry.delete')}>
                   <Trash2 size={16} />
                 </button>
               </div>

@@ -72,7 +72,7 @@ export default function Dashboard() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-sm font-medium text-muted">{fmtLongDate()}</p>
-          <h1 className="mt-0.5 text-2xl font-semibold tracking-tight text-ink">
+          <h1 className="mt-0.5 text-2xl font-bold tracking-tight text-ink">
             {greeting()}
             {settings.owner_name_mr ? `, ${settings.owner_name_mr}` : user?.name && user.name !== 'Shop Owner' ? `, ${user.name}` : ''} 👋
           </h1>
@@ -86,11 +86,17 @@ export default function Dashboard() {
           <Link
             key={q.to}
             to={q.to}
-            className={`flex items-center gap-3 rounded-xl px-3.5 py-3 text-[15px] font-semibold transition active:scale-[.98] ${
-              q.primary ? 'col-span-2 bg-brand-600 text-white shadow-soft hover:bg-brand-700 sm:col-span-1' : 'card card-hover !py-3 text-ink'
+            className={`group flex items-center gap-3 rounded-2xl px-3.5 py-3 text-[14.5px] font-semibold transition-all duration-150 active:scale-[.98] ${
+              q.primary
+                ? 'col-span-2 btn-glow text-white shadow-[0_8px_20px_-6px_rgb(29_69_216/0.4)] sm:col-span-1'
+                : 'card card-hover !py-3 text-ink ring-1 ring-line/80'
             }`}
           >
-            <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg ${q.primary ? 'bg-white/15' : q.tone}`}>
+            <span
+              className={`grid h-9.5 w-9.5 shrink-0 place-items-center rounded-xl transition-transform duration-150 group-hover:scale-105 ${
+                q.primary ? 'bg-white/18 text-white' : q.tone
+              }`}
+            >
               <q.icon size={19} />
             </span>
             <span className="leading-tight">{q.label}</span>
@@ -100,41 +106,47 @@ export default function Dashboard() {
 
       {/* Needs attention */}
       {data && (
-        <section className="card !p-0">
-          <div className="flex items-center justify-between px-4 pb-2 pt-3.5">
+        <section className="card overflow-hidden !p-0 shadow-soft ring-1 ring-line">
+          <div className="flex items-center justify-between px-4.5 py-3.5">
             <h2 className="section-title">{t('dash.attention')}</h2>
             {attention.length === 0 && (
-              <span className="inline-flex items-center gap-1 text-sm font-medium text-emerald-700">
-                <CheckCircle2 size={16} /> {t('dash.allClear')}
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-500/20 dark:bg-emerald-950/40 dark:text-emerald-300">
+                <CheckCircle2 size={14} /> {t('dash.allClear')}
               </span>
             )}
           </div>
           {attention.length > 0 && (
             <div className="divide-y divide-line border-t border-line">
               {attention.map((it, i) => (
-                <Link key={i} to={it.to} className="flex items-center gap-3 px-4 py-3 transition hover:bg-surface-2">
-                  <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg ${it.tone}`}>
+                <Link key={i} to={it.to} className="flex items-center gap-3 px-4.5 py-3 transition-colors hover:bg-surface-2/70">
+                  <span className={`grid h-8.5 w-8.5 shrink-0 place-items-center rounded-xl ${it.tone}`}>
                     <it.icon size={16} />
                   </span>
-                  <span className="min-w-0 flex-1 text-sm font-medium text-ink">{it.text}</span>
+                  <span className="min-w-0 flex-1 text-sm font-semibold text-ink">{it.text}</span>
                   <ChevronRight size={18} className="text-slate-400" />
                 </Link>
               ))}
             </div>
           )}
           {a?.top_pending?.length > 0 && (
-            <div className="border-t border-line px-4 py-3">
-              <div className="mb-2 flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-wide text-muted">{t('dash.owesMost')}</span>
-                <Link to="/reports/pending" className="text-xs font-semibold text-brand-700 hover:underline">
+            <div className="border-t border-line bg-surface-2/30 px-4.5 py-3.5">
+              <div className="mb-2.5 flex items-center justify-between">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-muted">{t('dash.owesMost')}</span>
+                <Link to="/reports/pending" className="text-xs font-bold text-brand-700 hover:underline dark:text-brand-400">
                   {t('dash.viewAll')}
                 </Link>
               </div>
-              <div className="flex gap-2 overflow-x-auto no-scrollbar">
+              <div className="flex gap-2.5 overflow-x-auto no-scrollbar">
                 {a.top_pending.map((c) => (
-                  <Link key={c.customer_id} to={`/customers/${c.customer_id}`} className="min-w-36 shrink-0 rounded-lg bg-surface-2 px-3 py-2 ring-1 ring-line transition hover:ring-line-strong">
-                    <div className="truncate text-sm font-medium text-ink">{c.name}</div>
-                    <PendingText amount={c.pending_amount} className="text-sm" />
+                  <Link
+                    key={c.customer_id}
+                    to={`/customers/${c.customer_id}`}
+                    className="min-w-40 shrink-0 rounded-xl bg-surface px-3.5 py-2.5 shadow-xs ring-1 ring-line transition-all duration-150 hover:ring-brand-500/40 hover:shadow-sm"
+                  >
+                    <div className="truncate text-[13.5px] font-semibold text-ink">{c.name}</div>
+                    <div className="mt-0.5">
+                      <PendingText amount={c.pending_amount} className="text-sm font-bold" />
+                    </div>
                   </Link>
                 ))}
               </div>
@@ -265,8 +277,8 @@ export default function Dashboard() {
             {data.customers.length === 0 ? (
               <Empty icon={Droplets}>{t('dash.noEntries')}</Empty>
             ) : (
-              <div className="card overflow-hidden !p-0">
-                <div className="hidden grid-cols-[1.6fr_repeat(5,1fr)] gap-2 border-b border-line bg-surface-2 px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-muted md:grid">
+              <div className="card overflow-hidden !p-0 shadow-soft ring-1 ring-line">
+                <div className="hidden grid-cols-[1.6fr_repeat(5,1fr)] gap-2 border-b border-line bg-surface-2/80 px-4.5 py-3 text-[11.5px] font-bold uppercase tracking-wider text-muted md:grid">
                   <span>{t('ledger.customer')}</span>
                   <span className="text-right">{t('ledger.given')}</span>
                   <span className="text-right">{t('ledger.returned')}</span>
@@ -276,31 +288,38 @@ export default function Dashboard() {
                 </div>
                 <div className="divide-y divide-line">
                   {data.customers.map((c) => (
-                    <Link key={c.customer_id} to={`/customers/${c.customer_id}`} className="block px-4 py-3 transition hover:bg-surface-2 md:grid md:grid-cols-[1.6fr_repeat(5,1fr)] md:items-center md:gap-2">
+                    <Link
+                      key={c.customer_id}
+                      to={`/customers/${c.customer_id}`}
+                      className="block px-4.5 py-3.5 transition-colors hover:bg-surface-2/60 md:grid md:grid-cols-[1.6fr_repeat(5,1fr)] md:items-center md:gap-2"
+                    >
                       <div className="flex items-center gap-3">
-                        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-50 text-sm font-semibold text-brand-700">{c.name.charAt(0).toUpperCase()}</span>
+                        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand-50 text-sm font-bold text-brand-700 ring-1 ring-brand-500/15 dark:bg-brand-500/15 dark:text-brand-300">
+                          {c.name.charAt(0).toUpperCase()}
+                        </span>
                         <div className="min-w-0">
-                          <div className="truncate font-medium text-ink">{c.name}</div>
+                          <div className="truncate text-sm font-semibold text-ink">{c.name}</div>
                           <div className="text-xs text-muted">
-                            <Icon icon={Droplets} size={11} className="mr-0.5 inline" /> {t('dash.nowHolds')} {c.current_jars} {t('common.jarsWord')}
+                            <Icon icon={Droplets} size={11} className="mr-0.5 inline text-brand-600" /> {t('dash.nowHolds')}{' '}
+                            <b className="font-semibold text-ink">{c.current_jars}</b> {t('common.jarsWord')}
                           </div>
                         </div>
                       </div>
                       {/* phone: compact summary row */}
-                      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 pl-12 text-sm md:hidden">
+                      <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 pl-12 text-xs md:hidden">
                         <span className="text-muted">
-                          ↑ <b className="text-ink">{c.given}</b> · ↓ <b className="text-ink">{c.returned}</b>
+                          ↑ <b className="font-semibold text-ink">{c.given}</b> · ↓ <b className="font-semibold text-ink">{c.returned}</b>
                         </span>
                         <span className="text-muted">
-                          {money(c.amount)} · <span className="text-emerald-700">{money(c.paid + c.payments)}</span>
+                          {money(c.amount)} · <span className="font-semibold text-emerald-700">{money(c.paid + c.payments)}</span>
                         </span>
-                        <PendingText amount={c.pending_amount} className="ml-auto" />
+                        <PendingText amount={c.pending_amount} className="ml-auto font-semibold" />
                       </div>
-                      <span className="hidden text-right tabular-nums md:block">{c.given}</span>
-                      <span className="hidden text-right tabular-nums md:block">{c.returned}</span>
-                      <span className="hidden text-right tabular-nums md:block">{money(c.amount)}</span>
-                      <span className="hidden text-right tabular-nums text-emerald-700 md:block">{money(c.paid + c.payments)}</span>
-                      <span className="hidden text-right md:block">
+                      <span className="hidden text-right font-medium tabular-nums md:block">{c.given}</span>
+                      <span className="hidden text-right font-medium tabular-nums md:block">{c.returned}</span>
+                      <span className="hidden text-right font-medium tabular-nums md:block">{money(c.amount)}</span>
+                      <span className="hidden text-right font-medium tabular-nums text-emerald-700 md:block">{money(c.paid + c.payments)}</span>
+                      <span className="hidden text-right font-semibold md:block">
                         <PendingText amount={c.pending_amount} />
                       </span>
                     </Link>

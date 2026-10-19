@@ -92,26 +92,26 @@ export default function Transactions() {
           {list.map((tx) => {
             const give = tx.transaction_type === 'given';
             return (
-              <div key={tx.id} className="card flex flex-col gap-3 !p-3.5">
-                <div className="flex items-start gap-3">
-                  <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-full ${give ? 'bg-brand-50 text-brand-700' : 'bg-sky-50 text-sky-700'}`}>
-                    {give ? <ArrowUpRight size={18} /> : <ArrowDownLeft size={18} />}
+              <div key={tx.id} className="card flex flex-col gap-3 !p-4 shadow-soft ring-1 ring-line">
+                <div className="flex items-start gap-3.5">
+                  <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-2xl ring-1 ${give ? 'bg-brand-50 text-brand-700 ring-brand-500/15 dark:bg-brand-500/15 dark:text-brand-300' : 'bg-sky-50 text-sky-700 ring-sky-500/15 dark:bg-sky-950/40 dark:text-sky-300'}`}>
+                    {give ? <ArrowUpRight size={18} strokeWidth={2.5} /> : <ArrowDownLeft size={18} strokeWidth={2.5} />}
                   </span>
                   <Link to={`/customers/${tx.customer_id}`} className="min-w-0 flex-1 hover:underline">
-                    <div className="truncate font-medium text-ink">{tx.customer_name}</div>
-                    <div className="mt-0.5 text-xs text-muted">{fmtDate(tx.transaction_date)}</div>
+                    <div className="truncate font-semibold text-ink">{tx.customer_name}</div>
+                    <div className="mt-0.5 text-xs text-muted font-medium">{fmtDate(tx.transaction_date)}</div>
                   </Link>
                   <div className="shrink-0 text-right">
-                    <div className="text-lg font-semibold tabular-nums text-ink">{t('entry.jarsN', { n: tx.jar_quantity })}</div>
+                    <div className="text-lg font-bold tabular-nums text-ink">{t('entry.jarsN', { n: tx.jar_quantity })}</div>
                     <Badge kind={tx.transaction_type} />
                   </div>
                 </div>
                 {give && (
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-lg bg-surface-2 px-3 py-2 text-sm">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-xl bg-surface-2/80 px-3.5 py-2.5 text-xs font-semibold">
                     <span className="tabular-nums text-ink">
-                      {money(tx.amount)} <span className="text-muted">@ {money(tx.rate)}</span>
+                      {money(tx.amount)} <span className="text-muted font-normal">@ {money(tx.rate)}</span>
                     </span>
-                    <span className="tabular-nums text-emerald-700">
+                    <span className="tabular-nums text-emerald-700 dark:text-emerald-400">
                       {t('entry.paid')} {money(tx.paid_amount + tx.advance_amount)}
                     </span>
                     <span className="ml-auto">
@@ -126,15 +126,15 @@ export default function Transactions() {
                   </div>
                 )}
                 {tx.notes && (
-                  <p className="flex items-start gap-1.5 text-sm text-muted">
+                  <p className="flex items-start gap-1.5 text-xs text-muted">
                     <StickyNote size={14} className="mt-0.5 shrink-0" /> <span className="min-w-0 break-words">{tx.notes}</span>
                   </p>
                 )}
                 <div className="flex justify-end gap-2 border-t border-line pt-3">
-                  <button className="btn-light btn-sm" onClick={() => setEditId(tx.id)}>
+                  <button className="btn-light btn-sm font-semibold" onClick={() => setEditId(tx.id)}>
                     <Pencil size={15} /> {t('common.edit')}
                   </button>
-                  <button className="btn-light btn-sm text-red-600 hover:bg-red-50" onClick={() => remove(tx)}>
+                  <button className="btn-light btn-sm font-semibold text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30" onClick={() => remove(tx)}>
                     <Trash2 size={15} /> {t('entry.delete')}
                   </button>
                 </div>

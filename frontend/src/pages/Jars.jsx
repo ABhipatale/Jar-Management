@@ -96,7 +96,7 @@ export default function Jars() {
           )}
 
           {s.total_jars > 0 && (
-            <section className="card">
+            <section className="card shadow-soft ring-1 ring-line">
               <h2 className="section-title mb-3">{t('jars.stockMix')}</h2>
               <StackBar
                 total={Math.max(s.total_jars, 1)}
@@ -116,12 +116,12 @@ export default function Jars() {
               {Object.entries(ACTIONS).map(([k, a]) => (
                 <button
                   key={k}
-                  className={`card card-hover flex items-center gap-3 !p-3 text-left text-sm font-medium active:scale-[.98] ${
-                    k === 'add' ? 'col-span-2 !bg-brand-600 !text-white !ring-brand-600 sm:col-span-3 lg:col-span-1' : 'text-ink'
+                  className={`card card-hover flex items-center gap-3 !p-3.5 text-left text-sm font-semibold active:scale-[.98] rounded-2xl ${
+                    k === 'add' ? 'col-span-2 btn-glow !text-white sm:col-span-3 lg:col-span-1 shadow-[0_8px_20px_-6px_rgb(29_69_216/0.4)]' : 'text-ink ring-1 ring-line/80'
                   }`}
                   onClick={() => setAction(k)}
                 >
-                  <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg ${k === 'add' ? 'bg-white/15 text-white' : a.tint}`}>
+                  <span className={`grid h-8.5 w-8.5 shrink-0 place-items-center rounded-xl ${k === 'add' ? 'bg-white/18 text-white' : a.tint}`}>
                     <a.icon size={17} />
                   </span>
                   <span className="min-w-0 leading-snug">{a.title}</span>
@@ -130,17 +130,17 @@ export default function Jars() {
             </div>
           </section>
 
-          <Link to="/reports/jar-status" className="card card-hover flex items-center gap-3">
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-brand-50 text-brand-700">
+          <Link to="/reports/jar-status" className="card card-hover flex items-center gap-3.5 shadow-soft ring-1 ring-line !p-4">
+            <span className="grid h-9.5 w-9.5 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-700 ring-1 ring-brand-500/15 dark:bg-brand-500/15 dark:text-brand-300">
               <House size={18} />
             </span>
-            <span className="flex-1 font-medium text-ink">{t('jars.whoHasLbl')}</span>
+            <span className="flex-1 font-semibold text-ink">{t('jars.whoHasLbl')}</span>
             <ChevronRight size={18} className="text-muted" />
           </Link>
 
           {tracking ? (
-            <section className="card space-y-3">
-              <h2 className="font-semibold text-ink">{t('jars.numbers')}</h2>
+            <section className="card space-y-3 shadow-soft ring-1 ring-line">
+              <h2 className="font-bold text-ink">{t('jars.numbers')}</h2>
               <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4">
                 {['', ...STATUSES].map((st) => (
                   <button key={st} className={`chip ${statusFilter === st ? 'chip-active' : ''}`} onClick={() => setStatusFilter(st)}>
@@ -148,14 +148,14 @@ export default function Jars() {
                   </button>
                 ))}
               </div>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5">
                 {data.jars.data.map((j) => (
                   <button
                     key={j.id}
-                    className="flex flex-col items-start gap-1.5 rounded-lg bg-surface-2 p-2.5 text-left ring-1 ring-inset ring-line transition hover:ring-line-strong active:scale-[.98]"
+                    className="flex flex-col items-start gap-1.5 rounded-xl bg-surface-2/70 p-3 text-left ring-1 ring-inset ring-line transition-all duration-150 hover:ring-brand-500/40 active:scale-[.98] shadow-xs"
                     onClick={() => setEditJar({ ...j })}
                   >
-                    <span className="font-mono text-sm font-semibold text-ink">{j.jar_number}</span>
+                    <span className="font-mono text-sm font-bold text-ink">{j.jar_number}</span>
                     <Badge kind={j.status} />
                     {j.customer_name && (
                       <span className="flex w-full min-w-0 items-center gap-1 text-xs text-muted">
