@@ -90,26 +90,33 @@ export default function Login() {
           />
         ))}
 
-        <div className="relative flex justify-end px-5 pt-4 lg:px-12 lg:pt-10">
+        <div className="relative flex justify-end px-5 pt-3 lg:px-12 lg:pt-10">
           <LangChips />
         </div>
 
-        <div className="relative flex flex-col items-center px-6 pb-16 pt-2 text-center lg:flex-1 lg:items-start lg:justify-center lg:px-12 lg:pb-12 lg:text-left xl:px-16">
-          <div className="login-logo grid h-[72px] w-[72px] animate-pop-in place-items-center rounded-[22px] bg-white p-2 lg:h-20 lg:w-20 lg:rounded-3xl">
-            <img src={logoSrc(branding)} alt="" className="h-full w-full rounded-2xl object-contain" />
+        {/* Phones: one compact row (logo + name) so the login form is visible without scrolling.
+            Desktop: big centred brand panel with the illustration. */}
+        <div className="relative flex flex-col px-6 pb-14 pt-3 lg:flex-1 lg:justify-center lg:px-12 lg:pb-12 xl:px-16">
+          <div className="flex items-center gap-4 lg:flex-col lg:items-start">
+            <div className="login-logo grid h-16 w-16 shrink-0 animate-pop-in place-items-center rounded-[20px] bg-white p-1.5 lg:h-20 lg:w-20 lg:rounded-3xl lg:p-2">
+              <img src={logoSrc(branding)} alt="" className="h-full w-full rounded-2xl object-contain" />
+            </div>
+            <div className="min-w-0">
+              <h1 className="truncate text-[24px] font-bold leading-tight tracking-tight drop-shadow-sm lg:mt-1 lg:text-4xl">{name}</h1>
+              {name !== t('common.jarMgmt') && (
+                <span className="mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-0.5 text-[12px] font-medium ring-1 ring-white/20 backdrop-blur-sm lg:mt-2.5 lg:px-3 lg:py-1 lg:text-[13px]">
+                  <Droplets size={13} aria-hidden="true" /> {t('common.jarMgmt')}
+                </span>
+              )}
+            </div>
           </div>
-          <h1 className="mt-4 text-[26px] font-bold leading-tight tracking-tight drop-shadow-sm lg:mt-5 lg:text-4xl">{name}</h1>
-          {name !== t('common.jarMgmt') && (
-            <span className="mt-2.5 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-[13px] font-medium ring-1 ring-white/20 backdrop-blur-sm">
-              <Droplets size={14} aria-hidden="true" /> {t('common.jarMgmt')}
-            </span>
-          )}
+          <p className="mt-4 text-[15px] font-medium leading-snug text-white/90 lg:hidden">{t('login.brandTitle')}</p>
 
-          {/* RO purifier filling water jars */}
+          {/* RO purifier filling water jars (desktop only: on phones it would push the form down) */}
           <img
             src="/illustration.svg"
             alt=""
-            className="mt-5 w-full max-w-[320px] animate-fade-in drop-shadow-xl lg:mt-6 lg:max-w-[440px]"
+            className="mt-6 hidden w-full max-w-[440px] animate-fade-in drop-shadow-xl lg:block"
             width="520"
             height="360"
           />
@@ -129,13 +136,13 @@ export default function Login() {
       </section>
 
       {/* ── Login card ── */}
-      <main className="relative z-10 -mt-10 flex flex-1 flex-col px-4 pb-6 lg:mt-0 lg:items-center lg:justify-center lg:px-10">
+      <main className="relative z-10 -mt-9 flex flex-1 flex-col px-4 pb-6 lg:mt-0 lg:items-center lg:justify-center lg:px-10">
         <div className="w-full animate-sheet-in lg:max-w-md">
-          <form onSubmit={submit} className="rounded-3xl bg-surface p-6 shadow-pop ring-1 ring-line sm:p-8" noValidate>
-            <h2 className="text-[22px] font-bold leading-tight tracking-tight text-ink">{t('login.welcome')} 👋</h2>
+          <form onSubmit={submit} className="rounded-3xl bg-surface p-5 shadow-pop ring-1 ring-line sm:p-8" noValidate>
+            <h2 className="text-[21px] font-bold leading-tight tracking-tight text-ink sm:text-[22px]">{t('login.welcome')} 👋</h2>
             <p className="mt-1 text-sm text-muted">{t('login.welcomeSub')}</p>
 
-            <div className="mt-6 space-y-4">
+            <div className="mt-5 space-y-4 sm:mt-6">
               <label className="block">
                 <span className="label">{t('login.emailOrMobile')}</span>
                 <span className="relative block">

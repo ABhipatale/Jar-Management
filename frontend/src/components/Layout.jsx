@@ -2,29 +2,30 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   AlertTriangle, BarChart3, Bell, CalendarClock, ChevronsLeft, ChevronsRight, CloudOff, Droplets, Home, LayoutDashboard, ListChecks,
-  LogOut, Menu, Monitor, Moon, Plus, PlusCircle, Receipt, Search, Settings as SettingsIcon, Sun, Users, Wallet, X,
+  LogOut, Menu, MessageCircle, Monitor, Moon, Plus, PlusCircle, Receipt, Search, Settings as SettingsIcon, Sun, Users, Wallet, X,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext';
 import { useUi } from '../context/UiContext';
-import api from '../api/client';
+import api, { errorMessage } from '../api/client';
 import { discard, outboxItems, subscribe, syncOutbox } from '../lib/outbox';
 import { t, tx } from '../i18n';
 import { logoSrc, useBranding } from '../lib/branding';
-import { businessName, businessPlace, daysUntil, fmtDate } from '../lib/format';
+import { businessName, businessPlace, daysUntil, fmtDate, today } from '../lib/format';
+import { messages, openWhatsAppLater } from '../lib/whatsapp';
 import { getTheme, setTheme } from '../lib/theme';
 import { useDebounced } from '../lib/useApi';
 import { DevCredit, PendingText } from './ui';
 
 /* Phone: top bar + bottom menu + drawer. Laptop/desktop (lg+): collapsible sidebar + top bar. */
 
+// Five items, "Entry" in the middle (Reports is in the ☰ menu).
 const BOTTOM = [
   { to: '/', label: t('nav.home'), icon: Home, end: true },
   { to: '/customers', label: t('nav.customers'), icon: Users },
-  { to: '/jars', label: t('nav.jars'), icon: Droplets },
   { to: '/entry', label: t('nav.entry'), icon: Plus, main: true },
+  { to: '/jars', label: t('nav.jars'), icon: Droplets },
   { to: '/payments', label: t('nav.payments'), icon: Wallet },
-  { to: '/reports', label: t('nav.reports'), icon: BarChart3 },
 ];
 
 const GROUPS = [
@@ -172,6 +173,7 @@ export default function Layout() {
               </div>
             </div>
           ))}
+          <SummaryButton collapsed={collapsed} />
         </nav>
         <div className="space-y-1 border-t border-line p-3">
           {!collapsed && <ThemeSwitch />}
@@ -292,15 +294,17 @@ export default function Layout() {
 
       {/* ── Phone bottom menu ─────────────────────────────────────── */}
       <nav className="no-print pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface/95 backdrop-blur-md lg:hidden" aria-label={t('layout.menu')}>
-        <div className="mx-auto grid h-16 max-w-2xl grid-cols-6">
+        <div className="mx-auto grid h-16 max-w-2xl grid-cols-5">
           {BOTTOM.map((n) => (
             <NavLink key={n.to} to={n.to} end={n.end} className={({ isActive }) => `relative flex h-16 flex-col items-center justify-end pb-2 text-[11px] font-medium leading-none ${isActive ? 'text-brand-600' : 'text-slate-500'}`}>
               {({ isActive }) => (
                 <>
                   {isActive && !n.main && <span className="absolute inset-x-5 top-0 h-[2.5px] rounded-b-full bg-brand-600" />}
                   {n.main ? (
-                    <span className={`absolute -top-3 left-1/2 grid h-11 w-11 -translate-x-1/2 place-items-center rounded-full text-white shadow-pop ring-[3px] ring-surface ${isActive ? 'bg-brand-700' : 'bg-brand-600'}`}>
-                      <Plus size={22} strokeWidth={2.5} />
+                    <span
+                      className={`btn-glow absolute -top-5 left-1/2 grid h-14 w-14 -translate-x-1/2 place-items-center rounded-full text-white ring-4 ring-surface transition active:scale-95 ${isActive ? 'brightness-110' : ''}`}
+                    >
+                      <Plus size={26} strokeWidth={2.6} />
                     </span>
                   ) : (
                     <n.icon size={21} strokeWidth={isActive ? 2.3 : 1.9} className="mb-1.5" />
@@ -338,6 +342,7 @@ export default function Layout() {
                   ))}
                 </div>
               ))}
+              <SummaryButton onDone={() => setDrawer(false)} />
             </nav>
             <div className="space-y-2 border-t border-line p-3 pb-6">
               <ThemeSwitch />
@@ -358,6 +363,47 @@ export default function Layout() {
         </div>
       )}
     </div>
+  );
+}
+
+/** Menu item: send today's summary (jars, cash, udhari, payments) on WhatsApp. */
+function SummaryButton({ collapsed = false, onDone }) {
+  const { settings } = useSettings();
+  const { toast } = useUi();
+  const [busy, setBusy] = useState(false);
+
+  const send = async () => {
+    setBusy(true);
+    try {
+      await openWhatsAppLater(null, async () => {
+        const { data } = await api.get('/dashboard', { params: { from: today(), to: today() } });
+        const d = data.today;
+        return messages.summary(settings, { date: today(), given: d.given, returned: d.returned, cash: d.cash, udhari: d.udhari, payments: d.payments, pending: d.pending });
+      });
+      onDone?.();
+    } catch (err) {
+      toast(errorMessage(err), 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={send}
+      disabled={busy}
+      title={collapsed ? t('dash.sendSummary') : undefined}
+      aria-label={collapsed ? t('dash.sendSummary') : undefined}
+      className={`flex w-full items-center gap-3 rounded-lg px-2.5 py-2.5 text-sm font-semibold text-[#128c4a] ring-1 ring-[#1fae55]/25 transition hover:bg-[#1fae55]/10 disabled:opacity-60 ${collapsed ? 'justify-center' : ''}`}
+    >
+      {busy ? (
+        <span className="h-[18px] w-[18px] shrink-0 animate-spin rounded-full border-2 border-current/30 border-t-current" aria-hidden="true" />
+      ) : (
+        <MessageCircle size={18} className="shrink-0" aria-hidden="true" />
+      )}
+      {!collapsed && <span className="truncate text-left">{t('dash.sendSummary')}</span>}
+    </button>
   );
 }
 

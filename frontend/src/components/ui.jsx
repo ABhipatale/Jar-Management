@@ -348,22 +348,18 @@ export function PrintHeader({ settings, title, subtitle }) {
   );
 }
 
-/** Developer credit shown at the bottom of every screen. */
+/** Developer credit shown at the bottom of every screen: one line, the name links to the website. */
 export function DevCredit({ className = '' }) {
   return (
-    <div className={`no-print flex flex-col items-center gap-0.5 text-center text-xs text-slate-400 ${className}`}>
-      <span>
-        {t('common.devBy')} <span className="font-semibold text-slate-500">AB Technology Services</span>
-      </span>
-      <span className="inline-flex flex-wrap items-center justify-center gap-x-2">
-        <a href={`tel:${SUPPORT_PHONE}`} className="inline-flex items-center gap-1 font-medium text-slate-500 hover:text-ink">
-          <Phone size={12} /> {SUPPORT_PHONE_DISPLAY}
-        </a>
-        <span aria-hidden="true">·</span>
-        <a href={`https://${SUPPORT_WEBSITE}`} target="_blank" rel="noopener noreferrer" className="font-medium text-slate-500 hover:text-ink">
-          {SUPPORT_WEBSITE}
-        </a>
-      </span>
-    </div>
+    <p className={`no-print flex flex-wrap items-center justify-center gap-x-1.5 text-center text-xs text-slate-400 ${className}`}>
+      <span>Developed by</span>
+      <a href={`https://${SUPPORT_WEBSITE}/`} target="_blank" rel="noopener noreferrer" className="font-semibold text-brand-700 hover:underline">
+        ABnexa
+      </a>
+      <span aria-hidden="true">·</span>
+      <a href={`tel:${SUPPORT_PHONE}`} className="inline-flex items-center gap-1 font-medium text-slate-500 hover:text-ink">
+        <Phone size={12} aria-hidden="true" /> {SUPPORT_PHONE_DISPLAY}
+      </a>
+    </p>
   );
 }

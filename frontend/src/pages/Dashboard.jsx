@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   AlertTriangle, ArrowDownLeft, ArrowUpRight, Banknote, Bell, BookOpen, CalendarClock, CheckCircle2, ChevronRight, Clock,
-  Droplets, MessageCircle, Package, Plus, Receipt, RotateCcw, TrendingUp, UserPlus, Wallet,
+  Droplets, Package, Plus, Receipt, RotateCcw, TrendingUp, UserPlus, Wallet,
 } from 'lucide-react';
 import { BarChart, StackBar } from '../components/charts';
 import RangeFilter, { initialRange } from '../components/RangeFilter';
@@ -12,7 +12,6 @@ import { useAuth } from '../context/AuthContext';
 import { t } from '../i18n';
 import { fmtDate, fmtLongDate, money, today } from '../lib/format';
 import { useApi } from '../lib/useApi';
-import { messages, openWhatsApp } from '../lib/whatsapp';
 
 const QUICK = [
   { to: '/entry?type=given', label: t('common.giveJar'), icon: Plus, primary: true },
@@ -55,11 +54,6 @@ export default function Dashboard() {
     return { given: pick('given'), returned: pick('returned'), cash: pick('cash'), udhari: pick('udhari'), payments: pick('payments') };
   }, [data]);
 
-  const sendSummary = () => {
-    const d = data.today;
-    openWhatsApp(null, messages.summary(settings, { date: today(), given: d.given, returned: d.returned, cash: d.cash, udhari: d.udhari, payments: d.payments, pending: d.pending }));
-  };
-
   const attention = a
     ? [
         a.bookings_today.count > 0 && { to: '/bookings', icon: CalendarClock, tone: 'bg-violet-50 text-violet-700', text: t('book.todayBanner', { n: a.bookings_today.count, jars: a.bookings_today.jars }) },
@@ -84,14 +78,11 @@ export default function Dashboard() {
           </h1>
           <p className="mt-1 text-sm text-muted">{t('dash.intro')}</p>
         </div>
-        <button onClick={sendSummary} disabled={!data} className="btn-wa btn-sm hidden sm:inline-flex">
-          <MessageCircle size={16} /> {t('dash.sendSummary')}
-        </button>
       </div>
 
       {/* Quick actions — one tap each */}
       <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-5">
-        {QUICK.map((q, i) => (
+        {QUICK.map((q) => (
           <Link
             key={q.to}
             to={q.to}
@@ -105,9 +96,6 @@ export default function Dashboard() {
             <span className="leading-tight">{q.label}</span>
           </Link>
         ))}
-        <button onClick={sendSummary} disabled={!data} className="btn-wa col-span-2 !py-3 sm:hidden">
-          <MessageCircle size={18} /> {t('dash.sendSummary')}
-        </button>
       </div>
 
       {/* Needs attention */}

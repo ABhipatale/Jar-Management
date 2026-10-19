@@ -287,3 +287,21 @@ ${LINE}
 
 ${shop.footer}`;
 }
+
+/**
+ * Like openWhatsApp, but the text is loaded first (e.g. today's summary from the API).
+ * Outside Android the tab is opened right away, inside the click, so the browser doesn't block it.
+ */
+export async function openWhatsAppLater(mobile, getText) {
+  const android = /Android/i.test(navigator.userAgent);
+  const tab = android ? null : window.open('', '_blank');
+  try {
+    const text = await getText();
+    if (!tab) return openWhatsApp(mobile, text);
+    tab.opener = null;
+    tab.location.href = `https://wa.me/${mobile ? waNumber(mobile) : ''}?text=${encodeURIComponent(text)}`;
+  } catch (err) {
+    tab?.close();
+    throw err;
+  }
+}
