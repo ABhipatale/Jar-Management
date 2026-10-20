@@ -50,6 +50,38 @@ class SuperAdminTest extends TestCase
         $this->assertSame(1, AdminAuditLog::where('action', 'company.created')->where('company_id', $id)->count());
     }
 
+    public function test_payment_pending_company_must_choose_a_plan_on_first_login(): void
+    {
+        $id = $this->createCompany(['payment' => 'pending'])->assertCreated()
+            ->assertJsonPath('data.awaiting_payment', true)
+            ->assertJsonPath('data.plan_id', null)
+            ->json('data.id');
+
+        // The owner can log in, but sees only the plans screen (with the welcome text).
+        $this->app['auth']->forgetGuards();
+        $token = $this->postJson('/api/login', ['login' => '9822001122', 'password' => 'raj12345'])->assertOk()
+            ->assertJsonPath('user.company.expired', true)
+            ->assertJsonPath('user.company.awaiting_payment', true)
+            ->json('token');
+        $this->withToken($token)->getJson('/api/billing')->assertOk()->assertJsonPath('company.awaiting_payment', true);
+        $this->withToken($token)->getJson('/api/customers')->assertForbidden()->assertJsonPath('code', 'company_expired');
+
+        // First payment (here: the super admin extends by hand) opens the app.
+        Company::find($id)->update(['expires_at' => now()->addMonth()]);
+        $this->app['auth']->forgetGuards(); // a new request loads the user (and company) afresh
+        $this->withToken($token)->getJson('/api/me')->assertJsonPath('user.company.expired', false)
+            ->assertJsonPath('user.company.awaiting_payment', false);
+    }
+
+    public function test_paid_company_with_a_plan_and_no_date_runs_one_period_from_today(): void
+    {
+        $yearly = \App\Models\Plan::where('interval', 'year')->value('id');
+        $this->createCompany(['payment' => 'paid', 'plan_id' => $yearly, 'expires_at' => null])->assertCreated()
+            ->assertJsonPath('data.expires_at', now()->addYear()->toDateString())
+            ->assertJsonPath('data.plan', 'Yearly')
+            ->assertJsonPath('data.awaiting_payment', false);
+    }
+
     public function test_slug_is_unique_and_owner_email_cannot_be_reused(): void
     {
         $this->createCompany()->assertCreated();

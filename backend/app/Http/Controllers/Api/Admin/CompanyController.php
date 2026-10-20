@@ -112,7 +112,19 @@ class CompanyController extends Controller
             'owner_email' => ['required', 'email', 'max:120', Rule::unique('users', 'email')],
             'owner_mobile' => ['nullable', 'regex:/^[6-9][0-9]{9}$/', Rule::unique('users', 'mobile')],
             'owner_password' => ['required', Password::min(6)],
+            // pending: the owner chooses and pays a plan on first login; paid: the app opens right away.
+            'payment' => ['sometimes', Rule::in(['paid', 'pending'])],
         ], $this->messages());
+
+        if (($data['payment'] ?? 'paid') === 'pending') {
+            $data['plan_id'] = null;
+            $data['expires_at'] = now()->subSecond(); // already "ended": locked until the first payment
+        } elseif (! empty($data['plan_id']) && empty($data['expires_at'])) {
+            // Paid for a plan, no end date given: one period from today.
+            $plan = Plan::findOrFail($data['plan_id']);
+            $data['expires_at'] = $plan->interval === 'year' ? now()->startOfDay()->addYear() : now()->startOfDay()->addMonth();
+        }
+        unset($data['payment']);
 
         $company = $this->companies->create($this->withPlanName($data));
         $this->audit($request, $company, 'company.created');
@@ -272,6 +284,7 @@ class CompanyController extends Controller
         return $c->only('id', 'name', 'name_mr', 'short_name', 'slug', 'locale', 'status', 'plan', 'plan_id') + [
             'expires_at' => $c->expires_at?->toDateString(),
             'expired' => $c->isExpired(),
+            'awaiting_payment' => $c->awaitingFirstPayment(),
             'created_at' => $c->created_at?->toDateString(),
         ] + $extra;
     }

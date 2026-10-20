@@ -29,6 +29,7 @@ class BillingController extends Controller
                 'plan_id' => $company->plan_id,
                 'expires_at' => $company->expires_at?->toDateString(),
                 'expired' => $company->isExpired(),
+                'awaiting_payment' => $company->awaitingFirstPayment(),
             ],
             'plans' => Plan::where('is_active', true)->orderBy('sort_order')->orderBy('price')->get()
                 ->map(fn (Plan $p) => $p->only('id', 'name', 'name_mr', 'price', 'interval', 'description')),

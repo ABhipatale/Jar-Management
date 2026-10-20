@@ -67,6 +67,8 @@ class AuthController extends Controller
                 // The app shows a "please pay" banner during the last days before this date.
                 'expires_at' => $company->expires_at?->toDateString(),
                 'expired' => $company->isExpired(),
+                // New company that has not paid yet: the plans screen greets instead of "plan ended".
+                'awaiting_payment' => $company->awaitingFirstPayment(),
             ] : null,
         ];
     }

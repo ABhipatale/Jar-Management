@@ -5,6 +5,7 @@ import { daysUntil } from '../../lib/format';
 
 export function StatusBadge({ company }) {
   if (company.status === 'suspended') return <Badge kind="inactive">{t('adm.status.suspended')}</Badge>;
+  if (company.awaiting_payment) return <Badge kind="udhari">{t('adm.status.awaiting')}</Badge>;
   if (company.expired) return <Badge kind="damaged">{t('adm.status.expired')}</Badge>;
   return <Badge kind="active">{t('adm.status.active')}</Badge>;
 }
@@ -53,6 +54,13 @@ export function PlanPill({ company }) {
     return (
       <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
         <Forever size={13} aria-hidden="true" /> {t('adm.noExpiry')}
+      </span>
+    );
+  }
+  if (company.awaiting_payment) {
+    return (
+      <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800">
+        <CalendarClock size={13} aria-hidden="true" /> {t('adm.pay.firstLogin')}
       </span>
     );
   }

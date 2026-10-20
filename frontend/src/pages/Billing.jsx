@@ -27,6 +27,8 @@ export default function Billing({ locked = false }) {
 
   const { company, plans, payments, enabled } = data;
   const monthly = plans.find((p) => p.interval === 'month');
+  // Red only when a plan really ended (a new, not-yet-paid company gets a friendly card).
+  const ended = company.expired && !company.awaiting_payment;
   const left = company.expires_at ? daysUntil(company.expires_at) : null;
 
   const buy = async (plan) => {
@@ -51,13 +53,15 @@ export default function Billing({ locked = false }) {
       {!locked && <PageHeader title={t('bill.title')} back />}
 
       {/* Current status */}
-      <div className={`card flex items-start gap-3 ${company.expired ? 'ring-red-200' : ''}`}>
-        <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${company.expired ? 'bg-red-50 text-red-600' : 'bg-emerald-50 text-emerald-700'}`}>
-          {company.expired ? <CalendarClock size={20} /> : <BadgeCheck size={20} />}
+      <div className={`card flex items-start gap-3 ${ended ? 'ring-red-200' : ''}`}>
+        <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${ended ? 'bg-red-50 text-red-600' : company.awaiting_payment ? 'bg-brand-50 text-brand-700' : 'bg-emerald-50 text-emerald-700'}`}>
+          {ended ? <CalendarClock size={20} /> : company.awaiting_payment ? <Sparkles size={20} /> : <BadgeCheck size={20} />}
         </span>
         <div className="min-w-0 flex-1">
           <div className="font-semibold text-ink">
-            {company.expired
+            {company.awaiting_payment
+              ? t('bill.noPlan')
+              : company.expired
               ? t('bill.expiredOn', { date: fmtDate(company.expires_at) })
               : company.expires_at
                 ? t('bill.activeTill', { date: fmtDate(company.expires_at) })

@@ -51,6 +51,16 @@ class Company extends Model
         return $this->expires_at !== null && $this->expires_at->isPast();
     }
 
+    /**
+     * Registered with "payment pending": its plan "ended" the moment it was created, so its users
+     * see only the plans screen (with a welcome text) until the first payment.
+     */
+    public function awaitingFirstPayment(): bool
+    {
+        return $this->isExpired() && $this->created_at !== null
+            && $this->expires_at->lte($this->created_at->copy()->addMinute());
+    }
+
     /** Can its users log in and use the app right now? */
     public function isUsable(): bool
     {

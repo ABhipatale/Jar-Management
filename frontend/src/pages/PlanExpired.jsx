@@ -1,4 +1,4 @@
-import { CalendarX2, LogOut } from 'lucide-react';
+import { CalendarX2, LogOut, Rocket } from 'lucide-react';
 import { DevCredit } from '../components/ui';
 import { useAuth } from '../context/AuthContext';
 import { t } from '../i18n';
@@ -9,6 +9,8 @@ import Billing from './Billing';
 export default function PlanExpired() {
   const { user, logout, stopImpersonating } = useAuth();
   const branding = useBranding();
+  // A new company that has not paid yet gets a welcome, not "your plan has ended".
+  const welcome = Boolean(user?.company?.awaiting_payment);
 
   return (
     <div className="min-h-dvh bg-app">
@@ -26,11 +28,17 @@ export default function PlanExpired() {
       </header>
       <main className="mx-auto max-w-3xl space-y-5 px-4 py-6">
         <div className="flex flex-col items-center text-center">
-          <span className="grid h-14 w-14 place-items-center rounded-2xl bg-red-50 text-red-600">
-            <CalendarX2 size={28} />
-          </span>
-          <h1 className="mt-3 text-[22px] font-bold tracking-tight text-ink">{t('bill.lockedTitle')}</h1>
-          <p className="mt-1 max-w-md text-sm text-muted">{t('bill.lockedSub')}</p>
+          {welcome ? (
+            <span className="btn-glow grid h-14 w-14 place-items-center rounded-2xl text-white">
+              <Rocket size={28} />
+            </span>
+          ) : (
+            <span className="grid h-14 w-14 place-items-center rounded-2xl bg-red-50 text-red-600">
+              <CalendarX2 size={28} />
+            </span>
+          )}
+          <h1 className="mt-3 text-[22px] font-bold tracking-tight text-ink">{welcome ? t('bill.welcomeTitle') : t('bill.lockedTitle')}</h1>
+          <p className="mt-1 max-w-md text-sm text-muted">{welcome ? t('bill.welcomeSub') : t('bill.lockedSub')}</p>
         </div>
         <Billing locked />
         <DevCredit className="pt-6" />
