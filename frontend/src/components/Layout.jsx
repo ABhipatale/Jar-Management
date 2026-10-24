@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
-  AlertTriangle, BarChart3, Bell, CalendarClock, ChevronsLeft, ChevronsRight, CloudOff, Droplets, Home, LayoutDashboard, ListChecks,
+  AlertTriangle, BarChart3, Bell, CalendarClock, CreditCard, ChevronsLeft, ChevronsRight, CloudOff, Droplets, Home, LayoutDashboard, ListChecks,
   LogOut, Menu, MessageCircle, Monitor, Moon, Plus, PlusCircle, Receipt, Search, Settings as SettingsIcon, Sun, Users, Wallet, X,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -58,6 +58,7 @@ const GROUPS = [
     items: [
       { to: '/notifications', label: t('notif.title'), icon: Bell, badge: true },
       { to: '/settings', label: t('nav.settings'), icon: SettingsIcon },
+      { to: '/billing', label: t('bill.title'), icon: CreditCard },
     ],
   },
 ];
