@@ -133,9 +133,13 @@ export default function Billing({ locked = false }) {
               {save > 0 && <div className="mt-2 text-sm font-semibold text-emerald-700">{t('bill.save', { amount: money(save) })}</div>}
               {planDesc(p) && <p className="mt-3 text-sm leading-relaxed text-muted">{planDesc(p)}</p>}
               <ul className="mt-4 space-y-1.5 text-sm text-ink">
-                {['bill.f1', 'bill.f2', 'bill.f3'].map((k) => (
-                  <li key={k} className="flex items-center gap-2">
-                    <CheckCircle2 size={16} className="shrink-0 text-emerald-600" /> {t(k, { interval: yearly ? t('bill.year') : t('bill.month') })}
+                {['bill.f1', 'bill.f2', 'bill.f3', 'bill.f4', 'bill.f5'].map((k) => (
+                  <li key={k} className="flex items-start gap-2">
+                    <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-emerald-600" />
+                    <span className={k === 'bill.f5' ? 'font-semibold text-emerald-700' : ''}>
+                      {/* f5: the plan's own cost per day (₹1999 / 365 ≈ ₹5, ₹250 / 30 ≈ ₹8) */}
+                      {t(k, { interval: yearly ? t('bill.year') : t('bill.month'), amount: Math.round(p.price / (yearly ? 365 : 30)) })}
+                    </span>
                   </li>
                 ))}
               </ul>
