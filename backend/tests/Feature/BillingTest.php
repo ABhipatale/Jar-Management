@@ -184,6 +184,19 @@ class BillingTest extends TestCase
         $this->getJson('/api/admin/overview')->assertForbidden();
     }
 
+    public function test_plan_description_in_both_languages(): void
+    {
+        Sanctum::actingAs(User::factory()->superAdmin()->create());
+        $id = $this->monthly()->id;
+        $this->putJson("/api/admin/plans/{$id}", ['description' => 'Perfect to get started.', 'description_mr' => 'नवीन सुरुवात करणाऱ्यांसाठी उत्तम.'])
+            ->assertOk()->assertJsonPath('data.description_mr', 'नवीन सुरुवात करणाऱ्यांसाठी उत्तम.');
+
+        Sanctum::actingAs($this->owner);
+        $plan = collect($this->getJson('/api/billing')->json('plans'))->firstWhere('id', $id);
+        $this->assertSame('Perfect to get started.', $plan['description']);
+        $this->assertSame('नवीन सुरुवात करणाऱ्यांसाठी उत्तम.', $plan['description_mr']);
+    }
+
     public function test_company_users_cannot_manage_plans(): void
     {
         $this->postJson('/api/admin/plans', ['name' => 'Free', 'price' => 1, 'interval' => 'month'])->assertForbidden();

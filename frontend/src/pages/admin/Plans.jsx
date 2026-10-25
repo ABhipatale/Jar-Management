@@ -7,7 +7,7 @@ import { t } from '../../i18n';
 import { money } from '../../lib/format';
 import { useApi } from '../../lib/useApi';
 
-const EMPTY = { name: '', name_mr: '', price: '', interval: 'month', description: '', is_active: true, sort_order: 0 };
+const EMPTY = { name: '', name_mr: '', price: '', interval: 'month', description: '', description_mr: '', is_active: true, sort_order: 0 };
 
 /** Super admin: the plans companies can buy (add, change, hide, delete). */
 export default function Plans() {
@@ -76,6 +76,7 @@ export default function Plans() {
                     <span className="text-4xl font-bold tracking-tight text-ink tabular-nums">{money(p.price)}</span>
                     <span className="text-sm font-medium text-muted">/ {yearly ? t('bill.year') : t('bill.month')}</span>
                   </div>
+                  {p.description_mr && <p className="text-sm text-muted">{p.description_mr}</p>}
                   {p.description && <p className="text-sm text-muted">{p.description}</p>}
                   <div className="inline-flex w-fit items-center gap-1.5 rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700">
                     <Building2 size={13} aria-hidden="true" /> {t('plans.companies', { n: p.companies })}
@@ -112,7 +113,7 @@ export default function Plans() {
 }
 
 function PlanForm({ plan, onClose, onSaved }) {
-  const [form, setForm] = useState({ ...EMPTY, ...plan, name_mr: plan.name_mr || '', description: plan.description || '' });
+  const [form, setForm] = useState({ ...EMPTY, ...plan, name_mr: plan.name_mr || '', description: plan.description || '', description_mr: plan.description_mr || '' });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
@@ -123,7 +124,7 @@ function PlanForm({ plan, onClose, onSaved }) {
     setError('');
     const body = {
       name: form.name, name_mr: form.name_mr || null, price: Number(form.price), interval: form.interval,
-      description: form.description || null, is_active: Boolean(form.is_active), sort_order: Number(form.sort_order) || 0,
+      description: form.description || null, description_mr: form.description_mr || null, is_active: Boolean(form.is_active), sort_order: Number(form.sort_order) || 0,
     };
     try {
       const { data } = plan.id ? await api.put(`/admin/plans/${plan.id}`, body) : await api.post('/admin/plans', body);
@@ -158,6 +159,9 @@ function PlanForm({ plan, onClose, onSaved }) {
             onChange={(v) => setForm((f) => ({ ...f, interval: v }))}
             options={[{ value: 'month', label: t('plans.monthly') }, { value: 'year', label: t('plans.yearly') }]}
           />
+        </Field>
+        <Field label={t('plans.descriptionMr')}>
+          <textarea className="input min-h-20" value={form.description_mr} onChange={set('description_mr')} maxLength={500} />
         </Field>
         <Field label={t('plans.description')}>
           <textarea className="input min-h-20" value={form.description} onChange={set('description')} maxLength={500} />

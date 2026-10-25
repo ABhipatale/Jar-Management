@@ -19,7 +19,7 @@ class PlanController extends Controller
         return response()->json([
             'payments_enabled' => $billing->enabled(),
             'data' => Plan::orderBy('sort_order')->orderBy('price')->get()->map(fn (Plan $p) => $p->only(
-                'id', 'name', 'name_mr', 'price', 'interval', 'description', 'is_active', 'sort_order'
+                'id', 'name', 'name_mr', 'price', 'interval', 'description', 'description_mr', 'is_active', 'sort_order'
             ) + ['companies' => (int) ($counts[$p->id] ?? 0)]),
         ]);
     }
@@ -57,6 +57,7 @@ class PlanController extends Controller
             'price' => [$req, 'numeric', 'min:1', 'max:1000000'],
             'interval' => [$req, Rule::in(['month', 'year'])],
             'description' => ['sometimes', 'nullable', 'string', 'max:500'],
+            'description_mr' => ['sometimes', 'nullable', 'string', 'max:500'],
             'is_active' => ['sometimes', 'boolean'],
             'sort_order' => ['sometimes', 'integer', 'min:0', 'max:1000'],
         ];

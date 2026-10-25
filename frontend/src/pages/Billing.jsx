@@ -11,6 +11,28 @@ import { SUPPORT_PHONE, SUPPORT_PHONE_DISPLAY } from '../lib/support';
 import { useApi } from '../lib/useApi';
 
 const planName = (p) => (lang === 'mr' ? p.name_mr || p.name : p.name);
+// Description in the app's language, falling back to the other one.
+const planDesc = (p) => (lang === 'mr' ? p.description_mr || p.description : p.description || p.description_mr);
+
+/** Colourful "choose plan" button: press-down + a ripple from where it was tapped. */
+function PlanButton({ yearly, onClick, disabled, children }) {
+  const [ripples, setRipples] = useState([]);
+  const tap = (e) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    const id = Date.now() + Math.random();
+    setRipples((list) => [...list, { id, x: e.clientX - r.left, y: e.clientY - r.top }]);
+    setTimeout(() => setRipples((list) => list.filter((x) => x.id !== id)), 700);
+    onClick();
+  };
+  return (
+    <button type="button" className={`plan-btn mt-5 ${yearly ? 'plan-btn-year' : 'plan-btn-month'}`} onClick={tap} disabled={disabled}>
+      {ripples.map((r) => (
+        <span key={r.id} className="plan-ripple" style={{ left: r.x, top: r.y }} aria-hidden="true" />
+      ))}
+      {children}
+    </button>
+  );
+}
 
 /**
  * Plans + one-time Razorpay payment (each payment adds a month/year). `locked`: the company's plan has ended and this is the only
@@ -109,7 +131,7 @@ export default function Billing({ locked = false }) {
               </div>
               {yearly && monthly && <div className="mt-1 text-sm text-muted">{t('bill.perMonth', { amount: money(Math.round(p.price / 12)) })}</div>}
               {save > 0 && <div className="mt-2 text-sm font-semibold text-emerald-700">{t('bill.save', { amount: money(save) })}</div>}
-              {p.description && <p className="mt-3 text-sm text-muted">{p.description}</p>}
+              {planDesc(p) && <p className="mt-3 text-sm leading-relaxed text-muted">{planDesc(p)}</p>}
               <ul className="mt-4 space-y-1.5 text-sm text-ink">
                 {['bill.f1', 'bill.f2', 'bill.f3'].map((k) => (
                   <li key={k} className="flex items-center gap-2">
@@ -117,18 +139,16 @@ export default function Billing({ locked = false }) {
                   </li>
                 ))}
               </ul>
-              <button
-                className={`mt-5 w-full ${yearly ? 'btn-primary' : 'btn-light'}`}
-                onClick={() => buy(p)}
-                disabled={!enabled || busy !== null}
-              >
+              <PlanButton yearly={yearly} onClick={() => buy(p)} disabled={!enabled || busy !== null}>
                 {busy === p.id ? (
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-current/40 border-t-current" aria-hidden="true" />
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" aria-hidden="true" />
+                ) : yearly ? (
+                  <Crown size={18} />
                 ) : (
-                  <CreditCard size={17} />
+                  <CreditCard size={18} />
                 )}
                 {t('bill.choose')}
-              </button>
+              </PlanButton>
             </div>
           );
         })}

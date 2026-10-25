@@ -10,7 +10,7 @@ class Plan extends Model
 {
     use SoftDeletes;
 
-    protected $fillable = ['name', 'name_mr', 'price', 'interval', 'description', 'is_active', 'sort_order'];
+    protected $fillable = ['name', 'name_mr', 'price', 'interval', 'description', 'description_mr', 'is_active', 'sort_order'];
 
     protected function casts(): array
     {

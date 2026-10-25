@@ -259,3 +259,29 @@ input[type="date"]::-webkit-calendar-picker-indicator { opacity: 0.6; cursor: po
     linear-gradient(135deg, color-mix(in oklab, var(--brand) 70%, black) 0%, var(--brand) 55%, color-mix(in oklab, var(--brand) 55%, #0ea5e9) 100%);
 }
 .admin-glass { @apply rounded-xl bg-white/10 ring-1 ring-white/15 backdrop-blur-sm; }
+
+/* ───────────── Plan "choose" buttons: colourful, shine, press + ripple on tap ───────────── */
+.plan-btn {
+  @apply relative isolate inline-flex h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-xl text-[15px] font-bold text-white transition duration-150 select-none;
+  box-shadow: 0 10px 24px -8px color-mix(in oklab, var(--pb-from) 70%, transparent);
+  background: linear-gradient(135deg, var(--pb-from), var(--pb-to));
+}
+.plan-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 16px 30px -10px color-mix(in oklab, var(--pb-from) 80%, transparent); }
+.plan-btn:active:not(:disabled) { transform: translateY(0) scale(0.96); }
+.plan-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.plan-btn-month { --pb-from: #2563eb; --pb-to: #0ea5e9; }
+.plan-btn-year { --pb-from: #f59e0b; --pb-to: #ea580c; }
+/* A light sweep across the button, every few seconds */
+.plan-btn::after {
+  content: ''; position: absolute; inset: 0 auto 0 -60%; width: 45%; z-index: -1;
+  background: linear-gradient(100deg, transparent, rgb(255 255 255 / 0.35), transparent);
+  transform: skewX(-20deg); animation: plan-shine 3.2s ease-in-out infinite;
+}
+.plan-btn-month::after { animation-delay: 1.6s; }
+@keyframes plan-shine { 0%, 55% { left: -60%; } 85%, 100% { left: 130%; } }
+.plan-ripple {
+  position: absolute; z-index: -1; width: 24px; height: 24px; margin: -12px 0 0 -12px; border-radius: 9999px;
+  background: rgb(255 255 255 / 0.55); pointer-events: none; animation: plan-ripple 0.65s ease-out forwards;
+}
+@keyframes plan-ripple { to { transform: scale(28); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .plan-btn::after, .plan-ripple { animation: none; display: none; } }

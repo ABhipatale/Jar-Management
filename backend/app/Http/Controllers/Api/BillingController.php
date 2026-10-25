@@ -32,7 +32,7 @@ class BillingController extends Controller
                 'awaiting_payment' => $company->awaitingFirstPayment(),
             ],
             'plans' => Plan::where('is_active', true)->orderBy('sort_order')->orderBy('price')->get()
-                ->map(fn (Plan $p) => $p->only('id', 'name', 'name_mr', 'price', 'interval', 'description')),
+                ->map(fn (Plan $p) => $p->only('id', 'name', 'name_mr', 'price', 'interval', 'description', 'description_mr')),
             'payments' => BillingPayment::with('plan:id,name,name_mr')->latest('id')->limit(24)->get()
                 ->map(fn (BillingPayment $p) => [
                     'id' => $p->id,
