@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Check, ChevronDown, Droplets, Phone, Search, X } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { Check, ChevronDown, Droplets, Phone, Search, UserPlus, X } from 'lucide-react';
 import api from '../api/client';
 import { t } from '../i18n';
+import { normalizeMobile } from '../lib/contacts';
+import ContactButton from './ContactButton';
 import { PendingText } from './ui';
 
 let cache = null; // shared across screens; refreshed on each mount
@@ -14,7 +17,22 @@ export default function CustomerPicker({ value, onChange, placeholder = t('cust.
   const [list, setList] = useState(cache || []);
   const [q, setQ] = useState('');
   const [open, setOpen] = useState(false);
+  const [notFound, setNotFound] = useState(null); // picked contact that isn't a customer yet
   const box = useRef(null);
+  const location = useLocation();
+
+  // Contact picked: select the EasyJar customer with one of its numbers (this company's list only).
+  const onContact = ({ name, mobiles }) => {
+    const found = list.find((c) => mobiles.includes(normalizeMobile(c.mobile)) && (includeInactive || c.status === 'active' || c.id === Number(value)));
+    if (found) {
+      setNotFound(null);
+      setOpen(false);
+      setQ('');
+      onChange(found.id, found);
+    } else {
+      setNotFound({ name, mobile: mobiles[0] });
+    }
+  };
 
   useEffect(() => {
     api
@@ -81,60 +99,76 @@ export default function CustomerPicker({ value, onChange, placeholder = t('cust.
     );
   }
 
+  const addUrl = notFound
+    ? `/customers/new?${new URLSearchParams({ name: notFound.name, mobile: notFound.mobile, return: location.pathname + location.search })}`
+    : '';
+
   return (
-    <div className="relative" ref={box}>
-      <Search size={18} className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-slate-400" aria-hidden="true" />
-      <input
-        className="input pl-10 pr-10"
-        value={q}
-        placeholder={placeholder}
-        onChange={(e) => { setQ(e.target.value); setOpen(true); }}
-        onFocus={() => setOpen(true)}
-        autoComplete="off"
-        role="combobox"
-        aria-expanded={open}
-        aria-autocomplete="list"
-      />
-      <ChevronDown
-        size={18}
-        className={`pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`}
-        aria-hidden="true"
-      />
-      {open && (
-        <div className="absolute z-40 mt-1.5 max-h-72 w-full animate-pop-in overflow-y-auto rounded-xl bg-surface p-1 shadow-pop ring-1 ring-line" role="listbox">
-          {matches.length === 0 && (
-            <div className="flex flex-col items-center gap-2 px-4 py-6 text-center text-sm text-muted">
-              <Search size={18} className="text-slate-400" aria-hidden="true" />
-              {t('picker.noCustomer')}
-            </div>
-          )}
-          {matches.map((c) => {
-            const isSel = c.id === Number(value);
-            return (
-              <button
-                type="button"
-                role="option"
-                aria-selected={isSel}
-                key={c.id}
-                className={`flex w-full items-center gap-3 rounded-lg px-2.5 py-2.5 text-left transition hover:bg-surface-2 ${isSel ? 'bg-brand-50' : ''}`}
-                onClick={() => { onChange(c.id, c); setOpen(false); setQ(''); }}
-              >
-                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-50 text-sm font-semibold text-brand-700">
-                  {c.name.charAt(0).toUpperCase()}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate font-medium text-ink">{c.name}</span>
-                  <span className="text-sm tabular-nums text-muted">{c.mobile}</span>
-                </span>
-                <span className="shrink-0 text-right text-sm">
-                  <span className="flex items-center justify-end gap-1 text-muted">
-                    <Droplets size={12} aria-hidden="true" /> <span className="font-semibold tabular-nums text-ink">{c.current_jars}</span>
+    <div>
+      <div className="relative" ref={box}>
+        <Search size={18} className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-slate-400" aria-hidden="true" />
+        <input
+          className="input pl-10 pr-20"
+          value={q}
+          placeholder={placeholder}
+          onChange={(e) => { setQ(e.target.value); setOpen(true); setNotFound(null); }}
+          onFocus={() => setOpen(true)}
+          autoComplete="off"
+          role="combobox"
+          aria-expanded={open}
+          aria-autocomplete="list"
+        />
+        <ChevronDown
+          size={18}
+          className={`pointer-events-none absolute right-12 top-1/2 -translate-y-1/2 text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`}
+          aria-hidden="true"
+        />
+        {/* Pick from phone contacts: inside the search box, so the box and list keep full width */}
+        <ContactButton onPick={onContact} size="sm" className="absolute right-1.5 top-1/2 z-10 -translate-y-1/2" />
+        {open && (
+          <div className="absolute z-40 mt-1.5 max-h-72 w-full animate-pop-in overflow-y-auto rounded-xl bg-surface p-1 shadow-pop ring-1 ring-line" role="listbox">
+            {matches.length === 0 && (
+              <div className="flex flex-col items-center gap-2 px-4 py-6 text-center text-sm text-muted">
+                <Search size={18} className="text-slate-400" aria-hidden="true" />
+                {t('picker.noCustomer')}
+              </div>
+            )}
+            {matches.map((c) => {
+              const isSel = c.id === Number(value);
+              return (
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={isSel}
+                  key={c.id}
+                  className={`flex w-full items-center gap-3 rounded-lg px-2.5 py-2.5 text-left transition hover:bg-surface-2 ${isSel ? 'bg-brand-50' : ''}`}
+                  onClick={() => { onChange(c.id, c); setOpen(false); setQ(''); }}
+                >
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-50 text-sm font-semibold text-brand-700">
+                    {c.name.charAt(0).toUpperCase()}
                   </span>
-                  <PendingText amount={c.pending_amount} />
-                </span>
-              </button>
-            );
-          })}
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-medium text-ink">{c.name}</span>
+                    <span className="text-sm tabular-nums text-muted">{c.mobile}</span>
+                  </span>
+                  <span className="shrink-0 text-right text-sm">
+                    <span className="flex items-center justify-end gap-1 text-muted">
+                      <Droplets size={12} aria-hidden="true" /> <span className="font-semibold tabular-nums text-ink">{c.current_jars}</span>
+                    </span>
+                    <PendingText amount={c.pending_amount} />
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+      {notFound && (
+        <div className="mt-2 flex animate-fade-in flex-wrap items-center gap-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-900 ring-1 ring-amber-200" role="status">
+          <span className="min-w-0 flex-1">{t('contact.notCustomer', { name: notFound.name || notFound.mobile, mobile: notFound.mobile })}</span>
+          <Link to={addUrl} className="btn-primary btn-sm">
+            <UserPlus size={15} /> {t('contact.addNew')}
+          </Link>
         </div>
       )}
     </div>

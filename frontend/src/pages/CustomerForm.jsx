@@ -1,10 +1,27 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import api, { errorMessage } from '../api/client';
-import { AlertTriangle, MapPin, Phone, Save, User, UserPlus } from 'lucide-react';
+import { AlertTriangle, ArrowRight, MapPin, Phone, Save, User, UserPlus, Users } from 'lucide-react';
+import ContactButton from '../components/ContactButton';
 import { Field, Loader, PageHeader, Segmented } from '../components/ui';
 import { useUi } from '../context/UiContext';
 import { t } from '../i18n';
+import { normalizeMobile } from '../lib/contacts';
+
+/** Another EasyJar customer (this company only) with exactly this mobile, or null. */
+async function findByMobile(mobile, exceptId) {
+  if (!mobile) return null;
+  const { data } = await api.get('/customers', { params: { search: mobile } });
+  return data.data.find((c) => normalizeMobile(c.mobile) === mobile && c.id !== Number(exceptId)) || null;
+}
+
+/** Where to go after saving: ?return=/entry?type=given → /entry?type=given&customer=<id>. */
+function returnTo(ret, id) {
+  if (!ret || !ret.startsWith('/') || ret.startsWith('//')) return null;
+  const u = new URL(ret, window.location.origin);
+  u.searchParams.set('customer', id);
+  return u.pathname + u.search;
+}
 
 /** Label with a red required marker (existing labels end with " *"). */
 const req = (key) => (
@@ -27,8 +44,12 @@ export default function CustomerForm() {
   const { id } = useParams();
   const editing = Boolean(id);
   const navigate = useNavigate();
-  const { toast } = useUi();
-  const [form, setForm] = useState({ name: '', mobile: '', address: '', status: 'active' });
+  const { toast, confirm } = useUi();
+  const [params] = useSearchParams();
+  // "Add as new customer" from a contact picked elsewhere pre-fills name + mobile.
+  const [form, setForm] = useState(() => ({ name: params.get('name') || '', mobile: params.get('mobile') || '', address: '', status: 'active' }));
+  const [dup, setDup] = useState(null); // existing customer with the same mobile
+  const [mismatch, setMismatch] = useState(false); // picked contact doesn't have the typed number
   const [loading, setLoading] = useState(editing);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -42,19 +63,45 @@ export default function CustomerForm() {
       .finally(() => setLoading(false));
   }, [editing, id]);
 
-  const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
+  const set = (k) => (e) => {
+    setForm({ ...form, [k]: e.target.value });
+    if (k === 'mobile') { setMismatch(false); setDup(null); }
+  };
+
+  // Contact picked: fill name + mobile, unless the number already typed doesn't match it.
+  const onContact = async ({ name, mobiles }) => {
+    const typed = normalizeMobile(form.mobile);
+    if (typed && !mobiles.includes(typed)) {
+      setMismatch(true);
+      return;
+    }
+    const mobile = typed || mobiles[0];
+    setMismatch(false);
+    setForm((f) => ({ ...f, name: name || f.name, mobile }));
+    try {
+      setDup(await findByMobile(mobile, id));
+    } catch {
+      setDup(null); // lookup is a convenience; saving still works
+    }
+  };
 
   const submit = async (e) => {
     e.preventDefault();
     if (!form.name.trim()) return setError(t('cust.enterName'));
-    const digits = form.mobile.replace(/\D/g, '').replace(/^(91|0)(?=\d{10}$)/, '');
-    if (!/^[6-9]\d{9}$/.test(digits)) return setError(t('cust.enterMobile'));
+    const digits = normalizeMobile(form.mobile);
+    if (!digits) return setError(t('cust.enterMobile'));
     setBusy(true);
     setError('');
     try {
+      // Never create a second customer with the same mobile by accident.
+      const other = await findByMobile(digits, id).catch(() => null);
+      if (other && !(await confirm({ title: t('contact.dupTitle'), message: t('contact.dupConfirm', { name: other.name, mobile: other.mobile }), confirmText: t('contact.dupSave'), danger: false }))) {
+        setDup(other);
+        return;
+      }
       const { data } = editing ? await api.put(`/customers/${id}`, form) : await api.post('/customers', form);
       toast(data.message || t('cust.saved'));
-      navigate(`/customers/${data.data.id}`, { replace: true });
+      navigate(returnTo(params.get('return'), data.data.id) || `/customers/${data.data.id}`, { replace: true });
     } catch (err) {
       setError(errorMessage(err));
     } finally {
@@ -85,10 +132,30 @@ export default function CustomerForm() {
           </WithIcon>
         </Field>
         <Field label={req('cust.mobile')} hint={t('cust.mobileHint')}>
-          <WithIcon icon={Phone}>
-            <input className="input pl-10 tabular-nums" type="tel" inputMode="numeric" value={form.mobile} onChange={set('mobile')} maxLength={14} aria-required="true" />
-          </WithIcon>
+          <span className="flex gap-2">
+            <span className="min-w-0 flex-1">
+              <WithIcon icon={Phone}>
+                <input className="input pl-10 tabular-nums" type="tel" inputMode="numeric" value={form.mobile} onChange={set('mobile')} maxLength={16} aria-required="true" />
+              </WithIcon>
+            </span>
+            <ContactButton onPick={onContact} className="h-auto self-stretch" />
+          </span>
         </Field>
+        {mismatch && (
+          <div className="-mt-2 flex animate-fade-in items-start gap-2.5 rounded-lg bg-amber-50 p-3 text-sm text-amber-900 ring-1 ring-amber-200" role="alert">
+            <AlertTriangle size={17} className="mt-0.5 shrink-0" />
+            <span>{t('contact.mismatch', { mobile: form.mobile })}</span>
+          </div>
+        )}
+        {dup && (
+          <div className="-mt-2 flex animate-fade-in flex-wrap items-center gap-3 rounded-lg bg-sky-50 p-3 text-sm text-sky-900 ring-1 ring-sky-200" role="status">
+            <Users size={17} className="shrink-0" />
+            <span className="min-w-0 flex-1">{t('contact.exists', { name: dup.name })}</span>
+            <Link to={`/customers/${dup.id}`} className="btn-light btn-sm">
+              {t('contact.openExisting')} <ArrowRight size={14} />
+            </Link>
+          </div>
+        )}
         <Field label={t('cust.address')} hint={t('cust.addressHint')}>
           <WithIcon icon={MapPin}>
             <textarea className="input pl-10" rows={2} value={form.address} onChange={set('address')} maxLength={500} />
