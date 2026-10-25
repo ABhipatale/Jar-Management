@@ -16,6 +16,7 @@ import { messages, openWhatsAppLater } from '../lib/whatsapp';
 import { getTheme, setTheme } from '../lib/theme';
 import { useDebounced } from '../lib/useApi';
 import { DevCredit, PendingText } from './ui';
+import { autoPush, enablePush, pushLater } from '../lib/push';
 
 /* Phone: top bar + bottom menu + drawer. Laptop/desktop (lg+): collapsible sidebar + top bar. */
 
@@ -80,6 +81,27 @@ export default function Layout() {
   const [online, setOnline] = useState(navigator.onLine);
   const [queue, setQueue] = useState(outboxItems);
   const [showQueue, setShowQueue] = useState(false);
+  // Notifications are on by default: ask once with a one-tap prompt (see autoPush).
+  const [askPush, setAskPush] = useState(false);
+  const [pushBusy, setPushBusy] = useState(false);
+  useEffect(() => {
+    if (user?.impersonating) return; // super admin looking at a company: never subscribe their phone
+    let alive = true;
+    const timer = setTimeout(() => autoPush().then((ask) => alive && setAskPush(ask)), 1500);
+    return () => { alive = false; clearTimeout(timer); };
+  }, [user?.id, user?.impersonating]);
+  const turnOnPush = async () => {
+    setPushBusy(true);
+    try {
+      await enablePush();
+      toast(t('notif.pushOnToast'));
+    } catch (err) {
+      if (err.message === 'denied') toast(t('notif.errDenied'), 'error');
+    } finally {
+      setPushBusy(false);
+      setAskPush(false);
+    }
+  };
   const [collapsed, setCollapsed] = useState(() => {
     try {
       return localStorage.getItem(SB_KEY) === '1';
@@ -349,6 +371,32 @@ export default function Layout() {
               <ThemeSwitch />
               <button className="flex w-full items-center gap-3 rounded-lg px-2.5 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50" onClick={doLogout}>
                 <LogOut size={18} /> {t('nav.logout')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── One-tap "turn on notifications" prompt (after login) ──── */}
+      {askPush && (
+        <div className="no-print fixed inset-x-0 bottom-0 z-[60] flex animate-sheet-in justify-center p-3 pb-safe sm:bottom-6 sm:left-auto sm:right-6 sm:p-0" role="dialog" aria-label={t('notif.askTitle')}>
+          <div className="w-full max-w-md rounded-2xl bg-surface p-4 shadow-pop ring-1 ring-line">
+            <div className="flex items-start gap-3">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-700">
+                <Bell size={22} className="animate-[bell-ring_1.2s_ease-in-out_2]" aria-hidden="true" />
+              </span>
+              <div className="min-w-0">
+                <div className="font-semibold text-ink">{t('notif.askTitle')}</div>
+                <p className="mt-0.5 text-sm text-muted">{t('notif.askSub')}</p>
+              </div>
+            </div>
+            <div className="mt-4 flex gap-2">
+              <button className="btn-light flex-1" onClick={() => { pushLater(); setAskPush(false); }} disabled={pushBusy}>
+                {t('notif.askLater')}
+              </button>
+              <button className="btn-primary flex-[2]" onClick={turnOnPush} disabled={pushBusy}>
+                {pushBusy ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" aria-hidden="true" /> : <Bell size={17} />}
+                {t('notif.askOn')}
               </button>
             </div>
           </div>

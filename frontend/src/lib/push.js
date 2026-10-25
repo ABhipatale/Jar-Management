@@ -33,9 +33,26 @@ export async function currentSubscription() {
   }
 }
 
+// Notifications are ON by default. These per-phone flags only remember the user's own choices.
+const OFF_KEY = 'rws_push_off'; // the user turned notifications off on this phone
+const LATER_KEY = 'rws_push_later'; // "later" on the prompt: ask again after this time (ms)
+const store = {
+  get: (k) => { try { return localStorage.getItem(k); } catch { return null; } },
+  set: (k, v) => {
+    try {
+      if (v == null) localStorage.removeItem(k);
+      else localStorage.setItem(k, v);
+    } catch {
+      /* private mode */
+    }
+  },
+};
+
 /** Ask permission and register this phone. Throws Error('unsupported'|'denied'|'server'|'nosw'). */
 export async function enablePush() {
   if (!pushSupported()) throw new Error('unsupported');
+  store.set(OFF_KEY, null);
+  store.set(LATER_KEY, null);
   const permission = await Notification.requestPermission();
   if (permission !== 'granted') throw new Error('denied');
 
@@ -52,10 +69,32 @@ export async function enablePush() {
 }
 
 export async function disablePush() {
+  store.set(OFF_KEY, '1');
   const sub = await currentSubscription();
   if (!sub) return;
   await api.post('/push/unsubscribe', { endpoint: sub.endpoint }).catch(() => {});
   await sub.unsubscribe().catch(() => {});
+}
+
+/**
+ * Called after login. Already allowed on this phone → (re)register silently, no question.
+ * Returns true when the app should show the one-tap "turn on notifications" prompt.
+ * (Browsers only allow the permission question after a tap on iPhone, so we can't ask by ourselves.)
+ */
+export async function autoPush() {
+  if (!pushSupported() || store.get(OFF_KEY)) return false;
+  if (Notification.permission === 'granted') {
+    try { await enablePush(); } catch { /* server without keys / no service worker: stay quiet */ }
+    return false;
+  }
+  if (Notification.permission === 'denied') return false;
+  const later = Number(store.get(LATER_KEY) || 0);
+  return Date.now() >= later;
+}
+
+/** "Later" on the prompt: ask again in 3 days. */
+export function pushLater() {
+  store.set(LATER_KEY, String(Date.now() + 3 * 24 * 3600 * 1000));
 }
 
 /** Tell the header bell to refresh its count. */

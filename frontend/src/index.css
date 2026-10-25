@@ -285,3 +285,6 @@ input[type="date"]::-webkit-calendar-picker-indicator { opacity: 0.6; cursor: po
 }
 @keyframes plan-ripple { to { transform: scale(28); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .plan-btn::after, .plan-ripple { animation: none; display: none; } }
+
+/* Notification prompt: the bell wiggles twice */
+@keyframes bell-ring { 0%, 100% { transform: rotate(0); } 15% { transform: rotate(16deg); } 30% { transform: rotate(-14deg); } 45% { transform: rotate(10deg); } 60% { transform: rotate(-6deg); } 75% { transform: rotate(2deg); } }
