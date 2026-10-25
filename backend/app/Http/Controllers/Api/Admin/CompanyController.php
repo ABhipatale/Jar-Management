@@ -134,12 +134,37 @@ class CompanyController extends Controller
 
     public function update(Request $request, Company $company)
     {
-        $data = $request->validate($this->rules($company), $this->messages());
+        $owner = $this->owner($company);
+        if (is_string($request->input('owner_email'))) {
+            $request->merge(['owner_email' => mb_strtolower(trim($request->input('owner_email')))]);
+        }
+        $data = $request->validate($this->rules($company) + [
+            // The owner's login details (email / mobile log in), unique among all users except the owner.
+            'owner_name' => ['sometimes', 'required', 'string', 'max:120'],
+            'owner_email' => ['sometimes', 'required', 'email', 'max:120', Rule::unique('users', 'email')->ignore($owner->id)],
+            'owner_mobile' => ['sometimes', 'nullable', 'regex:/^[6-9][0-9]{9}$/', Rule::unique('users', 'mobile')->ignore($owner->id)],
+        ], $this->messages());
+
+        $ownerData = [];
+        foreach (['owner_name' => 'name', 'owner_email' => 'email', 'owner_mobile' => 'mobile'] as $in => $col) {
+            if (array_key_exists($in, $data)) {
+                $ownerData[$col] = $data[$in];
+                unset($data[$in]);
+            }
+        }
+
         if (array_key_exists('slug', $data)) {
             $data['slug'] = $this->companies->uniqueSlug($data['slug'] ?: $data['name'] ?? $company->name, $company->id);
         }
         $company->update($this->withPlanName($data));
         $this->audit($request, $company, 'company.updated', array_keys($data));
+
+        $owner->fill($ownerData);
+        if ($owner->isDirty()) {
+            $changed = array_keys($owner->getDirty());
+            $owner->save();
+            $this->audit($request, $company, 'owner.updated', ['user_id' => $owner->id, 'fields' => $changed]);
+        }
 
         return response()->json(['message' => __('कंपनी बदलली.'), 'data' => $this->detail($company)]);
     }

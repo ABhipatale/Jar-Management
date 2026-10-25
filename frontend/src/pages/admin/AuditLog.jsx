@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Building2, CalendarPlus, History, ImageMinus, ImagePlus, KeyRound, LogIn, Pause, Pencil, Play, Trash2 } from 'lucide-react';
+import { Building2, CalendarPlus, History, ImageMinus, ImagePlus, KeyRound, LogIn, Pause, Pencil, Play, Trash2, UserCog } from 'lucide-react';
 import { Empty, ErrorBox, Loader, PageHeader } from '../../components/ui';
 import { lang, t } from '../../i18n';
 import { fmtDate } from '../../lib/format';
@@ -18,6 +18,7 @@ const ACTIONS = {
   'company.logo_changed': [ImagePlus, 'bg-sky-50 text-sky-700'],
   'company.logo_removed': [ImageMinus, 'bg-slate-100 text-slate-600'],
   'owner.password_reset': [KeyRound, 'bg-amber-50 text-amber-700'],
+  'owner.updated': [UserCog, 'bg-brand-50 text-brand-700'],
 };
 
 const time = (iso) => new Date(iso).toLocaleTimeString(LOCALE, { hour: '2-digit', minute: '2-digit' });

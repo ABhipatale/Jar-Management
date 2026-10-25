@@ -30,7 +30,11 @@ export default function CompanyForm() {
     api.get(`/admin/companies/${id}`).then(
       ({ data }) => {
         const c = data.data;
-        setForm({ ...EMPTY, ...Object.fromEntries(Object.entries(c).map(([k, v]) => [k, v ?? ''])) });
+        setForm({
+          ...EMPTY,
+          ...Object.fromEntries(Object.entries(c).map(([k, v]) => [k, v ?? ''])),
+          owner_name: c.owner?.name || '', owner_email: c.owner?.email || '', owner_mobile: c.owner?.mobile || '',
+        });
         setLoading(false);
       },
       (err) => {
@@ -51,8 +55,9 @@ export default function CompanyForm() {
       locale: form.locale, plan_id: form.plan_id ? Number(form.plan_id) : null, expires_at: form.expires_at || null,
     };
     try {
+      const owner = { owner_name: form.owner_name, owner_email: form.owner_email, owner_mobile: form.owner_mobile || null };
       const { data } = editing
-        ? await api.put(`/admin/companies/${id}`, company)
+        ? await api.put(`/admin/companies/${id}`, { ...company, ...owner })
         : await api.post('/admin/companies', {
             ...company,
             owner_name: form.owner_name, owner_email: form.owner_email,
@@ -100,9 +105,9 @@ export default function CompanyForm() {
         </Field>
       </section>
 
-      {!editing && (
-        <section className="card space-y-4">
+      <section className="card space-y-4">
           <h2 className="font-semibold text-ink">{t('adm.section.owner')}</h2>
+          {editing && <p className="-mt-2 text-xs text-muted">{t('adm.ownerEditHint')}</p>}
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label={t('adm.f.ownerName')}>
               <input className="input" value={form.owner_name} onChange={set('owner_name')} required maxLength={120} />
@@ -113,12 +118,13 @@ export default function CompanyForm() {
             <Field label={t('adm.f.ownerEmail')}>
               <input className="input" type="email" value={form.owner_email} onChange={set('owner_email')} required autoCapitalize="none" />
             </Field>
-            <Field label={t('adm.f.ownerPassword')}>
-              <input className="input" type="text" value={form.owner_password} onChange={set('owner_password')} required minLength={6} autoComplete="new-password" />
-            </Field>
+            {!editing && (
+              <Field label={t('adm.f.ownerPassword')}>
+                <input className="input" type="text" value={form.owner_password} onChange={set('owner_password')} required minLength={6} autoComplete="new-password" />
+              </Field>
+            )}
           </div>
-        </section>
-      )}
+      </section>
 
       <section className="card space-y-4">
         <h2 className="font-semibold text-ink">{t('adm.section.plan')}</h2>

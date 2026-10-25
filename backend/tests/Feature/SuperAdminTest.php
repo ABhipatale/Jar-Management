@@ -82,6 +82,27 @@ class SuperAdminTest extends TestCase
             ->assertJsonPath('data.awaiting_payment', false);
     }
 
+    public function test_super_admin_edits_owner_name_email_and_mobile(): void
+    {
+        $id = $this->createCompany()->assertCreated()->json('data.id');
+        $this->createCompany(['name' => 'Other', 'owner_email' => 'other@water.in', 'owner_mobile' => '9822003344']);
+
+        // Taken by another company's owner: refused.
+        $this->putJson("/api/admin/companies/{$id}", ['owner_email' => 'other@water.in'])->assertStatus(422)->assertJsonValidationErrors('owner_email');
+        $this->putJson("/api/admin/companies/{$id}", ['owner_mobile' => '9822003344'])->assertStatus(422)->assertJsonValidationErrors('owner_mobile');
+
+        $this->putJson("/api/admin/companies/{$id}", ['name' => 'Raj Water', 'owner_name' => 'Raj Patil', 'owner_email' => ' Raj.Patil@Water.in ', 'owner_mobile' => '9822005566'])
+            ->assertOk()
+            ->assertJsonPath('data.owner.name', 'Raj Patil')
+            ->assertJsonPath('data.owner.email', 'raj.patil@water.in')
+            ->assertJsonPath('data.owner.mobile', '9822005566');
+        $this->assertSame(1, AdminAuditLog::where('action', 'owner.updated')->where('company_id', $id)->count());
+
+        // The owner now logs in with the new email (old password unchanged).
+        $this->app['auth']->forgetGuards();
+        $this->postJson('/api/login', ['login' => 'raj.patil@water.in', 'password' => 'raj12345'])->assertOk();
+    }
+
     public function test_slug_is_unique_and_owner_email_cannot_be_reused(): void
     {
         $this->createCompany()->assertCreated();
