@@ -8,6 +8,7 @@ use App\Models\Jar;
 use App\Services\BrandingService;
 use App\Services\IconService;
 use App\Services\JarService;
+use App\Services\PaymentQrService;
 use App\Services\SettingService;
 use App\Support\CurrentCompany;
 use Illuminate\Http\Request;
@@ -27,6 +28,7 @@ class SettingController extends Controller
         private JarService $jars,
         private BrandingService $branding,
         private IconService $icons,
+        private PaymentQrService $payQr,
     ) {}
 
     public function show()
@@ -86,11 +88,37 @@ class SettingController extends Controller
         return response()->json($this->payload() + ['message' => __('लोगो काढला.')]);
     }
 
+    /** The shop's UPI QR photo, linked from udhari WhatsApp messages. */
+    public function uploadPayQr(Request $request)
+    {
+        $request->validate(['qr' => ['required', 'image', 'mimes:png,jpg,jpeg,webp', 'max:5120']], [
+            'qr.required' => __('कृपया QR चा फोटो निवडा.'),
+            'qr.image' => __('हा फोटो वाचता आला नाही. कृपया PNG किंवा JPG निवडा.'),
+            'qr.mimes' => __('हा फोटो वाचता आला नाही. कृपया PNG किंवा JPG निवडा.'),
+            'qr.max' => __('QR फोटो 5 MB पेक्षा लहान असावा.'),
+        ]);
+        $this->payQr->store(CurrentCompany::get(), $request->file('qr'));
+
+        return response()->json($this->payload() + ['message' => __('QR जतन झाला.')]);
+    }
+
+    public function removePayQr()
+    {
+        $this->payQr->remove(CurrentCompany::get());
+
+        return response()->json($this->payload() + ['message' => __('QR काढला.')]);
+    }
+
     private function payload(): array
     {
         $company = CurrentCompany::get()->refresh();
+        $settings = $this->settings->all();
+        $qr = $this->payQr->find($company);
 
-        return $this->settings->all() + [
+        return $settings + [
+            'pay_qr_url' => $this->payQr->imageUrl($company, $qr),
+            // Link added to udhari WhatsApp messages (null = nothing set up yet).
+            'pay_url' => $this->payQr->payUrl($company, (bool) $qr, (string) $settings['upi_id']),
             'business_name' => $company->name,
             'business_name_mr' => $company->name_mr ?? '',
             'short_name' => $company->short_name ?? '',

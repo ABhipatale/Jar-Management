@@ -121,5 +121,10 @@
     "ऑटो-रिन्यू बंद केले. प्लॅन शेवटच्या तारखेपर्यंत सुरू राहील.": "Auto-renew turned off. The plan stays active until its end date.",
     "प्लॅन जोडला.": "Plan added.",
     "प्लॅन बदलला.": "Plan updated.",
-    "प्लॅन हटवला.": "Plan deleted."
+    "प्लॅन हटवला.": "Plan deleted.",
+    "कृपया QR चा फोटो निवडा.": "Please choose a photo of the QR.",
+    "QR फोटो 5 MB पेक्षा लहान असावा.": "The QR photo must be smaller than 5 MB.",
+    "QR जतन झाला.": "QR saved.",
+    "QR काढला.": "QR removed.",
+    "कृपया योग्य UPI ID टाका (उदा. 9876543210@ybl).": "Please enter a valid UPI ID (e.g. 9876543210@ybl)."
 }

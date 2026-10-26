@@ -53,7 +53,8 @@ class IconService
     public function remove(Company $company): void
     {
         DB::transaction(function () use ($company) {
-            CompanyAsset::where('company_id', $company->id)->delete();
+            // Only the logo and app icons (the payment QR is a separate asset).
+            CompanyAsset::where('company_id', $company->id)->whereIn('kind', self::KINDS)->delete();
             $company->increment('assets_version');
         });
     }

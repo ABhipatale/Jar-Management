@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ChevronRight, CreditCard, Droplets, ImagePlus, KeyRound, Languages, LogOut, MessageCircle, MessageSquareText, Palette, Save, Sparkles, Store, Trash2 } from 'lucide-react';
+import { ChevronRight, CreditCard, Droplets, ExternalLink, ImagePlus, KeyRound, Languages, LogOut, MessageCircle, MessageSquareText, Palette, QrCode, Save, Sparkles, Store, Trash2 } from 'lucide-react';
 import api, { errorMessage } from '../api/client';
 import { ThemeSwitch } from '../components/Layout';
 import { Field, Loader, PageHeader, Segmented } from '../components/ui';
@@ -48,6 +48,8 @@ export default function Settings() {
   const [waApp, setWaAppState] = useState(getWaApp);
   const [logoBusy, setLogoBusy] = useState(false);
   const logoInput = useRef(null);
+  const [qrBusy, setQrBusy] = useState(false);
+  const qrInput = useRef(null);
 
   useEffect(() => {
     api.get('/settings').then(({ data }) => {
@@ -101,6 +103,28 @@ export default function Settings() {
       toast(errorMessage(err), 'error');
     } finally {
       setLogoBusy(false);
+    }
+  };
+
+  // Payment QR is saved right away too; the server stores a clean copy of the picture.
+  const payQr = async (file) => {
+    setQrBusy(true);
+    try {
+      let res;
+      if (file) {
+        const body = new FormData();
+        body.append('qr', file);
+        res = await api.post('/settings/pay-qr', body);
+      } else {
+        res = await api.delete('/settings/pay-qr');
+      }
+      setSettings(res.data);
+      setForm((f) => ({ ...f, pay_qr_url: res.data.pay_qr_url, pay_url: res.data.pay_url }));
+      toast(res.data.message);
+    } catch (err) {
+      toast(errorMessage(err), 'error');
+    } finally {
+      setQrBusy(false);
     }
   };
 
@@ -223,6 +247,50 @@ export default function Settings() {
           </div>
           <Field label={t('set.contactNumbers')} hint={t('set.contactNumbersHint')}>
             <input className="input" value={form.contact_numbers || ''} onChange={set('contact_numbers')} maxLength={200} />
+          </Field>
+        </Section>
+
+        <Section icon={QrCode} tone="bg-violet-50 text-violet-700" title={t('set.payQr')} hint={t('set.payQrHint')}>
+          <div className="flex flex-wrap items-start gap-4">
+            <div className="grid h-32 w-32 shrink-0 place-items-center overflow-hidden rounded-2xl bg-white ring-1 ring-line">
+              {form.pay_qr_url ? (
+                <img src={form.pay_qr_url} alt={t('set.payQr')} className="h-full w-full object-contain" />
+              ) : (
+                <QrCode size={40} className="text-slate-300" aria-hidden="true" />
+              )}
+            </div>
+            <div className="min-w-0 flex-1 space-y-2">
+              <input
+                ref={qrInput}
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  e.target.value = '';
+                  if (f) payQr(f);
+                }}
+              />
+              <div className="flex flex-wrap gap-2">
+                <button type="button" className="btn-light" onClick={() => qrInput.current?.click()} disabled={qrBusy}>
+                  <ImagePlus size={16} /> {form.pay_qr_url ? t('set.payQrChange') : t('set.payQrUpload')}
+                </button>
+                {form.pay_qr_url && (
+                  <button type="button" className="btn-light text-red-600" onClick={() => payQr(null)} disabled={qrBusy}>
+                    <Trash2 size={16} /> {t('set.payQrRemove')}
+                  </button>
+                )}
+              </div>
+              <p className="text-xs text-muted">{t('set.payQrPhotoHint')}</p>
+              {form.pay_url && (
+                <a href={`${form.pay_url}?a=100`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 hover:underline">
+                  <ExternalLink size={15} /> {t('set.payQrPreview')}
+                </a>
+              )}
+            </div>
+          </div>
+          <Field label={t('set.upiId')} hint={t('set.upiIdHint')}>
+            <input className="input" value={form.upi_id || ''} onChange={set('upi_id')} maxLength={100} autoCapitalize="none" autoCorrect="off" spellCheck={false} placeholder="9876543210@ybl" />
           </Field>
         </Section>
 

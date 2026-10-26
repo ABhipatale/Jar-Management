@@ -125,6 +125,19 @@ function footerFor(base) {
   return fillTemplate(text, base);
 }
 
+/**
+ * "Pay here" lines for udhari messages, when the shop has set up a payment QR / UPI ID in
+ * Settings: a link to the public pay page with the pending amount. Empty otherwise.
+ */
+function payBlock(settings, amount) {
+  const a = Math.round((Number(amount) || 0) * 100) / 100;
+  if (!settings?.pay_url || a <= 0) return '';
+  return `💳 *पेमेंटसाठी QR / UPI*\n${settings.pay_url}?a=${a}\n\n`;
+}
+
+/** Puts {pay_block} just before the closing {footer}. */
+const withPay = (text, block) => (block ? text.replace('{footer}', '{pay_block}{footer}') : text);
+
 /** Template text for a message; makes sure the closing {footer} block is always there. */
 function tpl(settings, key) {
   const text = settings?.[key] || DEFAULT_TEMPLATES[key];
@@ -186,8 +199,11 @@ export function openWhatsApp(mobile, text) {
 
 export const messages = {
   delivery(settings, t) {
-    return fillTemplate(tpl(settings, 'wa_delivery'), {
+    // Udhari given in this entry → add the payment QR link (for the customer's total due).
+    const pay = Number(t.udhari_amount) > 0 ? payBlock(settings, t.pending_amount) : '';
+    return fillTemplate(withPay(tpl(settings, 'wa_delivery'), pay), {
       ...shopValues(settings),
+      pay_block: pay,
       customer_name: t.customer_name,
       date: fmtDate(t.transaction_date || today()),
       jar_quantity: t.jar_quantity,
@@ -247,8 +263,10 @@ ${LINE}
     );
   },
   reminder(settings, c) {
-    return fillTemplate(tpl(settings, 'wa_reminder'), {
+    const pay = payBlock(settings, c.pending_amount);
+    return fillTemplate(withPay(tpl(settings, 'wa_reminder'), pay), {
       ...shopValues(settings),
+      pay_block: pay,
       customer_name: c.name,
       pending_amount: amt(c.pending_amount),
     });
@@ -285,7 +303,7 @@ ${LINE}
 💧 सध्या आपल्याकडे जार : *${customer.current_jars}*
 💰 एकूण बाकी : *₹${amt(customer.pending_amount)}*
 
-${shop.footer}`;
+${payBlock(settings, customer.pending_amount)}${shop.footer}`;
 }
 
 /**

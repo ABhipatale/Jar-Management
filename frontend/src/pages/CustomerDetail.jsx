@@ -112,7 +112,8 @@ export default function CustomerDetail() {
               <a href={`tel:${c.mobile}`} className="btn-light btn-sm !py-2">
                 <Phone size={16} /> {t('cust.call')}
               </a>
-              <button className="btn-wa btn-sm !py-2" onClick={() => openWhatsApp(c.mobile, `नमस्कार ${c.name},\n\n`)}>
+              {/* Udhari pending → the full udhari message (with the payment QR link); otherwise a greeting to type after. */}
+              <button className="btn-wa btn-sm !py-2" onClick={() => openWhatsApp(c.mobile, owes ? messages.reminder(settings, c) : `नमस्कार ${c.name},\n\n`)}>
                 <MessageCircle size={16} /> WhatsApp
               </button>
               {owes && (

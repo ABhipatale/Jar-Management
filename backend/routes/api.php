@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\SettingController;
+use App\Http\Controllers\PayController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
@@ -28,6 +29,9 @@ Route::get('/manifest.webmanifest', [BrandingController::class, 'platformManifes
 Route::get('/companies/{slug}/branding', [BrandingController::class, 'company']);
 Route::get('/companies/{slug}/manifest.webmanifest', [BrandingController::class, 'manifest']);
 Route::get('/companies/{slug}/icons/{kind}.png', [BrandingController::class, 'icon']);
+// Payment QR page + image for udhari WhatsApp messages (public: the customer opens the link).
+Route::get('/pay/{slug}', [PayController::class, 'page'])->middleware('throttle:60,1');
+Route::get('/companies/{slug}/pay-qr.png', [PayController::class, 'qr'])->middleware('throttle:60,1');
 
 // Daily reminder job (Vercel Cron). Idempotent: only sends due reminders, each once.
 Route::get('/cron/reminders', [NotificationController::class, 'cron'])->middleware('throttle:10,1');
@@ -110,4 +114,6 @@ Route::middleware(['auth:sanctum', 'company'])->group(function () {
     Route::put('/settings', [SettingController::class, 'update']);
     Route::post('/settings/logo', [SettingController::class, 'uploadLogo']);
     Route::delete('/settings/logo', [SettingController::class, 'removeLogo']);
+    Route::post('/settings/pay-qr', [SettingController::class, 'uploadPayQr']);
+    Route::delete('/settings/pay-qr', [SettingController::class, 'removePayQr']);
 });

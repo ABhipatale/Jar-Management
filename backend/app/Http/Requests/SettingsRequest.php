@@ -31,6 +31,7 @@ class SettingsRequest extends ApiRequest
             'wa_payment' => ['sometimes', 'nullable', 'string', 'max:2000'],
             'wa_reminder' => ['sometimes', 'nullable', 'string', 'max:2000'],
             'wa_summary' => ['sometimes', 'nullable', 'string', 'max:2000'],
+            'upi_id' => ['sometimes', 'nullable', 'string', 'max:100', 'regex:/^[A-Za-z0-9._-]{2,256}@[A-Za-z][A-Za-z0-9.-]{1,64}$/'],
         ];
     }
 
@@ -41,6 +42,7 @@ class SettingsRequest extends ApiRequest
             'business_mobile.regex' => __('कृपया योग्य 10 अंकी मोबाईल नंबर टाका.'),
             'total_jars.min' => __('एकूण जार उणे असू शकत नाहीत.'),
             'default_rate.min' => __('दर उणे असू शकत नाही.'),
+            'upi_id.regex' => __('कृपया योग्य UPI ID टाका (उदा. 9876543210@ybl).'),
         ];
     }
 }

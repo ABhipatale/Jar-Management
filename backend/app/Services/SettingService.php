@@ -26,6 +26,8 @@ class SettingService
         'wa_payment' => '',
         'wa_reminder' => '',
         'wa_summary' => '',
+        // UPI ID for the "pay" button on the payment page linked from udhari messages.
+        'upi_id' => '',
     ];
 
     public function all(): array

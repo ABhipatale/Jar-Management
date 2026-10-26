@@ -319,5 +319,14 @@
   "jars.stockMix": "स्टॉक का बँटवारा",
   "jars.actions": "स्टॉक बदलें",
   "jars.whoHasLbl": "किस ग्राहक के पास कितने जार हैं?",
-  "exp.addTitle": "नया खर्च"
+  "exp.addTitle": "नया खर्च",
+  "set.payQr": "पेमेंट QR (उधार के लिए)",
+  "set.payQrHint": "उधार वाले WhatsApp मैसेज (उधार रिमाइंडर, उधार पर जार देने पर, खाता) के साथ यह QR लिंक से ग्राहक को जाता है.",
+  "set.payQrUpload": "QR फ़ोटो अपलोड करें",
+  "set.payQrChange": "QR बदलें",
+  "set.payQrRemove": "QR हटाएँ",
+  "set.payQrPhotoHint": "अपने UPI ऐप (PhonePe, GPay, Paytm) के QR का स्क्रीनशॉट या फ़ोटो. PNG/JPG, 5 MB तक.",
+  "set.payQrPreview": "ग्राहक को दिखने वाला पेज देखें",
+  "set.upiId": "UPI ID (वैकल्पिक)",
+  "set.upiIdHint": "डालने पर पेज पर \"UPI ऐप से पेमेंट करें\" बटन आता है, रकम पहले से भरी हुई. सेटिंग्स सेव करें दबाएँ."
 }
