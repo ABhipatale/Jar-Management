@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Check, ChevronDown, Droplets, Phone, Search, UserPlus, X } from 'lucide-react';
+import { Check, ChevronDown, Droplets, Pencil, Phone, Search, UserPlus, X } from 'lucide-react';
 import api from '../api/client';
 import { t } from '../i18n';
 import { normalizeMobile } from '../lib/contacts';
@@ -68,14 +68,15 @@ export default function CustomerPicker({ value, onChange, placeholder = t('cust.
 
   if (selected && !open) {
     return (
-      <div className="flex animate-fade-in items-center gap-3 rounded-xl bg-brand-50 px-3 py-2.5 ring-1 ring-inset ring-brand-500/40">
+      <div className="flex w-full min-w-0 animate-fade-in items-center gap-3 overflow-hidden rounded-xl bg-brand-50 px-3 py-2.5 ring-1 ring-inset ring-brand-500/40">
         <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-surface text-[15px] font-semibold text-brand-700 ring-1 ring-brand-500/20">
           {selected.name.charAt(0).toUpperCase()}
         </span>
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5">
-            <span className="truncate font-semibold text-ink">{selected.name}</span>
-            <Check size={15} className="shrink-0 text-brand-600" aria-hidden="true" />
+          {/* Long names wrap onto (at most) two lines instead of pushing the layout wider than the phone */}
+          <div className="flex min-w-0 items-start gap-1.5">
+            <span className="line-clamp-2 min-w-0 break-words font-semibold leading-snug text-ink" title={selected.name}>{selected.name}</span>
+            <Check size={15} className="mt-1 shrink-0 text-brand-600" aria-hidden="true" />
           </div>
           <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-sm text-muted">
             <span className="inline-flex items-center gap-1 tabular-nums">
@@ -87,8 +88,14 @@ export default function CustomerPicker({ value, onChange, placeholder = t('cust.
             <PendingText amount={selected.pending_amount} />
           </div>
         </div>
-        <button type="button" className="btn-light btn-sm shrink-0" onClick={() => { setQ(''); setOpen(true); }}>
-          {t('common.change')}
+        <button
+          type="button"
+          className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-surface text-brand-700 shadow-soft ring-1 ring-line transition hover:bg-surface-2 active:scale-95"
+          onClick={() => { setQ(''); setOpen(true); }}
+          aria-label={t('common.change')}
+          title={t('common.change')}
+        >
+          <Pencil size={17} aria-hidden="true" />
         </button>
         {allowClear && (
           <button type="button" className="icon-btn shrink-0" onClick={() => onChange(null, null)} aria-label={t('picker.clear')}>
