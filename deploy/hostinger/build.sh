@@ -8,10 +8,16 @@
 # Usage (Git Bash, from the repo root):   bash deploy/hostinger/build.sh abnexa.in
 set -euo pipefail
 
-DOMAIN="${1:?usage: bash deploy/hostinger/build.sh <domain>   e.g. abnexa.in}"
+DOMAIN="${1:?usage: bash deploy/hostinger/build.sh <domain> [backend-folder]   e.g. easyjar.abnexa.in}"
+# Backend folder on the server (next to public_html). Live: laravel (default).
+# Pre-prod: bash deploy/hostinger/build.sh preproduction-easyjar.abnexa.in preproduction-easyjar-laravel
+BACKEND="${2:-laravel}"
 KIT="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$(cd "$KIT/../.." && pwd)"
-OUT="$KIT/out"
+# Live → out/, any other backend → out-<backend>/ (so pre-prod and live zips never mix).
+if [ "$BACKEND" = "laravel" ]; then OUT="$KIT/out"; else OUT="$KIT/out-$BACKEND"; fi
+# Name on the login page: pre-prod says so, so nobody confuses it with live.
+if [ "$BACKEND" = "laravel" ]; then LABEL="EasyJar"; else LABEL="EasyJar PREPROD"; fi
 WINTAR=/c/Windows/System32/tar.exe   # writes zips with forward slashes (Linux-safe)
 
 # Empty (not delete) out/: Windows refuses to delete a folder that a terminal has open.
@@ -25,7 +31,7 @@ trap 'rm -f "$ROOT/frontend/.env.production.local"' EXIT
 printf 'VITE_API_URL=\n' > "$ROOT/frontend/.env.production.local"
 (cd "$ROOT/frontend" && npm run build)
 cp -r "$ROOT/frontend/dist/." "$OUT/public_html/"
-cp "$KIT/index.php" "$OUT/public_html/index.php"
+sed "s#__BACKEND_FOLDER__#$BACKEND#" "$KIT/index.php" > "$OUT/public_html/index.php"
 cp "$KIT/htaccess.txt" "$OUT/public_html/.htaccess"
 cp "$KIT/assets-htaccess.txt" "$OUT/public_html/assets/.htaccess"
 cp -n "$ROOT/backend/public/robots.txt" "$OUT/public_html/" 2>/dev/null || true
@@ -49,7 +55,7 @@ echo "==> 3/4 Server .env (only needed on the first deploy)"
 local_env() { grep -E "^$1=" "$ROOT/backend/.env" 2>/dev/null | tail -1 | cut -d= -f2- || true; }
 APP_KEY="base64:$(php -r 'echo base64_encode(random_bytes(32));')"
 cat > "$OUT/env-for-server.txt" <<EOF
-APP_NAME="EasyJar"
+APP_NAME="$LABEL"
 APP_ENV=production
 APP_KEY=$APP_KEY
 APP_DEBUG=false
@@ -70,8 +76,8 @@ DB_PASSWORD=FILL_ME
 SUPERADMIN_NAME="$(local_env SUPERADMIN_NAME | tr -d '"')"
 SUPERADMIN_EMAIL=$(local_env SUPERADMIN_EMAIL)
 SUPERADMIN_PASSWORD=$(local_env SUPERADMIN_PASSWORD)
-PLATFORM_NAME="EasyJar"
-PLATFORM_NAME_MR="EasyJar"
+PLATFORM_NAME="$LABEL"
+PLATFORM_NAME_MR="$LABEL"
 
 RAZORPAY_KEY_ID=$(local_env RAZORPAY_KEY_ID)
 RAZORPAY_KEY_SECRET=$(local_env RAZORPAY_KEY_SECRET)

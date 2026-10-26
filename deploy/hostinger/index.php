@@ -11,9 +11,16 @@ use Illuminate\Http\Request;
 
 define('LARAVEL_START', microtime(true));
 
-// Next to the web root (domains/<site>/laravel), or — for a subdomain whose folder is
+// Backend folder name: "laravel" for live; build.sh writes another name for a second
+// environment (e.g. "preproduction-easyjar-laravel"), so pre-prod never loads live's code.
+$backend = '__BACKEND_FOLDER__';
+if (str_starts_with($backend, '__')) {
+    $backend = 'laravel';
+}
+
+// Next to the web root (domains/<site>/<backend>), or — for a subdomain whose folder is
 // public_html/<sub> — two levels up, next to public_html, still outside every web root.
-$laravel = is_dir(__DIR__.'/../laravel/vendor') ? __DIR__.'/../laravel' : __DIR__.'/../../laravel';
+$laravel = is_dir(__DIR__."/../{$backend}/vendor") ? __DIR__."/../{$backend}" : __DIR__."/../../{$backend}";
 
 if (file_exists($maintenance = $laravel.'/storage/framework/maintenance.php')) {
     require $maintenance;

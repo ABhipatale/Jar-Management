@@ -49,3 +49,20 @@ The script writes these files to `deploy/hostinger/out/` (git-ignored, because t
 3. If the update has new migrations (new files in `backend/database/migrations`), run them over SSH:
    `cd domains/abnexa.in/laravel && php artisan migrate --force`
 4. Phones pick up the new app version by themselves (the service worker is never cached).
+
+## Pre-prod (test before live)
+
+Same hosting, completely separate: its own frontend folder, backend folder and database.
+
+| | Live | Pre-prod |
+|---|---|---|
+| URL | `easyjar.abnexa.in` | `preproduction-easyjar.abnexa.in` |
+| Frontend | `public_html/easyjar` | `public_html/preproduction-easyjar` |
+| Backend | `laravel/` | `preproduction-easyjar-laravel/` |
+| Build | `bash deploy/hostinger/build.sh easyjar.abnexa.in` → `out/` | `bash deploy/hostinger/build.sh preproduction-easyjar.abnexa.in preproduction-easyjar-laravel` → `out-preproduction-easyjar-laravel/` |
+
+- Pre-prod's login page says **EasyJar PREPROD**.
+- Give pre-prod its **own database**; never point it at the live one.
+- **No cron job** for pre-prod (real customers must not get reminders from test data).
+- Razorpay: pre-prod uses the live keys, so test payments are **real money**.
+- Workflow: build → upload to pre-prod → test → build live → upload to live.
