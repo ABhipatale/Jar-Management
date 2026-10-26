@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Middleware\SetLocale;
 use App\Models\Company;
 use App\Models\PushSubscription;
 use App\Models\Reminder;
@@ -87,7 +88,7 @@ class NotificationController extends Controller
                 'user_id' => $request->user()->id,
                 'p256dh' => $data['keys']['p256dh'],
                 'auth' => $data['keys']['auth'],
-                'locale' => app()->getLocale() === 'en' ? 'en' : 'mr',
+                'locale' => in_array(app()->getLocale(), SetLocale::SUPPORTED, true) ? app()->getLocale() : 'mr',
             ]
         );
 

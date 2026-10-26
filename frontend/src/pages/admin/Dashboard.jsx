@@ -6,12 +6,11 @@ import {
 import { BarChart } from '../../components/charts';
 import { ErrorBox, Loader, StatCard } from '../../components/ui';
 import { useAuth } from '../../context/AuthContext';
-import { lang, t } from '../../i18n';
+import { LOCALE, t } from '../../i18n';
 import { daysUntil, fmtDate, money } from '../../lib/format';
 import { useApi } from '../../lib/useApi';
 import { CompanyAvatar, PlanPill, StatusBadge } from './common';
 
-const LOCALE = lang === 'mr' ? 'mr-IN-u-nu-latn' : 'en-IN';
 const monthLabel = (ym) => new Date(`${ym}-01T00:00:00`).toLocaleDateString(LOCALE, { month: 'short' });
 const shortMoney = (v) => (v >= 100000 ? `₹${(v / 100000).toFixed(1)}L` : v >= 1000 ? `₹${(v / 1000).toFixed(v >= 10000 ? 0 : 1)}k` : `₹${Math.round(v)}`);
 

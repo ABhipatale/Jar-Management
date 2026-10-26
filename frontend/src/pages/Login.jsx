@@ -3,7 +3,7 @@ import { AlertTriangle, Droplets, Eye, EyeOff, KeyRound, Languages, LogIn, Shiel
 import { errorMessage, takeLogoutReason } from '../api/client';
 import { DevCredit } from '../components/ui';
 import { useAuth } from '../context/AuthContext';
-import { LANGS, lang, setLang, t } from '../i18n';
+import { LOGIN_LANGS, lang, setLang, t } from '../i18n';
 import { brandName, logoSrc, refreshBranding, useBranding } from '../lib/branding';
 
 const YEAR = new Date().getFullYear();
@@ -29,7 +29,7 @@ function LangChips() {
   return (
     <div className="inline-flex items-center gap-0.5 rounded-full bg-white/15 p-1 ring-1 ring-white/25 backdrop-blur-md" role="group" aria-label={t('login.language')}>
       <Languages size={15} className="mx-1.5 text-white/80" aria-hidden="true" />
-      {Object.entries(LANGS).map(([code, label]) => (
+      {Object.entries(LOGIN_LANGS).map(([code, label]) => (
         <button
           key={code}
           type="button"

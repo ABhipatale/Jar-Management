@@ -8,11 +8,11 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Picks the language for API messages from the `X-Locale` header sent by the app.
- * `en` → English, `mr` → Marathi; anything else keeps the configured default (Marathi).
+ * `en` → English, `mr` → Marathi, `hi` → Hindi; anything else keeps the configured default (Marathi).
  */
 class SetLocale
 {
-    public const SUPPORTED = ['mr', 'en'];
+    public const SUPPORTED = ['mr', 'en', 'hi'];
 
     /** The configured default, remembered before any request changes it (setLocale also rewrites config). */
     private static ?string $default = null;

@@ -1,5 +1,5 @@
 // Formatting + date helpers. All dates travel to the API as YYYY-MM-DD (local time).
-import { lang } from '../i18n';
+import { LOCALE, isDeva } from '../i18n';
 import { brandName } from './branding';
 
 export function toISODate(d = new Date()) {
@@ -67,7 +67,7 @@ export function fmtDate(iso) {
 
 /** गुरु, 1, ऑक्टो 2026 (Marathi names, Western digits) / Thu, 1 Oct 2026 */
 export function fmtLongDate(iso = today()) {
-  return parseISODate(iso).toLocaleDateString(lang === 'mr' ? 'mr-IN-u-nu-latn' : 'en-IN', {
+  return parseISODate(iso).toLocaleDateString(LOCALE, {
     weekday: 'short',
     day: 'numeric',
     month: 'short',
@@ -77,11 +77,11 @@ export function fmtLongDate(iso = today()) {
 
 /** Company name / place in the app's language (header, print, Excel). */
 export function businessName(settings) {
-  return (lang === 'mr' ? settings?.business_name_mr || settings?.business_name : settings?.business_name) || brandName();
+  return (isDeva ? settings?.business_name_mr || settings?.business_name : settings?.business_name) || brandName();
 }
 
 export function businessPlace(settings) {
-  return (lang === 'mr' ? settings?.business_place_mr || settings?.business_address : settings?.business_address) || '';
+  return (isDeva ? settings?.business_place_mr || settings?.business_address : settings?.business_address) || '';
 }
 
 export function num(v) {

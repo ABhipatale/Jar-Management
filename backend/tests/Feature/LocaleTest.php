@@ -56,6 +56,24 @@ class LocaleTest extends TestCase
             ->assertJsonPath('message', 'No jars available in the shop. All jars are with customers or damaged/lost.');
     }
 
+    public function test_hindi_with_header(): void
+    {
+        $msg = $this->give(11, ['X-Locale' => 'hi'])->assertStatus(422)->json('message');
+        $this->assertStringContainsString('दुकान में', $msg);
+        $this->assertStringNotContainsString('दुकानात', $msg);
+
+        // Validation messages are Hindi too.
+        $this->postJson('/api/customers', ['name' => '', 'mobile' => '123'], ['X-Locale' => 'hi'])->assertStatus(422)
+            ->assertJsonValidationErrors(['name', 'mobile']);
+
+        // A phone that turns on reminders in Hindi gets Hindi reminders.
+        $this->postJson('/api/push/subscribe', [
+            'endpoint' => 'https://fcm.googleapis.com/fcm/send/hindi-phone',
+            'keys' => ['p256dh' => str_repeat('a', 87), 'auth' => str_repeat('b', 22)],
+        ], ['X-Locale' => 'hi'])->assertOk();
+        $this->assertDatabaseHas('push_subscriptions', ['endpoint' => 'https://fcm.googleapis.com/fcm/send/hindi-phone', 'locale' => 'hi']);
+    }
+
     public function test_form_request_message_follows_locale(): void
     {
         $this->postJson('/api/customers', ['name' => '', 'mobile' => '9876543211'], self::EN)

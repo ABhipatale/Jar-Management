@@ -1,11 +1,9 @@
 import { Link } from 'react-router-dom';
 import { Building2, CalendarPlus, History, ImageMinus, ImagePlus, KeyRound, LogIn, Pause, Pencil, Play, Trash2, UserCog } from 'lucide-react';
 import { Empty, ErrorBox, Loader, PageHeader } from '../../components/ui';
-import { lang, t } from '../../i18n';
+import { LOCALE, t } from '../../i18n';
 import { fmtDate } from '../../lib/format';
 import { useApi } from '../../lib/useApi';
-
-const LOCALE = lang === 'mr' ? 'mr-IN-u-nu-latn' : 'en-IN';
 
 // Icon + colour per action.
 const ACTIONS = {

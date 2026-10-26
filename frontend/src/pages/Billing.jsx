@@ -4,15 +4,15 @@ import api, { errorMessage } from '../api/client';
 import { ErrorBox, Loader, PageHeader } from '../components/ui';
 import { useAuth } from '../context/AuthContext';
 import { useUi } from '../context/UiContext';
-import { lang, t } from '../i18n';
+import { isDeva, t } from '../i18n';
 import { daysUntil, fmtDate, money } from '../lib/format';
 import { payWithRazorpay } from '../lib/razorpay';
 import { SUPPORT_PHONE, SUPPORT_PHONE_DISPLAY } from '../lib/support';
 import { useApi } from '../lib/useApi';
 
-const planName = (p) => (lang === 'mr' ? p.name_mr || p.name : p.name);
+const planName = (p) => (isDeva ? p.name_mr || p.name : p.name);
 // Description in the app's language, falling back to the other one.
-const planDesc = (p) => (lang === 'mr' ? p.description_mr || p.description : p.description || p.description_mr);
+const planDesc = (p) => (isDeva ? p.description_mr || p.description : p.description || p.description_mr);
 
 /** Colourful "choose plan" button: press-down + a ripple from where it was tapped. */
 function PlanButton({ yearly, onClick, disabled, children }) {

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import defaultLogo from '../assets/logo.png';
 import api from '../api/client';
-import { lang, t } from '../i18n';
+import { isDeva, t } from '../i18n';
 
 /**
  * Name, logo and install icons of the company using this phone — or of the
@@ -50,7 +50,7 @@ export function setBranding(b) {
 }
 
 export function brandName(b = getBranding()) {
-  return lang === 'mr' ? b.name_mr || b.name : b.name;
+  return isDeva ? b.name_mr || b.name : b.name;
 }
 
 export function logoSrc(b = getBranding()) {
