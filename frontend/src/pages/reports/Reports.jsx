@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { BookOpenText, CalendarDays, CalendarRange, ChevronRight, Clock, Droplets, Banknote, HandCoins, CalendarCheck } from 'lucide-react';
+import { BookOpenText, CalendarDays, CalendarRange, ChevronRight, Clock, Droplets, Banknote, HandCoins, CalendarCheck, TrendingUp } from 'lucide-react';
 import CustomerPicker from '../../components/CustomerPicker';
 import { Modal, PageHeader } from '../../components/ui';
 import { t } from '../../i18n';
@@ -12,6 +12,7 @@ const REPORTS = [
   { ledger: true, icon: BookOpenText, tone: 'bg-violet-50 text-violet-700', title: t('rep.ledger.title'), sub: t('rep.ledger.sub') },
   { to: '/reports/jar-status', icon: Droplets, tone: 'bg-sky-50 text-sky-700', title: t('rep.jarStatus.cardTitle'), sub: t('rep.jarStatus.sub') },
   { to: '/reports/cash', icon: Banknote, tone: 'bg-emerald-50 text-emerald-700', title: t('rep.cash.title'), sub: t('rep.cash.sub') },
+  { to: '/reports/profit', icon: TrendingUp, tone: 'bg-emerald-50 text-emerald-700', title: t('rep.profit.title'), sub: t('rep.profit.sub') },
   { to: '/reports/udhari', icon: HandCoins, tone: 'bg-amber-50 text-amber-700', title: t('rep.udhari.title'), sub: t('rep.udhari.sub') },
   { to: '/reports/pending', icon: Clock, tone: 'bg-red-50 text-red-600', title: t('rep.pending.cardTitle'), sub: t('rep.pending.sub') },
 ];

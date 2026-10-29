@@ -23,6 +23,8 @@ import CashReport from './pages/reports/CashReport';
 import UdhariReport from './pages/reports/UdhariReport';
 import PendingReport from './pages/reports/PendingReport';
 import JarStatusReport from './pages/reports/JarStatusReport';
+import ProfitReport from './pages/reports/ProfitReport';
+import Broadcast from './pages/Broadcast';
 import AdminLayout from './pages/admin/AdminLayout';
 import AdminDashboard from './pages/admin/Dashboard';
 import Companies from './pages/admin/Companies';
@@ -93,6 +95,8 @@ export default function App() {
           <Route path="reports/udhari" element={<UdhariReport />} />
           <Route path="reports/pending" element={<PendingReport />} />
           <Route path="reports/jar-status" element={<JarStatusReport />} />
+          <Route path="reports/profit" element={<ProfitReport />} />
+          <Route path="broadcast" element={<Broadcast />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>

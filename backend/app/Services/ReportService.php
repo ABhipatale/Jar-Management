@@ -260,6 +260,84 @@ class ReportService
         return array_reverse($rows);
     }
 
+    /**
+     * Month-by-month profit for one year.
+     *
+     *   Sales     = bill amount of jar/bottle entries (what was sold, paid or udhari)
+     *   Collected = money actually received (entry cash/advance + all payments)
+     *   Profit    = sales - expenses
+     *
+     * Deposits are the customer's money and stay out of every figure.
+     * Grouped per day in SQL and summed per month here, so it works on every database.
+     */
+    public function profit(int $year): array
+    {
+        $from = sprintf('%04d-01-01', $year);
+        $to = sprintf('%04d-12-31', $year);
+
+        $sales = CurrentCompany::table('jar_transactions')->whereNull('deleted_at')
+            ->whereBetween('transaction_date', [$from, $to])
+            ->groupBy('transaction_date')
+            ->selectRaw('transaction_date AS d, SUM(amount) AS sales, SUM(paid_amount + advance_amount) AS cash')
+            ->get();
+
+        $pays = CurrentCompany::table('payments')->whereNull('deleted_at')
+            ->whereBetween('payment_date', [$from, $to])
+            ->groupBy('payment_date')
+            ->selectRaw('payment_date AS d, SUM(amount) AS v')
+            ->get();
+
+        $exps = CurrentCompany::table('expenses')->whereNull('deleted_at')
+            ->whereBetween('expense_date', [$from, $to])
+            ->groupBy('expense_date', 'expense_type')
+            ->selectRaw('expense_date AS d, expense_type AS type, SUM(amount) AS v')
+            ->get();
+
+        $month = fn ($d) => (int) substr((string) $d, 5, 2);
+        $months = [];
+        for ($m = 1; $m <= 12; $m++) {
+            $months[$m] = ['month' => sprintf('%04d-%02d', $year, $m), 'sales' => 0.0, 'collected' => 0.0, 'expenses' => 0.0];
+        }
+        foreach ($sales as $r) {
+            $months[$month($r->d)]['sales'] += (float) $r->sales;
+            $months[$month($r->d)]['collected'] += (float) $r->cash;
+        }
+        foreach ($pays as $r) {
+            $months[$month($r->d)]['collected'] += (float) $r->v;
+        }
+        $types = [];
+        foreach ($exps as $r) {
+            $months[$month($r->d)]['expenses'] += (float) $r->v;
+            $types[$r->type] = ($types[$r->type] ?? 0) + (float) $r->v;
+        }
+
+        $rows = array_map(fn ($r) => [
+            'month' => $r['month'],
+            'sales' => round($r['sales'], 2),
+            'collected' => round($r['collected'], 2),
+            'expenses' => round($r['expenses'], 2),
+            'profit' => round($r['sales'] - $r['expenses'], 2),
+        ], array_values($months));
+
+        arsort($types);
+        $sum = fn ($k) => round(array_sum(array_column($rows, $k)), 2);
+
+        return [
+            'year' => $year,
+            'months' => $rows,
+            'total' => [
+                'sales' => $sum('sales'),
+                'collected' => $sum('collected'),
+                'expenses' => $sum('expenses'),
+                'profit' => $sum('profit'),
+            ],
+            'expense_types' => array_map(
+                fn ($type, $v) => ['type' => $type, 'amount' => round($v, 2)],
+                array_keys($types), array_values($types)
+            ),
+        ];
+    }
+
     /** Customers who owe money, biggest first. */
     public function pending(?string $search = null, ?int $customerId = null): array
     {

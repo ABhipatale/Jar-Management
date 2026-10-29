@@ -67,6 +67,14 @@ class ReportController extends Controller
         ]);
     }
 
+    /** Month-wise sales, expenses and profit for one year. ?year=YYYY */
+    public function profit(Request $request)
+    {
+        $request->validate(['year' => ['nullable', 'integer', 'min:2000', 'max:2100']]);
+
+        return response()->json($this->reports->profit((int) $request->input('year', now()->year)));
+    }
+
     public function pending(Request $request)
     {
         $this->validateCommon($request);
