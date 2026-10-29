@@ -144,5 +144,7 @@
     ":qty बाटल्या जोडल्या.": ":qty bottles added.",
     "दुकानात फक्त :available बाटल्या उपलब्ध आहेत, :qty बाटल्या कमी करता येणार नाहीत.": "Only :available bottles are available in the shop, cannot remove :qty.",
     "दुकानात फक्त :available बाटल्या उपलब्ध आहेत.": "Only :available bottles are available in the shop.",
-    "फक्त :count बाटल्या :status म्हणून नोंदवता येतील.": "Only :count bottles can be marked as :status."
+    "फक्त :count बाटल्या :status म्हणून नोंदवता येतील.": "Only :count bottles can be marked as :status.",
+    "किमान एक जार किंवा बाटली टाका.": "Enter at least one jar or bottle.",
+    ":n बाटल्या": ":n bottles"
 }

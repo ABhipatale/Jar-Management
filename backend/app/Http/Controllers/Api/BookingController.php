@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Services\BookingService;
 use App\Support\CurrentCompany;
+use App\Support\Products;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -48,12 +49,15 @@ class BookingController extends Controller
         return response()->json(['message' => __('बुकिंग रद्द केली.')]);
     }
 
+    /** With bottles switched on a booking may be bottles only (0 jars), but never empty. */
     private function validated(Request $request, bool $withCustomer): array
     {
-        return $request->validate(array_filter([
+        $bottles = in_array(Products::BOTTLE, Products::enabled(), true);
+        $data = $request->validate(array_filter([
             'customer_id' => $withCustomer ? ['required', 'integer', Rule::exists('customers', 'id')->where('company_id', CurrentCompany::id())->whereNull('deleted_at')] : null,
             'delivery_date' => ['required', 'date_format:Y-m-d', 'after_or_equal:today'],
-            'jar_quantity' => ['required', 'integer', 'min:1', 'max:10000'],
+            'jar_quantity' => ['required', 'integer', 'min:'.($bottles ? 0 : 1), 'max:10000'],
+            'bottle_quantity' => $bottles ? ['nullable', 'integer', 'min:0', 'max:10000'] : null,
             'notes' => ['nullable', 'string', 'max:500'],
         ]), [
             'customer_id.required' => __('कृपया ग्राहक निवडा.'),
@@ -62,6 +66,13 @@ class BookingController extends Controller
             'jar_quantity.required' => __('कृपया जारची संख्या टाका.'),
             'jar_quantity.min' => __('जारची संख्या किमान 1 असावी.'),
         ]);
+
+        $data['bottle_quantity'] = $bottles ? (int) ($data['bottle_quantity'] ?? 0) : 0;
+        if ($data['jar_quantity'] + $data['bottle_quantity'] < 1) {
+            throw ValidationException::withMessages(['jar_quantity' => __('किमान एक जार किंवा बाटली टाका.')]);
+        }
+
+        return $data;
     }
 
     private function mustBeOpen(Booking $booking): void

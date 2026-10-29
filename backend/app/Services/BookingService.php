@@ -7,7 +7,8 @@ use App\Models\JarTransaction;
 use Illuminate\Support\Collection;
 
 /**
- * Advance jar bookings ("10 jars on 08-10-2026").
+ * Advance jar bookings ("10 jars on 08-10-2026"); with bottles switched on a booking can
+ * also (or only) be for 20 L bottles.
  *
  * Phone notifications (all times IST, app timezone):
  *  - night before (from 6 PM): "tomorrow N bookings · X jars"
@@ -25,6 +26,7 @@ class BookingService
             'customer_id' => $data['customer_id'],
             'delivery_date' => $data['delivery_date'],
             'jar_quantity' => (int) $data['jar_quantity'],
+            'bottle_quantity' => (int) ($data['bottle_quantity'] ?? 0),
             'notes' => $data['notes'] ?? null,
         ]);
         $this->skipNotificationsAlreadyPast($b);
@@ -38,6 +40,7 @@ class BookingService
         $b->update([
             'delivery_date' => $data['delivery_date'],
             'jar_quantity' => (int) $data['jar_quantity'],
+            'bottle_quantity' => (int) ($data['bottle_quantity'] ?? 0),
             'notes' => $data['notes'] ?? null,
         ] + ($dateChanged ? ['eve_notified_at' => null, 'morning_notified_at' => null] : []));
         if ($dateChanged) {
@@ -87,12 +90,16 @@ class BookingService
         ];
     }
 
-    /** Undelivered bookings for a date (default today): count and total jars. */
+    /** Undelivered bookings for a date (default today): count, total jars and total bottles. */
     public function summaryFor(?string $date = null): array
     {
         $q = Booking::where('status', 'booked')->where('delivery_date', $date ?? now()->toDateString());
 
-        return ['count' => (clone $q)->count(), 'jars' => (int) (clone $q)->sum('jar_quantity')];
+        return [
+            'count' => (clone $q)->count(),
+            'jars' => (int) (clone $q)->sum('jar_quantity'),
+            'bottles' => (int) (clone $q)->sum('bottle_quantity'),
+        ];
     }
 
     /** @return array{evening:int, morning:int, devices:int} */
@@ -128,10 +135,16 @@ class BookingService
     private function payload(Collection $items, string $when, string $locale): array
     {
         $jars = $items->sum('jar_quantity');
+        $bottles = $items->sum('bottle_quantity');
         $title = $when === 'today'
             ? __('🚚 आज :n डिलिव्हरी · :jars जार', ['n' => $items->count(), 'jars' => $jars], $locale)
             : __('📅 उद्या :n बुकिंग · एकूण :jars जार', ['n' => $items->count(), 'jars' => $jars], $locale);
-        $body = $items->take(6)->map(fn ($b) => ($b->customer?->name ?? '').' – '.$b->jar_quantity)->implode(', ')
+        if ($bottles > 0) {
+            $title .= ' + '.__(':n बाटल्या', ['n' => $bottles], $locale);
+        }
+        // "Rahul – 3" (jars only, as before) or "Rahul – 3 + 2 बाटल्या".
+        $body = $items->take(6)->map(fn ($b) => ($b->customer?->name ?? '').' – '.$b->jar_quantity
+            .($b->bottle_quantity > 0 ? ' + '.__(':n बाटल्या', ['n' => $b->bottle_quantity], $locale) : ''))->implode(', ')
             .($items->count() > 6 ? '…' : '');
 
         return ['title' => $title, 'body' => $body, 'url' => '/bookings', 'tag' => 'bookings-'.$when.'-'.now()->toDateString()];
@@ -146,6 +159,7 @@ class BookingService
             'customer_mobile' => $b->customer?->mobile,
             'delivery_date' => $b->delivery_date->toDateString(),
             'jar_quantity' => $b->jar_quantity,
+            'bottle_quantity' => $b->bottle_quantity,
             'notes' => $b->notes,
             'status' => $b->status,
             'jar_transaction_id' => $b->jar_transaction_id,

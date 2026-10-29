@@ -32,7 +32,7 @@ import { t } from '../i18n';
 import { addDays, fmtDate, money, num, round2, today, uuid } from '../lib/format';
 import { submit } from '../lib/outbox';
 import {
-  BOTTLE, JAR, countText, customerProducts, depositHeldOf, depositRate, features, heldOf, productName, rateFor, suggestedDeposit, usesDeposit,
+  BOTTLE, JAR, companyProducts, countText, customerProducts, depositHeldOf, depositRate, features, heldOf, productName, rateFor, suggestedDeposit, usesDeposit,
 } from '../lib/products';
 import { messages, openWhatsApp } from '../lib/whatsapp';
 
@@ -78,7 +78,7 @@ export default function DailyEntry() {
   const [customer, setCustomer] = useState(null);
   const [type, setType] = useState(params.get('type') === 'returned' ? 'returned' : 'given');
   // Per product (jar / bottle). With bottles off only the jar values are used.
-  const [qty, setQty] = useState(() => byProduct(params.get('qty') || '1', '0'));
+  const [qty, setQty] = useState(() => byProduct(params.get('qty') || '1', params.get('bqty') || '0'));
   // Delivery of an advance booking (closes the booking when saved).
   const [bookingId, setBookingId] = useState(params.get('booking') || null);
   const [rates, setRates] = useState(() => byProduct(String(settings.default_rate || ''), String(settings.bottle_rate || '')));
@@ -96,6 +96,10 @@ export default function DailyEntry() {
   const [ret, setRet] = useState(() => byProduct('', ''));
   // Deposit typed by hand (null = use the suggested amount).
   const [dep, setDep] = useState(() => byProduct(null, null));
+  // Items added just for this entry ("+ Bottle", or a booking with bottles) though the
+  // customer isn't set up for them.
+  const bookingBottles = parseInt(params.get('bqty'), 10) || 0;
+  const [extra, setExtra] = useState(() => (bookingBottles > 0 ? [BOTTLE] : []));
   // Items currently in the shop (null = unknown, e.g. offline). The server checks again on save.
   const [stock, setStock] = useState(() => byProduct(null, null));
 
@@ -118,6 +122,10 @@ export default function DailyEntry() {
     if (ty === 'given' || ty === 'returned') setType(ty);
     if (params.get('customer')) setCustomerId(params.get('customer'));
     if (params.get('qty')) setQty((q) => ({ ...q, [JAR]: params.get('qty') }));
+    if (params.get('bqty')) {
+      setQty((q) => ({ ...q, [BOTTLE]: params.get('bqty') }));
+      setExtra((x) => (x.includes(BOTTLE) ? x : [...x, BOTTLE]));
+    }
     setBookingId(params.get('booking') || null);
   }, [params]);
 
@@ -138,14 +146,21 @@ export default function DailyEntry() {
     setCustomerId(id || '');
     setCustomer(c);
     setDep(byProduct(null, null));
+    // A booking's bottles stay on the delivery even if the customer doesn't usually take bottles.
+    setExtra(bookingId && bookingBottles > 0 ? [BOTTLE] : []);
     if (!c) return;
     setRates(byProduct(rateFor(c, settings, JAR), rateFor(c, settings, BOTTLE)));
     const theirs = customerProducts(c, settings);
-    if (theirs.length === 1) setQty((q) => ({ ...q, [theirs[0]]: q[theirs[0]] && q[theirs[0]] !== '0' ? q[theirs[0]] : '1' }));
+    // Booking deliveries keep the booked quantities.
+    if (theirs.length === 1 && !bookingId) setQty((q) => ({ ...q, [theirs[0]]: q[theirs[0]] && q[theirs[0]] !== '0' ? q[theirs[0]] : '1' }));
   };
 
   const isGive = type === 'given';
-  const items = customerProducts(customer, settings);
+  const theirs = customerProducts(customer, settings);
+  const sold = companyProducts(settings);
+  const items = sold.filter((p) => theirs.includes(p) || extra.includes(p));
+  // Items the company sells that this customer doesn't usually take: offered as "+ Bottle".
+  const addable = customer ? sold.filter((p) => !items.includes(p)) : [];
   const single = items.length === 1;
   const legacy = !feat.bottles && !feat.deposit; // exactly the old screen and request
   const withDeposit = Boolean(customer) && usesDeposit(settings, customer);
@@ -164,6 +179,7 @@ export default function DailyEntry() {
   const amount = round2(items.reduce((s, p) => s + lineAmount(p), 0));
   const paid = payType === 'cash' ? amount : Math.min(round2(num(paidInput)), amount);
   const udhari = round2(amount - paid);
+  const depositTotal = withDeposit ? round2(items.reduce((s, p) => s + num(depOf(p)), 0)) : 0;
   const q = nOf(JAR);
   const r = rOf(JAR);
   const itemsText = items.filter((p) => nOf(p) > 0).map((p) => countText(p, nOf(p))).join(t('prod.and'));
@@ -267,6 +283,7 @@ export default function DailyEntry() {
     setTakeBack(byProduct(false, false));
     setRet(byProduct('', ''));
     setDep(byProduct(null, null));
+    setExtra([]);
     setReminderDays(15);
     setClientUuid(uuid());
     if (!keepCustomer) {
@@ -340,7 +357,36 @@ export default function DailyEntry() {
             onRet={(v) => setRet((s) => ({ ...s, [p]: String(v) }))}
             onOpenTakeBack={() => openTakeBack(p)}
             onCloseTakeBack={() => closeTakeBack(p)}
+            onRemove={
+              extra.includes(p)
+                ? () => {
+                    setExtra((x) => x.filter((e) => e !== p));
+                    setQty((s) => ({ ...s, [p]: '0' }));
+                    closeTakeBack(p);
+                  }
+                : undefined
+            }
           />
+        ))}
+
+        {addable.map((p) => (
+          <button
+            key={p}
+            type="button"
+            onClick={() => {
+              setExtra((x) => [...x, p]);
+              setQty((s) => ({ ...s, [p]: '1' }));
+            }}
+            className="flex w-full items-center gap-3 rounded-lg border border-dashed border-line-strong bg-surface-2 px-3 py-2.5 text-left transition hover:border-brand-400 active:scale-[.99]"
+          >
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-surface text-brand-700 ring-1 ring-line">
+              <Plus size={16} />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold text-ink">{t('prod.addToEntry', { item: productName(p) })}</span>
+              <span className="block text-xs text-muted">{t('prod.addToEntryHint')}</span>
+            </span>
+          </button>
         ))}
 
         {(customer || (isGive && items.some((p) => stockFor(p) !== null))) && (
@@ -361,6 +407,11 @@ export default function DailyEntry() {
                       <b className="tabular-nums">{heldAfter(p)}</b>
                     </span>
                   ))
+                )}
+                {feat.deposit && (
+                  <span className="block">
+                    {t('prod.depositHeld')}: <b className="tabular-nums">{money(customer.deposit_held ?? 0)}</b>
+                  </span>
                 )}
               </Callout>
             )}
@@ -441,27 +492,45 @@ export default function DailyEntry() {
           <Field label={t('entry.advanceMoney')} hint={t('entry.advanceHint')}>
             <input className="input tabular-nums" inputMode="decimal" value={advance} placeholder="0" onChange={(e) => setAdvance(e.target.value.replace(/[^\d.]/g, ''))} />
           </Field>
+
+          {feat.deposit && customer && (
+            <div className="space-y-3 rounded-lg bg-violet-50/60 p-3 ring-1 ring-inset ring-violet-600/15">
+              <div className="flex items-center gap-2 text-sm font-semibold text-violet-800">
+                <Landmark size={16} /> {t('prod.depositSec')}
+              </div>
+              {withDeposit ? (
+                <>
+                  {items.map((p) => (
+                    <DepositField key={p} p={p} single={single} isGive customer={customer} settings={settings} value={depOf(p)} onChange={(v) => setDep((s) => ({ ...s, [p]: v }))} />
+                  ))}
+                  <p className="text-xs text-violet-800/80">{t('prod.depositNote')}</p>
+                </>
+              ) : (
+                <p className="text-sm text-muted">{t('prod.noDepositCustomer')}</p>
+              )}
+            </div>
+          )}
+
+          {feat.deposit && withDeposit && depositTotal > 0 && (
+            <div className="rounded-lg bg-emerald-50 px-3 py-2.5 ring-1 ring-inset ring-emerald-600/15">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-sm font-semibold text-emerald-900">{t('prod.collectToday')}</span>
+                <span className="text-lg font-semibold tabular-nums text-ink">{money(round2(paid + num(advance) + depositTotal))}</span>
+              </div>
+              <p className="text-xs text-emerald-800">
+                {t('prod.collectTodayHint', { paid: money(round2(paid + num(advance))), deposit: money(depositTotal) })}
+              </p>
+            </div>
+          )}
         </Section>
       )}
 
-      {feat.deposit && customer && (
+      {!isGive && feat.deposit && customer && (
         <Section title={t('prod.depositSec')} icon={Landmark}>
           {withDeposit ? (
             <>
               {items.map((p) => (
-                <Field
-                  key={p}
-                  label={`${t(isGive ? 'prod.depositTaken' : 'prod.depositRefund')}${single ? '' : ` · ${productName(p)}`}`}
-                  hint={t('prod.depositHint', { held: depositHeldOf(customer, p), rate: depositRate(settings, p) })}
-                >
-                  <input
-                    className="input tabular-nums"
-                    inputMode="decimal"
-                    value={depOf(p)}
-                    placeholder="0"
-                    onChange={(e) => setDep((s) => ({ ...s, [p]: e.target.value.replace(/[^\d.]/g, '') }))}
-                  />
-                </Field>
+                <DepositField key={p} p={p} single={single} isGive={false} customer={customer} settings={settings} value={depOf(p)} onChange={(v) => setDep((s) => ({ ...s, [p]: v }))} />
               ))}
               <p className="text-xs text-muted">{t('prod.depositNote')}</p>
             </>
@@ -508,12 +577,38 @@ export default function DailyEntry() {
   );
 }
 
+/** Deposit taken (give) or refunded (return) for one product, pre-filled with the suggestion. */
+function DepositField({ p, single, isGive, customer, settings, value, onChange }) {
+  return (
+    <Field
+      label={`${t(isGive ? 'prod.depositTaken' : 'prod.depositRefund')}${single ? '' : ` · ${productName(p)}`}`}
+      hint={t('prod.depositHint', { held: depositHeldOf(customer, p), rate: depositRate(settings, p) })}
+    >
+      <input className="input tabular-nums" inputMode="decimal" value={value} placeholder="0" onChange={(e) => onChange(e.target.value.replace(/[^\d.]/g, ''))} />
+    </Field>
+  );
+}
+
 /** "How many given / returned" for one product, with the optional empties-taken-back box. */
-function ProductQty({ product: p, framed, isGive, customer, held, qty, onQty, min, takeBack, ret, onRet, onOpenTakeBack, onCloseTakeBack }) {
+function ProductQty({ product: p, framed, isGive, customer, held, qty, onQty, min, takeBack, ret, onRet, onOpenTakeBack, onCloseTakeBack, onRemove }) {
   const n = parseInt(qty, 10) || 0;
   return (
     <div className={framed ? 'space-y-3 rounded-lg p-3 ring-1 ring-inset ring-line' : 'space-y-4'}>
-      <Field group label={tx(p, isGive ? 'given' : 'returned')}>
+      <Field
+        group
+        label={
+          onRemove ? (
+            <span className="flex items-center justify-between gap-2">
+              {tx(p, isGive ? 'given' : 'returned')}
+              <button type="button" className="btn-ghost btn-sm !px-2 text-muted" onClick={onRemove}>
+                <X size={14} /> {t('prod.removeFromEntry')}
+              </button>
+            </span>
+          ) : (
+            tx(p, isGive ? 'given' : 'returned')
+          )
+        }
+      >
         <Stepper value={qty} onChange={onQty} min={min} max={!isGive && customer && held > 0 ? held : undefined} />
       </Field>
 

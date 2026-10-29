@@ -184,6 +184,25 @@ class BottleDepositTest extends TestCase
         $this->deleteJson("/api/customers/{$this->rahul->id}")->assertStatus(422);
     }
 
+    public function test_bookings_can_include_bottles_only_when_switched_on(): void
+    {
+        $tomorrow = now()->addDay()->toDateString();
+        $book = fn (array $x) => $this->postJson('/api/bookings', $x + ['customer_id' => $this->rahul->id, 'delivery_date' => $tomorrow]);
+
+        // Bottles off: bottle count ignored, jars must be at least 1 (as before).
+        $book(['jar_quantity' => 2, 'bottle_quantity' => 5])->assertCreated()->assertJsonPath('data.bottle_quantity', 0);
+        $book(['jar_quantity' => 0])->assertStatus(422);
+
+        $this->features(true, false);
+        $book(['jar_quantity' => 3, 'bottle_quantity' => 2])->assertCreated()->assertJsonPath('data.bottle_quantity', 2);
+        $book(['jar_quantity' => 0, 'bottle_quantity' => 4])->assertCreated(); // bottles only
+        $book(['jar_quantity' => 0, 'bottle_quantity' => 0])->assertStatus(422);
+
+        $open = collect($this->getJson('/api/bookings')->json('open'));
+        $this->assertSame(6, $open->sum('bottle_quantity'));
+        $this->assertSame(5, $open->sum('jar_quantity'));
+    }
+
     public function test_only_the_super_admin_switches_features_and_sees_what_is_outstanding(): void
     {
         $companyId = $this->owner->company_id;

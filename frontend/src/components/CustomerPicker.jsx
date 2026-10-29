@@ -86,6 +86,11 @@ export default function CustomerPicker({ value, onChange, placeholder = t('cust.
               <Droplets size={12} aria-hidden="true" /> {t('common.jarsCount', { n: selected.current_jars })}
               {selected.current_bottles > 0 && <> · {t('prod.bottlesN', { n: selected.current_bottles })}</>}
             </span>
+            {selected.deposit_held > 0 && (
+              <span className="tabular-nums">
+                {t('prod.depositHeld')} ₹{selected.deposit_held}
+              </span>
+            )}
             <PendingText amount={selected.pending_amount} />
           </div>
         </div>

@@ -315,8 +315,7 @@ export const messages = {
 📅 आपली बुकिंग नोंदवली आहे.
 ${LINE}
 🗓️ डिलिव्हरी दिनांक : *{date}*
-💧 जार : *{qty} पाण्याचे जार*
-{notes_line}${LINE}
+{items_lines}{notes_line}${LINE}
 
 ठरलेल्या दिवशी आपल्याला जार पोहोचवले जातील.
 
@@ -325,7 +324,10 @@ ${LINE}
         ...shopValues(settings),
         customer_name: b.customer_name,
         date: fmtDate(b.delivery_date),
-        qty: b.jar_quantity,
+        // Jar line as before; a bottles line only when the booking has bottles.
+        items_lines:
+          (b.jar_quantity > 0 || !(b.bottle_quantity > 0) ? `💧 जार : *${b.jar_quantity} पाण्याचे जार*\n` : '') +
+          (b.bottle_quantity > 0 ? `💧 बाटली : *${b.bottle_quantity} बाटल्या (20 लि.)*\n` : ''),
         notes_line: b.notes ? `📝 ${b.notes}\n` : '',
       }
     );

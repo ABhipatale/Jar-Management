@@ -8,6 +8,7 @@ import { useSettings } from '../context/SettingsContext';
 import { useUi } from '../context/UiContext';
 import { t } from '../i18n';
 import { addDays, fmtDate, fmtLongDate, today } from '../lib/format';
+import { BOTTLE, countText, customerProducts, features } from '../lib/products';
 import { refreshBell } from '../lib/push';
 import { useApi } from '../lib/useApi';
 import { messages, openWhatsApp } from '../lib/whatsapp';
@@ -16,7 +17,14 @@ import { messages, openWhatsApp } from '../lib/whatsapp';
  * Advance jar bookings: "10 jars on 08-10-2026".
  * The owner gets a phone notification the night before (~8 PM) and that morning (~7 AM).
  * "Deliver" opens the normal Give Jar screen pre-filled; saving it closes the booking.
+ * With bottles switched on a booking can also (or only) be for 20 L bottles.
  */
+
+/** "3 जार" / "3 जार + 2 बाटल्या" / "2 बाटल्या". */
+const bookingItems = (b) =>
+  [b.jar_quantity > 0 || !(b.bottle_quantity > 0) ? countText('jar', b.jar_quantity) : null, b.bottle_quantity > 0 ? countText(BOTTLE, b.bottle_quantity) : null]
+    .filter(Boolean)
+    .join(t('prod.and'));
 export default function Bookings() {
   const { settings } = useSettings();
   const { toast, confirm, alert } = useUi();
@@ -78,6 +86,7 @@ export default function Bookings() {
         const isToday = date === today();
         const label = late ? t('book.ui.overdue') : isToday ? t('book.today') : date === tomorrow ? t('book.tomorrow') : fmtLongDate(date);
         const jars = items.reduce((s, b) => s + b.jar_quantity, 0);
+        const bottles = items.reduce((s, b) => s + (b.bottle_quantity || 0), 0);
         return (
           <section key={date} className="space-y-3">
             <h2 className={`section-title flex items-center justify-between gap-2 ${late ? '!text-red-600' : isToday ? '!text-amber-700' : ''}`}>
@@ -89,11 +98,12 @@ export default function Bookings() {
               </span>
               <span className="shrink-0 rounded-md bg-slate-100 px-1.5 py-0.5 text-xs font-semibold normal-case tracking-normal text-slate-600 tabular-nums">
                 {t('book.dayTotal', { n: items.length, jars })}
+                {bottles > 0 && ` + ${countText(BOTTLE, bottles)}`}
               </span>
             </h2>
-            <div className="grid gap-3 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
               {items.map((b) => (
-                <div key={b.id} className={`card !py-3.5 ${late ? '!ring-red-300' : isToday ? '!ring-amber-300' : ''}`}>
+                <div key={b.id} className={`card min-w-0 !py-3.5 ${late ? '!ring-red-300' : isToday ? '!ring-amber-300' : ''}`}>
                   <div className="flex items-start gap-3">
                     <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-50 text-sm font-semibold text-brand-700">
                       {(b.customer_name || '?').charAt(0).toUpperCase()}
@@ -119,9 +129,19 @@ export default function Bookings() {
                         </div>
                       )}
                     </Link>
-                    <div className="shrink-0 text-right">
-                      <div className="text-2xl font-semibold leading-none tracking-tight text-brand-700 tabular-nums">{b.jar_quantity}</div>
-                      <div className="mt-1 text-xs font-medium text-muted">{t('book.jars')}</div>
+                    <div className="flex shrink-0 gap-3 text-right">
+                      {(b.jar_quantity > 0 || !(b.bottle_quantity > 0)) && (
+                        <div>
+                          <div className="text-2xl font-semibold leading-none tracking-tight text-brand-700 tabular-nums">{b.jar_quantity}</div>
+                          <div className="mt-1 text-xs font-medium text-muted">{t('book.jars')}</div>
+                        </div>
+                      )}
+                      {b.bottle_quantity > 0 && (
+                        <div>
+                          <div className="text-2xl font-semibold leading-none tracking-tight text-sky-700 tabular-nums">{b.bottle_quantity}</div>
+                          <div className="mt-1 text-xs font-medium text-muted">{t('prod.bottlesWord')}</div>
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className="mt-3 flex flex-wrap items-center justify-end gap-2 border-t border-line pt-3">
@@ -135,7 +155,10 @@ export default function Bookings() {
                       <MessageCircle size={16} />
                     </button>
                     {date <= today() && (
-                      <Link to={`/entry?type=given&customer=${b.customer_id}&qty=${b.jar_quantity}&booking=${b.id}`} className="btn-primary btn-sm">
+                      <Link
+                        to={`/entry?type=given&customer=${b.customer_id}&qty=${b.jar_quantity}${b.bottle_quantity > 0 ? `&bqty=${b.bottle_quantity}` : ''}&booking=${b.id}`}
+                        className="btn-primary btn-sm"
+                      >
                         <Truck size={16} /> {t('book.ui.deliver')}
                       </Link>
                     )}
@@ -159,7 +182,7 @@ export default function Bookings() {
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-medium text-ink">{b.customer_name}</span>
                   <span className="block text-xs text-muted tabular-nums">
-                    {b.jar_quantity} {t('book.jars')} · {fmtDate(b.delivery_date)}
+                    {bookingItems(b)} · {fmtDate(b.delivery_date)}
                   </span>
                 </span>
                 <span className={`shrink-0 text-xs font-semibold ${b.status === 'delivered' ? 'text-emerald-700' : 'text-slate-500'}`}>
@@ -204,20 +227,25 @@ function groupByDate(list) {
 
 function BookingForm({ booking, onClose, onSaved }) {
   const { alert } = useUi();
+  const { settings } = useSettings();
+  const bottlesOn = features(settings).bottles;
   const editing = Boolean(booking);
   const [customerId, setCustomerId] = useState(booking?.customer_id || '');
   const [customer, setCustomer] = useState(null);
   const [date, setDate] = useState(booking?.delivery_date || addDays(today(), 1));
-  const [qty, setQty] = useState(String(booking?.jar_quantity || 10));
+  const [qty, setQty] = useState(String(booking?.jar_quantity ?? 10));
+  const [bQty, setBQty] = useState(String(booking?.bottle_quantity || 0));
   const [notes, setNotes] = useState(booking?.notes || '');
   const [busy, setBusy] = useState(false);
 
   const save = async () => {
     if (!editing && !customerId) return alert({ message: t('book.selectCustomer') });
-    if (!(parseInt(qty, 10) > 0)) return alert({ message: t('book.qtyMin') });
+    const jars = parseInt(qty, 10) || 0;
+    const bottles = bottlesOn ? parseInt(bQty, 10) || 0 : 0;
+    if (bottlesOn ? jars + bottles < 1 : jars < 1) return alert({ message: bottlesOn ? t('prod.qtyMin') : t('book.qtyMin') });
     setBusy(true);
     try {
-      const body = { delivery_date: date, jar_quantity: parseInt(qty, 10), notes: notes || null };
+      const body = { delivery_date: date, jar_quantity: jars, ...(bottlesOn && { bottle_quantity: bottles }), notes: notes || null };
       const { data } = editing ? await api.put(`/bookings/${booking.id}`, body) : await api.post('/bookings', { ...body, customer_id: Number(customerId) });
       const saved = { ...booking, ...data.data, customer_name: editing ? booking.customer_name : customer?.name, customer_mobile: editing ? booking.customer_mobile : customer?.mobile };
       onSaved(saved, !editing);
@@ -237,15 +265,31 @@ function BookingForm({ booking, onClose, onSaved }) {
           </div>
         ) : (
           <Field group label={t('book.customer')}>
-            <CustomerPicker value={customerId} onChange={(id, c) => { setCustomerId(id || ''); setCustomer(c); }} />
+            <CustomerPicker
+              value={customerId}
+              onChange={(id, c, opts) => {
+                setCustomerId(id || '');
+                setCustomer(c);
+                // A bottles-only customer: start with bottles instead of jars.
+                if (bottlesOn && c && !opts?.silent && !customerProducts(c, settings).includes('jar')) {
+                  setQty('0');
+                  setBQty((v) => (parseInt(v, 10) > 0 ? v : '10'));
+                }
+              }}
+            />
           </Field>
         )}
         <Field label={t('book.date')} hint={t('book.dateHint')}>
           <input type="date" className="input" value={date} min={today()} onChange={(e) => setDate(e.target.value)} />
         </Field>
         <Field group label={t('book.qty')}>
-          <Stepper value={qty} onChange={(v) => setQty(String(v))} min={1} />
+          <Stepper value={qty} onChange={(v) => setQty(String(v))} min={bottlesOn ? 0 : 1} />
         </Field>
+        {bottlesOn && (
+          <Field group label={t('prod.bookQtyBottles')}>
+            <Stepper value={bQty} onChange={(v) => setBQty(String(v))} min={0} />
+          </Field>
+        )}
         <Field label={t('book.notes')}>
           <input className="input" value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={500} placeholder={t('book.notesPh')} />
         </Field>

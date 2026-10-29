@@ -184,14 +184,15 @@ function Section({ title, count, tone, icon: I, children }) {
         {title}
         <span className={`rounded-md px-1.5 py-0.5 text-xs font-semibold normal-case tabular-nums ring-1 ring-inset ${pill}`}>{count}</span>
       </h2>
-      <div className="grid gap-3 lg:grid-cols-2">{children}</div>
+      {/* grid-cols-1 = minmax(0, 1fr): long names truncate instead of widening the page on phones. */}
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">{children}</div>
     </section>
   );
 }
 
 function ReminderCard({ r, highlight, muted, children }) {
   return (
-    <div className={`card !py-3.5 ${highlight ? '!ring-amber-300' : ''} ${muted ? 'opacity-60' : ''}`}>
+    <div className={`card min-w-0 !py-3.5 ${highlight ? '!ring-amber-300' : ''} ${muted ? 'opacity-60' : ''}`}>
       <div className="flex items-start gap-3">
         <span className="relative grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-50 text-sm font-semibold text-brand-700">
           {(r.customer_name || '?').charAt(0).toUpperCase()}
