@@ -393,3 +393,52 @@ export async function openWhatsAppLater(mobile, getText) {
     throw err;
   }
 }
+
+// Festival / offer / notice messages for the broadcast screen (customer-facing, Marathi).
+// ___ marks the blanks the shop fills in; {customer_name} is filled per customer.
+export const BROADCAST_TEMPLATES = {
+  festival: `🙏 *नमस्कार {customer_name}*,
+
+🪔 आपणास व आपल्या परिवारास *___ च्या हार्दिक शुभेच्छा!* 🎉
+
+आपल्या विश्वासाबद्दल मनःपूर्वक आभार. 💧
+
+{footer}`,
+  offer: `🙏 *नमस्कार {customer_name}*,
+
+🎁 *खास ऑफर!*
+${LINE}
+▫️ ___
+▫️ ऑफर दिनांक *___* पर्यंत.
+${LINE}
+
+ऑर्डरसाठी आम्हाला कॉल / WhatsApp करा. 📞
+
+{footer}`,
+  holiday: `🙏 *नमस्कार {customer_name}*,
+
+📢 *सूचना*
+दिनांक *___* रोजी आमची जार सेवा बंद राहील.
+कृपया आदल्या दिवशीच आवश्यक जार मागवून घ्यावे. 🙏
+
+{footer}`,
+  price: `🙏 *नमस्कार {customer_name}*,
+
+📢 *दर बदलाची सूचना*
+दिनांक *___* पासून जारचा नवीन दर *₹___* असेल.
+
+आपल्या सहकार्याबद्दल धन्यवाद. 🙏
+
+{footer}`,
+  custom: `🙏 *नमस्कार {customer_name}*,
+
+
+
+{footer}`,
+};
+
+/** A broadcast message for one customer (or, with no name, for a group / broadcast list). */
+export function broadcastText(settings, template, customerName) {
+  const text = template.includes('{footer}') ? template : `${template.trimEnd()}\n\n{footer}`;
+  return fillTemplate(text, { ...shopValues(settings), customer_name: customerName || 'ग्राहक' });
+}

@@ -85,6 +85,7 @@ Route::middleware(['auth:sanctum', 'company'])->group(function () {
         Route::get('/weekly', 'weekly');
         Route::get('/monthly', 'monthly');
         Route::get('/cash', 'cash');
+        Route::get('/profit', 'profit');
         Route::get('/udhari', 'udhari');
         Route::get('/pending', 'pending');
         Route::get('/jar-status', 'jarStatus');
