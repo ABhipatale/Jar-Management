@@ -83,6 +83,9 @@ jobs:
             --exclude=./.phpunit.result.cache --exclude=./phpunit.xml \
             --exclude=./Dockerfile.vercel --exclude=./Caddyfile.vercel --exclude=./vercel-start.sh --exclude=./.dockerignore \
             .) | (cd out/app && tar -xf -)
+          # Empty folders so composer's package:discover can run; they are never uploaded (see rsync excludes).
+          mkdir -p out/app/bootstrap/cache out/app/storage/framework/cache/data out/app/storage/framework/sessions \
+                   out/app/storage/framework/views out/app/storage/logs out/app/storage/app
           (cd out/app && composer install --no-dev --optimize-autoloader --no-interaction --no-progress)
           printf 'Require all denied\nDeny from all\n' > out/app/.htaccess
 
