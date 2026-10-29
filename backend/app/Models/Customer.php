@@ -11,7 +11,24 @@ class Customer extends Model
 {
     use BelongsToCompany, SoftDeletes;
 
-    protected $fillable = ['name', 'mobile', 'address', 'status'];
+    /** Same defaults as the database, so a freshly created model has them too. */
+    protected $attributes = ['takes_jar' => true, 'takes_bottle' => false, 'no_deposit' => false];
+
+    protected $fillable = [
+        'name', 'mobile', 'address', 'status',
+        'takes_jar', 'takes_bottle', 'jar_rate', 'bottle_rate', 'no_deposit',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'takes_jar' => 'boolean',
+            'takes_bottle' => 'boolean',
+            'jar_rate' => 'float',
+            'bottle_rate' => 'float',
+            'no_deposit' => 'boolean',
+        ];
+    }
 
     public function jarTransactions(): HasMany
     {

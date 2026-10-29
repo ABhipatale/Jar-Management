@@ -126,12 +126,14 @@ export default function Customers() {
                     <Droplets size={13} className="text-brand-600" aria-hidden="true" />
                     <span className="font-semibold tabular-nums text-ink">{c.current_jars}</span> {t('common.jarsWord')}
                   </div>
+                  {c.current_bottles > 0 && <div className="text-xs text-muted">{t('prod.bottlesN', { n: c.current_bottles })}</div>}
                   <div>
                     <PendingText amount={c.pending_amount} />
                   </div>
                 </div>
                 <span className="hidden text-right tabular-nums lg:block">
                   <span className="font-semibold text-ink">{c.current_jars}</span> <span className="text-muted">{t('common.jarsWord')}</span>
+                  {c.current_bottles > 0 && <span className="block text-xs text-muted">{t('prod.bottlesN', { n: c.current_bottles })}</span>}
                 </span>
                 <span className="hidden text-right lg:block">
                   <PendingText amount={c.pending_amount} />

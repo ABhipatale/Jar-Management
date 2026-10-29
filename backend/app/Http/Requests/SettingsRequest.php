@@ -23,8 +23,12 @@ class SettingsRequest extends ApiRequest
             'owner_name_mr' => ['sometimes', 'nullable', 'string', 'max:120'],
             'contact_numbers' => ['sometimes', 'nullable', 'string', 'max:200'],
             'default_rate' => ['sometimes', 'numeric', 'min:0', 'max:100000'],
+            'bottle_rate' => ['sometimes', 'numeric', 'min:0', 'max:100000'],
+            'jar_deposit' => ['sometimes', 'numeric', 'min:0', 'max:100000'],
+            'bottle_deposit' => ['sometimes', 'numeric', 'min:0', 'max:100000'],
             'jar_tracking' => ['sometimes', 'boolean'],
             'total_jars' => ['sometimes', 'integer', 'min:0', 'max:100000'],
+            'total_bottles' => ['sometimes', 'integer', 'min:0', 'max:100000'],
             'expense_types' => ['sometimes', 'nullable', 'string', 'max:500'],
             'wa_delivery' => ['sometimes', 'nullable', 'string', 'max:2000'],
             'wa_return' => ['sometimes', 'nullable', 'string', 'max:2000'],
@@ -42,6 +46,10 @@ class SettingsRequest extends ApiRequest
             'business_mobile.regex' => __('कृपया योग्य 10 अंकी मोबाईल नंबर टाका.'),
             'total_jars.min' => __('एकूण जार उणे असू शकत नाहीत.'),
             'default_rate.min' => __('दर उणे असू शकत नाही.'),
+            'bottle_rate.min' => __('दर उणे असू शकत नाही.'),
+            'jar_deposit.min' => __('डिपॉझिट उणे असू शकत नाही.'),
+            'bottle_deposit.min' => __('डिपॉझिट उणे असू शकत नाही.'),
+            'total_bottles.min' => __('एकूण जार उणे असू शकत नाहीत.'),
             'upi_id.regex' => __('कृपया योग्य UPI ID टाका (उदा. 9876543210@ybl).'),
         ];
     }

@@ -14,9 +14,12 @@ class JarTransaction extends Model
     public const GIVEN = 'given';
     public const RETURNED = 'returned';
 
+    /** Same defaults as the database, so a freshly created model has them too. */
+    protected $attributes = ['product' => 'jar', 'deposit_amount' => 0];
+
     protected $fillable = [
-        'customer_id', 'transaction_date', 'transaction_type', 'jar_quantity', 'payment_type',
-        'rate', 'amount', 'paid_amount', 'udhari_amount', 'advance_amount', 'notes',
+        'customer_id', 'transaction_date', 'transaction_type', 'product', 'jar_quantity', 'payment_type',
+        'rate', 'amount', 'paid_amount', 'udhari_amount', 'advance_amount', 'deposit_amount', 'notes',
         'client_uuid', 'created_by',
     ];
 
@@ -30,6 +33,7 @@ class JarTransaction extends Model
             'paid_amount' => 'float',
             'udhari_amount' => 'float',
             'advance_amount' => 'float',
+            'deposit_amount' => 'float',
         ];
     }
 

@@ -63,7 +63,7 @@ class ReminderService
 
     private function settled(array $balance): bool
     {
-        return $balance['current_jars'] <= 0 && $balance['pending'] <= 0.004;
+        return $balance['current_jars'] <= 0 && $balance['current_bottles'] <= 0 && $balance['pending'] <= 0.004;
     }
 
     /** Safety net: close reminders of any customer that became clear by other means. */

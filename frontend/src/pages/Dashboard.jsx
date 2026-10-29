@@ -162,14 +162,17 @@ export default function Dashboard() {
               )}
             </h2>
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-              <StatCard label={t('dash.jarsGiven', { p: label }).trim()} value={p.given} icon={ArrowUpRight} tone="blue" delta={pct(p.given, prev.given)} deltaLabel={vs} spark={spark.given} to="/transactions" />
-              <StatCard label={t('dash.jarsReturned', { p: label }).trim()} value={p.returned} icon={ArrowDownLeft} tone="purple" delta={pct(p.returned, prev.returned)} deltaLabel={vs} spark={spark.returned} to="/transactions" />
+              <StatCard label={t('dash.jarsGiven', { p: label }).trim()} value={p.given} icon={ArrowUpRight} tone="blue" delta={pct(p.given, prev.given)} deltaLabel={vs} spark={spark.given} to="/transactions" sub={data.bottle_stock ? `+ ${t('prod.bottlesN', { n: p.bottles_given ?? 0 })}` : undefined} />
+              <StatCard label={t('dash.jarsReturned', { p: label }).trim()} value={p.returned} icon={ArrowDownLeft} tone="purple" delta={pct(p.returned, prev.returned)} deltaLabel={vs} spark={spark.returned} to="/transactions" sub={data.bottle_stock ? `+ ${t('prod.bottlesN', { n: p.bottles_returned ?? 0 })}` : undefined} />
               <StatCard label={t('dash.cash', { p: label }).trim()} value={money(p.cash)} icon={Banknote} tone="green" delta={pct(p.cash, prev.cash)} deltaLabel={vs} spark={spark.cash} to="/reports/cash" />
               <StatCard label={t('dash.udhari', { p: label }).trim()} value={money(p.udhari)} icon={BookOpen} tone="amber" delta={pct(p.udhari, prev.udhari)} deltaInverse deltaLabel={vs} spark={spark.udhari} to="/reports/udhari" />
               <StatCard label={t('dash.paymentsReceived')} value={money(p.payments)} icon={Wallet} tone="green" delta={pct(p.payments, prev.payments)} deltaLabel={vs} spark={spark.payments} to="/payments" />
               <StatCard label={t('dash.netCash')} value={money(p.net_cash)} icon={TrendingUp} tone={p.net_cash >= 0 ? 'blue' : 'red'} delta={pct(p.net_cash, prev.net_cash)} deltaLabel={vs} sub={t('dash.netCashSub')} />
               <StatCard label={t('dash.expenses', { p: label }).trim()} value={money(p.expenses)} icon={Receipt} tone="slate" delta={pct(p.expenses, prev.expenses)} deltaInverse deltaLabel={vs} sub={t('dash.thisMonth', { amount: money(data.month_expenses) })} to="/expenses" />
               <StatCard label={t('common.totalPending')} value={money(p.pending)} icon={Clock} tone="red" sub={t('dash.pendingSub')} to="/reports/pending" />
+              {(p.deposit_in > 0 || p.deposit_out > 0) && (
+                <StatCard label={t('prod.depositSec')} value={money(p.deposit_in)} icon={Wallet} tone="slate" sub={`${t('prod.depositRefund')}: ${money(p.deposit_out)}`} />
+              )}
             </div>
           </section>
 

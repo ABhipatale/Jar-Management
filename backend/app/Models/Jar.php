@@ -12,7 +12,9 @@ class Jar extends Model
 
     public const STATUSES = ['available', 'with_customer', 'returned', 'damaged', 'lost'];
 
-    protected $fillable = ['jar_number', 'status', 'customer_id', 'status_date'];
+    protected $attributes = ['product' => 'jar'];
+
+    protected $fillable = ['jar_number', 'product', 'status', 'customer_id', 'status_date'];
 
     protected function casts(): array
     {

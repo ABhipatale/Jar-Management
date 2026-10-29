@@ -6,11 +6,15 @@ use App\Support\CurrentCompany;
 use App\Models\CustomerLedger;
 use App\Models\JarTransaction;
 use App\Models\Payment;
+use App\Support\Products;
 
 /**
  * customer_ledger is a derived statement. After any entry, payment or delete we
  * rebuild the customer's rows (inside the caller's DB transaction), so running
  * balances stay correct even for back-dated entries and deletions.
+ *
+ * jar_balance / bottle_balance are kept apart (never summed); deposit_balance is the
+ * refundable deposit held, separate from the money balance.
  */
 class LedgerService
 {
@@ -25,6 +29,7 @@ class LedgerService
                 'row' => [
                     'entry_date' => $t->transaction_date->format('Y-m-d'),
                     'entry_type' => $t->transaction_type,
+                    'product' => $t->product,
                     'jar_transaction_id' => $t->id,
                     'payment_id' => null,
                     'jars_given' => $isGiven ? $t->jar_quantity : 0,
@@ -32,9 +37,12 @@ class LedgerService
                     'amount' => $t->amount,
                     'paid' => round($t->paid_amount + $t->advance_amount, 2),
                     'udhari' => $t->udhari_amount,
+                    'deposit' => $t->deposit_amount,
                     'description' => $t->notes,
                 ],
+                'product' => $t->product,
                 'jars' => $isGiven ? $t->jar_quantity : -$t->jar_quantity,
+                'deposit' => $isGiven ? $t->deposit_amount : -$t->deposit_amount,
                 'due' => $t->udhari_amount - $t->advance_amount,
             ];
         }
@@ -45,6 +53,7 @@ class LedgerService
                 'row' => [
                     'entry_date' => $p->payment_date->format('Y-m-d'),
                     'entry_type' => 'payment',
+                    'product' => Products::JAR,
                     'jar_transaction_id' => null,
                     'payment_id' => $p->id,
                     'jars_given' => 0,
@@ -52,9 +61,12 @@ class LedgerService
                     'amount' => 0,
                     'paid' => $p->amount,
                     'udhari' => 0,
+                    'deposit' => 0,
                     'description' => strtoupper($p->payment_mode).($p->notes ? ' - '.$p->notes : ''),
                 ],
+                'product' => Products::JAR,
                 'jars' => 0,
+                'deposit' => 0,
                 'due' => -$p->amount,
             ];
         }
@@ -64,17 +76,21 @@ class LedgerService
         $now = now();
         $companyId = CurrentCompany::require();
         $balance = 0.0;
-        $jars = 0;
+        $held = [Products::JAR => 0, Products::BOTTLE => 0];
+        $deposit = 0.0;
         $rows = [];
         foreach ($events as $e) {
             $balance = round($balance + $e['due'], 2);
-            $jars += $e['jars'];
+            $held[$e['product']] = ($held[$e['product']] ?? 0) + $e['jars'];
+            $deposit = round($deposit + $e['deposit'], 2);
             // Bulk insert skips model events, so company_id is set here.
             $rows[] = $e['row'] + [
                 'company_id' => $companyId,
                 'customer_id' => $customerId,
                 'balance' => $balance,
-                'jar_balance' => $jars,
+                'jar_balance' => $held[Products::JAR],
+                'bottle_balance' => $held[Products::BOTTLE],
+                'deposit_balance' => $deposit,
                 'created_at' => $now,
                 'updated_at' => $now,
             ];

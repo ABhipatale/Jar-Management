@@ -84,6 +84,7 @@ export default function CustomerPicker({ value, onChange, placeholder = t('cust.
             </span>
             <span className="inline-flex items-center gap-1">
               <Droplets size={12} aria-hidden="true" /> {t('common.jarsCount', { n: selected.current_jars })}
+              {selected.current_bottles > 0 && <> · {t('prod.bottlesN', { n: selected.current_bottles })}</>}
             </span>
             <PendingText amount={selected.pending_amount} />
           </div>

@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Support\CurrentCompany;
+use App\Support\Products;
 use Illuminate\Validation\Rule;
 
 class JarTransactionRequest extends ApiRequest
@@ -13,7 +14,19 @@ class JarTransactionRequest extends ApiRequest
             'customer_id' => ['required', 'integer', Rule::exists('customers', 'id')->where('company_id', CurrentCompany::id())->whereNull('deleted_at')],
             'transaction_date' => ['required', 'date_format:Y-m-d', 'before_or_equal:today'],
             'transaction_type' => ['required', 'in:given,returned'],
-            'jar_quantity' => ['required', 'integer', 'min:1', 'max:10000'],
+            // Old single-product form. Ignored when "lines" is sent.
+            'jar_quantity' => ['required_without:lines', 'integer', 'min:1', 'max:10000'],
+            // Which product the single-product form is for (only products the company sells).
+            'product' => ['nullable', Rule::in(Products::enabled())],
+            // One entry for jars and bottles: [{product, quantity, rate, return_quantity, deposit_amount}].
+            'lines' => ['nullable', 'array', 'min:1', 'max:'.count(Products::ALL)],
+            'lines.*.product' => ['required', 'distinct', Rule::in(Products::enabled())],
+            'lines.*.quantity' => ['required', 'integer', 'min:0', 'max:10000'],
+            'lines.*.rate' => ['nullable', 'numeric', 'min:0', 'max:100000'],
+            'lines.*.return_quantity' => ['nullable', 'integer', 'min:0', 'max:10000'],
+            'lines.*.deposit_amount' => ['nullable', 'numeric', 'min:0', 'max:10000000'],
+            // GIVE: deposit collected. RETURN: deposit refunded (only when the company uses deposits).
+            'deposit_amount' => ['nullable', 'numeric', 'min:0', 'max:10000000'],
             // GIVE only: empty jars taken back at the same delivery (saved as a RETURN entry).
             'return_quantity' => ['nullable', 'integer', 'min:0', 'max:10000'],
             // GIVE only: follow-up reminder after 1, 7 or 15 days (0/empty = none).
@@ -39,6 +52,11 @@ class JarTransactionRequest extends ApiRequest
             'transaction_type.required' => __('कृपया जार दिले किंवा जार परत निवडा.'),
             'transaction_type.in' => __('चुकीचा व्यवहार प्रकार.'),
             'jar_quantity.required' => __('कृपया जारची संख्या टाका.'),
+            'jar_quantity.required_without' => __('कृपया जारची संख्या टाका.'),
+            'product.in' => __('ही वस्तू तुमच्या खात्यात चालू नाही.'),
+            'lines.*.product.in' => __('ही वस्तू तुमच्या खात्यात चालू नाही.'),
+            'lines.*.product.distinct' => __('एकाच नोंदीत एक वस्तू दोनदा टाकता येत नाही.'),
+            'deposit_amount.min' => __('डिपॉझिट उणे असू शकत नाही.'),
             'jar_quantity.integer' => __('जारची संख्या पूर्ण अंकात असावी.'),
             'jar_quantity.min' => __('जारची संख्या किमान 1 असावी.'),
             'payment_type.in' => __('चुकीचा पेमेंट प्रकार.'),

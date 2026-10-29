@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { CalendarPlus, ImagePlus, KeyRound, LogIn, Mail, Pause, Pencil, Phone, Play, Trash2, Users } from 'lucide-react';
+import { CalendarPlus, Droplets, ImagePlus, KeyRound, Landmark, LogIn, Mail, Pause, Pencil, Phone, Play, Trash2, Users } from 'lucide-react';
 import api, { errorMessage } from '../../api/client';
 import defaultLogo from '../../assets/logo.png';
 import { ErrorBox, Field, Loader, Modal, PageHeader, StatCard } from '../../components/ui';
@@ -63,6 +63,20 @@ export default function CompanyDetail() {
     run(() => api.put(`/admin/companies/${id}`, { expires_at: addMonths(from, months) }));
   };
 
+  // Optional features of the business app. Switching one off while bottles / deposit are
+  // still out with customers asks first (nothing is deleted, but new entries stop).
+  const setFeature = async (key, on) => {
+    if (!on) {
+      const out = c.outstanding || {};
+      const warn =
+        key === 'bottles_enabled'
+          ? out.bottles > 0 && t('prod.adminOffBottles', { n: out.bottles })
+          : out.deposit > 0 && t('prod.adminOffDeposit', { n: out.deposit });
+      if (warn && !(await confirm({ message: warn, confirmText: t('prod.adminOffYes'), danger: true }))) return;
+    }
+    run(() => api.put(`/admin/companies/${id}`, { [key]: on }));
+  };
+
   const uploadLogo = (e) => {
     const file = e.target.files?.[0];
     e.target.value = '';
@@ -104,26 +118,41 @@ export default function CompanyDetail() {
 
       <div className="admin-hero relative overflow-hidden rounded-2xl p-5 text-white shadow-pop">
         <div className="pointer-events-none absolute -right-8 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" aria-hidden="true" />
-        <div className="relative flex flex-wrap items-center gap-4">
-          <img
-            src={c.branding?.logo_url || defaultLogo}
-            alt=""
-            className="h-16 w-16 rounded-2xl bg-white object-contain p-1 shadow-lg ring-4 ring-white/20"
-          />
-          <div className="min-w-0 flex-1 space-y-1.5">
-            <div className="flex flex-wrap items-center gap-2">
-              <StatusBadge company={c} />
-              <PlanPill company={c} />
-              {c.plan && <span className="text-sm text-white/80">{t('adm.plan')}: {c.plan}</span>}
+        <div className="relative flex flex-col gap-4 lg:flex-row lg:items-center">
+          <div className="flex min-w-0 flex-1 flex-col gap-4 sm:flex-row sm:items-center">
+            <div className="flex min-w-0 items-center gap-3 sm:contents">
+              <img
+                src={c.branding?.logo_url || defaultLogo}
+                alt=""
+                className="h-14 w-14 shrink-0 rounded-2xl bg-white object-contain p-1 shadow-lg ring-4 ring-white/20 sm:h-16 sm:w-16"
+              />
+              {/* Phone: badges next to the logo; larger screens: above the details. */}
+              <div className="flex min-w-0 flex-wrap items-center gap-2 sm:hidden">
+                <StatusBadge company={c} />
+                <PlanPill company={c} />
+              </div>
             </div>
-            <div className="text-sm text-white/80">
-              {t('adm.expires')}: <span className="font-semibold text-white">{c.expires_at ? fmtDate(c.expires_at) : t('adm.noExpiry')}</span>
-              {' · '}
-              {t('adm.created')}: {fmtDate(c.created_at)}
+            <div className="min-w-0 flex-1 space-y-2">
+              <div className="hidden flex-wrap items-center gap-2 sm:flex">
+                <StatusBadge company={c} />
+                <PlanPill company={c} />
+              </div>
+              <dl className="grid grid-cols-3 gap-2 rounded-xl bg-white/10 p-2.5 text-sm ring-1 ring-white/15 sm:max-w-md">
+                {[
+                  [t('adm.plan'), c.plan || '—'],
+                  [t('adm.expires'), c.expires_at ? fmtDate(c.expires_at) : t('adm.noExpiry')],
+                  [t('adm.created'), fmtDate(c.created_at)],
+                ].map(([label, value]) => (
+                  <div key={label} className="min-w-0">
+                    <dt className="truncate text-[11px] font-medium text-white/70">{label}</dt>
+                    <dd className="truncate font-semibold tabular-nums text-white">{value}</dd>
+                  </div>
+                ))}
+              </dl>
             </div>
           </div>
           <button
-            className="btn-on-hero"
+            className="btn-on-hero w-full lg:w-auto"
             onClick={loginAs}
             disabled={busy || c.status !== 'active' || c.expired}
           >
@@ -163,7 +192,7 @@ export default function CompanyDetail() {
 
         <section className="card space-y-3">
           <h2 className="font-semibold text-ink">{t('adm.section.plan')}</h2>
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-2 gap-2">
             <button className="btn-light" onClick={() => extend(1)} disabled={busy}>
               <CalendarPlus size={16} /> {t('adm.extendMonth')}
             </button>
@@ -171,10 +200,31 @@ export default function CompanyDetail() {
               <CalendarPlus size={16} /> {t('adm.extendYear')}
             </button>
           </div>
-          <button className={c.status === 'active' ? 'btn-light text-red-600' : 'btn-primary'} onClick={toggle} disabled={busy}>
+          <button className={`w-full ${c.status === 'active' ? 'btn-light text-red-600' : 'btn-primary'}`} onClick={toggle} disabled={busy}>
             {c.status === 'active' ? <Pause size={16} /> : <Play size={16} />}
             {c.status === 'active' ? t('adm.suspend') : t('adm.activate')}
           </button>
+        </section>
+
+        <section className="card space-y-3">
+          <h2 className="font-semibold text-ink">{t('prod.adminFeatures')}</h2>
+          <p className="text-sm text-muted">{t('prod.adminFeaturesHint')}</p>
+          {[
+            ['bottles_enabled', Droplets, t('prod.adminBottles'), t('prod.adminBottlesHint')],
+            ['deposit_enabled', Landmark, t('prod.adminDeposit'), t('prod.adminDepositHint')],
+          ].map(([key, Icon, label, hint]) => (
+            <label key={key} className="flex cursor-pointer items-start gap-3 rounded-lg bg-surface-2 px-3.5 py-3 ring-1 ring-line">
+              <input type="checkbox" className="mt-0.5 h-5 w-5 shrink-0 accent-brand-700" checked={Boolean(c[key])} disabled={busy} onChange={(e) => setFeature(key, e.target.checked)} />
+              <Icon size={18} className="mt-0.5 shrink-0 text-muted" aria-hidden="true" />
+              <span className="min-w-0 flex-1">
+                <span className="flex items-center justify-between gap-2 text-sm font-medium text-ink">
+                  {label}
+                  <span className={`text-xs font-semibold ${c[key] ? 'text-emerald-700' : 'text-muted'}`}>{c[key] ? t('prod.on') : t('prod.off')}</span>
+                </span>
+                <span className="block text-xs text-muted">{hint}</span>
+              </span>
+            </label>
+          ))}
         </section>
 
         <section className="card space-y-3">

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ChevronRight, CreditCard, Droplets, ExternalLink, ImagePlus, KeyRound, Languages, LogOut, MessageCircle, MessageSquareText, Palette, QrCode, Save, Sparkles, Store, Trash2 } from 'lucide-react';
+import { ChevronRight, CreditCard, Droplets, ExternalLink, ImagePlus, KeyRound, Landmark, Languages, LogOut, MessageCircle, MessageSquareText, Palette, QrCode, Save, Sparkles, Store, Trash2 } from 'lucide-react';
 import api, { errorMessage } from '../api/client';
 import { ThemeSwitch } from '../components/Layout';
 import { Field, Loader, PageHeader, Segmented } from '../components/ui';
@@ -10,6 +10,7 @@ import { LANGS, lang, setLang, t, tx } from '../i18n';
 import { Link } from 'react-router-dom';
 import { logoSrc } from '../lib/branding';
 import { fmtDate } from '../lib/format';
+import { features } from '../lib/products';
 import { DEFAULT_TEMPLATES, getWaApp, setWaApp } from '../lib/whatsapp';
 
 const TEMPLATES = [
@@ -67,12 +68,21 @@ export default function Settings() {
     );
 
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
+  const feat = features(form);
 
   const save = async (e) => {
     e.preventDefault();
     setBusy(true);
     try {
       const payload = { ...form, jar_tracking: form.jar_tracking === '1' || form.jar_tracking === true, total_jars: parseInt(form.total_jars, 10) || 0 };
+      // Bottle / deposit fields only when the super admin switched them on (else not sent).
+      if (feat.bottles) payload.total_bottles = parseInt(form.total_bottles, 10) || 0;
+      else delete payload.total_bottles;
+      if (!feat.bottles) delete payload.bottle_rate;
+      if (!feat.deposit) {
+        delete payload.jar_deposit;
+        delete payload.bottle_deposit;
+      }
       const { data } = await api.put('/settings', payload);
       setSettings(data);
       setForm(data);
@@ -316,6 +326,34 @@ export default function Settings() {
             <input className="input" value={form.expense_types} onChange={set('expense_types')} />
           </Field>
         </Section>
+
+        {(feat.bottles || feat.deposit) && (
+          <Section icon={Landmark} tone="bg-sky-50 text-sky-700" title={t('prod.settingsSec')} hint={t('prod.settingsHint')}>
+            {feat.bottles && (
+              <div className="grid grid-cols-2 gap-3">
+                <Field label={t('prod.totalBottles')} hint={t('set.totalJarsHint')}>
+                  <input className="input" inputMode="numeric" value={form.total_bottles ?? 0} onChange={(e) => setForm({ ...form, total_bottles: e.target.value.replace(/\D/g, '') })} />
+                </Field>
+                <Field label={t('prod.bottleDefaultRate')}>
+                  <input className="input" inputMode="decimal" value={form.bottle_rate ?? ''} onChange={set('bottle_rate')} />
+                </Field>
+              </div>
+            )}
+            {feat.deposit && (
+              <div className="grid grid-cols-2 gap-3">
+                <Field label={t('prod.jarDeposit')}>
+                  <input className="input" inputMode="decimal" value={form.jar_deposit ?? ''} onChange={set('jar_deposit')} />
+                </Field>
+                {feat.bottles && (
+                  <Field label={t('prod.bottleDeposit')}>
+                    <input className="input" inputMode="decimal" value={form.bottle_deposit ?? ''} onChange={set('bottle_deposit')} />
+                  </Field>
+                )}
+              </div>
+            )}
+            {feat.deposit && <p className="text-xs text-muted">{t('prod.depositNote')}</p>}
+          </Section>
+        )}
 
         <Section icon={MessageSquareText} tone="bg-emerald-50 text-emerald-700" title={t('set.waMessages')} hint={t('set.waHint')}>
           <div className="space-y-4">

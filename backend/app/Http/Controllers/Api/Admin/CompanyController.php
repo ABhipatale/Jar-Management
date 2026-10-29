@@ -12,9 +12,12 @@ use App\Models\Customer;
 use App\Models\JarTransaction;
 use App\Models\Plan;
 use App\Models\User;
+use App\Services\BalanceService;
 use App\Services\BrandingService;
 use App\Services\CompanyService;
 use App\Services\IconService;
+use App\Support\CurrentCompany;
+use App\Support\Products;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -27,6 +30,7 @@ class CompanyController extends Controller
         private CompanyService $companies,
         private IconService $icons,
         private BrandingService $branding,
+        private BalanceService $balances,
     ) {}
 
     public function index(Request $request)
@@ -290,6 +294,9 @@ class CompanyController extends Controller
             'locale' => ['sometimes', Rule::in(['mr', 'en'])],
             'plan_id' => ['sometimes', 'nullable', 'integer', Rule::exists('plans', 'id')->whereNull('deleted_at')],
             'expires_at' => ['sometimes', 'nullable', 'date'],
+            // Optional features of the business app (off for every company until switched on here).
+            'bottles_enabled' => ['sometimes', 'boolean'],
+            'deposit_enabled' => ['sometimes', 'boolean'],
         ];
     }
 
@@ -311,6 +318,8 @@ class CompanyController extends Controller
             'expired' => $c->isExpired(),
             'awaiting_payment' => $c->awaitingFirstPayment(),
             'created_at' => $c->created_at?->toDateString(),
+            'bottles_enabled' => (bool) $c->bottles_enabled,
+            'deposit_enabled' => (bool) $c->deposit_enabled,
         ] + $extra;
     }
 
@@ -323,6 +332,11 @@ class CompanyController extends Controller
             'users' => User::where('company_id', $company->id)->count(),
             'customers' => Customer::withoutGlobalScope('company')->where('company_id', $company->id)->whereNull('deleted_at')->count(),
             'jar_entries' => JarTransaction::withoutGlobalScope('company')->where('company_id', $company->id)->count(),
+            // Still out with customers: shown as a warning before switching bottles / deposit off.
+            'outstanding' => CurrentCompany::run($company, fn () => [
+                'bottles' => $this->balances->totalCustomerJars(Products::BOTTLE),
+                'deposit' => round((float) $this->balances->balancesTable()->sum('deposit_held'), 2),
+            ]),
             'last_activity_at' => JarTransaction::withoutGlobalScope('company')->where('company_id', $company->id)->max('created_at'),
             'branding' => $this->branding->forCompany($company),
             'payments' => BillingPayment::withoutGlobalScope('company')->with('plan:id,name')

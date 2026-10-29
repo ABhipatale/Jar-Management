@@ -4,11 +4,12 @@ import { AlertTriangle, ChevronRight, CircleCheck, CircleHelp, Droplets, House, 
 import api, { errorMessage } from '../api/client';
 import { StackBar } from '../components/charts';
 import CustomerPicker from '../components/CustomerPicker';
-import { Badge, ErrorBox, Field, Loader, Modal, PageHeader, StatCard, Stepper } from '../components/ui';
+import { Badge, ErrorBox, Field, Loader, Modal, PageHeader, Segmented, StatCard, Stepper } from '../components/ui';
 import { useSettings } from '../context/SettingsContext';
 import { useUi } from '../context/UiContext';
 import { t } from '../i18n';
 import { today } from '../lib/format';
+import { BOTTLE, JAR, features, productName } from '../lib/products';
 import { useApi } from '../lib/useApi';
 
 const ACTIONS = {
@@ -27,7 +28,11 @@ export default function Jars() {
   const { toast } = useUi();
   const tracking = settings.jar_tracking === '1' || settings.jar_tracking === true;
   const [statusFilter, setStatusFilter] = useState('');
-  const { data, loading, error, reload } = useApi('/jars', { status: statusFilter || undefined });
+  // Jars and bottles have separate stock (bottles only when the company sells them).
+  const bottles = features(settings).bottles;
+  const [product, setProduct] = useState(JAR);
+  const productParam = bottles && product === BOTTLE ? BOTTLE : undefined;
+  const { data, loading, error, reload } = useApi('/jars', { status: statusFilter || undefined, product: productParam });
   const [action, setAction] = useState(null);
   const [qty, setQty] = useState('1');
   const [date, setDate] = useState(today());
@@ -41,7 +46,10 @@ export default function Jars() {
     if (n < 1) return toast(t('entry.qtyMin'), 'error');
     setBusy(true);
     try {
-      const res = action === 'add' ? await api.post('/jars', { quantity: n }) : await api.post('/jars/adjust', { action, quantity: n, date });
+      const res =
+        action === 'add'
+          ? await api.post('/jars', { quantity: n, product: productParam })
+          : await api.post('/jars/adjust', { action, quantity: n, date, product: productParam });
       toast(res.data.message);
       setAction(null);
       setQty('1');
@@ -70,6 +78,20 @@ export default function Jars() {
   return (
     <div className="space-y-5">
       <PageHeader title={t('jars.title')} subtitle={t('jars.subtitle')} />
+
+      {bottles && (
+        <Segmented
+          value={product}
+          onChange={(v) => {
+            setProduct(v);
+            setStatusFilter('');
+          }}
+          options={[
+            { value: JAR, label: productName(JAR), icon: Droplets, activeClass: 'bg-brand-600 text-white shadow-soft' },
+            { value: BOTTLE, label: productName(BOTTLE), icon: Droplets, activeClass: 'bg-sky-600 text-white shadow-soft' },
+          ]}
+        />
+      )}
 
       {error && <ErrorBox message={error} onRetry={reload} />}
       {!data && loading && <Loader />}
@@ -181,7 +203,7 @@ export default function Jars() {
       )}
 
       {action && (
-        <Modal title={ACTIONS[action].title} onClose={() => setAction(null)}>
+        <Modal title={bottles ? `${ACTIONS[action].title} · ${productName(product)}` : ACTIONS[action].title} onClose={() => setAction(null)}>
           <div className="space-y-4">
             <Field group label={t('jars.howMany')}>
               <Stepper value={qty} onChange={(v) => setQty(String(v))} min={1} />

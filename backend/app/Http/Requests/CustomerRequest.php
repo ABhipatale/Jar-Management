@@ -19,6 +19,12 @@ class CustomerRequest extends ApiRequest
             'mobile' => ['required', 'regex:/^[6-9][0-9]{9}$/'],
             'address' => ['nullable', 'string', 'max:500'],
             'status' => ['nullable', 'in:active,inactive'],
+            // Bottles / deposit (only used when the company has them switched on).
+            'takes_jar' => ['sometimes', 'boolean'],
+            'takes_bottle' => ['sometimes', 'boolean'],
+            'jar_rate' => ['sometimes', 'nullable', 'numeric', 'min:0', 'max:100000'],
+            'bottle_rate' => ['sometimes', 'nullable', 'numeric', 'min:0', 'max:100000'],
+            'no_deposit' => ['sometimes', 'boolean'],
         ];
     }
 
@@ -30,6 +36,8 @@ class CustomerRequest extends ApiRequest
             'mobile.required' => __('कृपया मोबाईल नंबर टाका.'),
             'mobile.regex' => __('कृपया योग्य 10 अंकी मोबाईल नंबर टाका.'),
             'status.in' => __('चुकीची ग्राहक स्थिती.'),
+            'jar_rate.min' => __('दर उणे असू शकत नाही.'),
+            'bottle_rate.min' => __('दर उणे असू शकत नाही.'),
         ];
     }
 }

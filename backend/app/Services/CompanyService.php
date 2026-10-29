@@ -31,6 +31,8 @@ class CompanyService
                 'plan_id' => $data['plan_id'] ?? null,
                 'expires_at' => $data['expires_at'] ?? null,
                 'status' => Company::ACTIVE,
+                'bottles_enabled' => (bool) ($data['bottles_enabled'] ?? false),
+                'deposit_enabled' => (bool) ($data['deposit_enabled'] ?? false),
             ]);
 
             User::create([

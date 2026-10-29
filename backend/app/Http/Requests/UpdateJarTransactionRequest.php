@@ -8,7 +8,7 @@ class UpdateJarTransactionRequest extends JarTransactionRequest
     public function rules(): array
     {
         return array_intersect_key(parent::rules(), array_flip([
-            'transaction_date', 'jar_quantity', 'payment_type', 'rate', 'paid_amount', 'advance_amount', 'notes',
-        ]));
+            'transaction_date', 'payment_type', 'rate', 'paid_amount', 'advance_amount', 'deposit_amount', 'notes',
+        ])) + ['jar_quantity' => ['required', 'integer', 'min:1', 'max:10000']];
     }
 }

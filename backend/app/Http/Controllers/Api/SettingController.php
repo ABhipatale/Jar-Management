@@ -11,6 +11,7 @@ use App\Services\JarService;
 use App\Services\PaymentQrService;
 use App\Services\SettingService;
 use App\Support\CurrentCompany;
+use App\Support\Products;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -58,6 +59,12 @@ class SettingController extends Controller
             if (array_key_exists('total_jars', $data)) {
                 $this->jars->setTotal((int) $data['total_jars']);
                 unset($data['total_jars']);
+            }
+            if (array_key_exists('total_bottles', $data)) {
+                if (CurrentCompany::get()->bottles_enabled) {
+                    $this->jars->setTotal((int) $data['total_bottles'], Products::BOTTLE);
+                }
+                unset($data['total_bottles']);
             }
             if (array_key_exists('jar_tracking', $data)) {
                 $data['jar_tracking'] = $data['jar_tracking'] ? '1' : '0';
@@ -122,7 +129,13 @@ class SettingController extends Controller
             'business_name' => $company->name,
             'business_name_mr' => $company->name_mr ?? '',
             'short_name' => $company->short_name ?? '',
-            'total_jars' => Jar::count(),
+            'total_jars' => Jar::where('product', Products::JAR)->count(),
+            'total_bottles' => Jar::where('product', Products::BOTTLE)->count(),
+            // Switched on per company by the super admin; the app hides what is off.
+            'features' => [
+                'bottles' => (bool) $company->bottles_enabled,
+                'deposit' => (bool) $company->deposit_enabled,
+            ],
             'branding' => $this->branding->forCompany($company),
         ];
     }

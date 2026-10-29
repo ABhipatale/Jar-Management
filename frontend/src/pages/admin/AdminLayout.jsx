@@ -24,7 +24,7 @@ function useDarkMode() {
   return [dark, () => setTheme(dark ? 'light' : 'dark')];
 }
 
-/** Super-admin panel shell: dark sidebar on desktop, top bar + tab chips on phones. */
+/** Super-admin panel shell: dark sidebar on desktop; on phones a top bar + bottom tabs. */
 export default function AdminLayout() {
   const { user, logout } = useAuth();
   const branding = useBranding();
@@ -100,16 +100,31 @@ export default function AdminLayout() {
             <LogOut size={18} />
           </button>
         </div>
-        <nav className="no-scrollbar flex gap-2 overflow-x-auto px-4 pb-2.5" aria-label={t('adm.panel')}>
-          {NAV.map((n) => (
-            <NavLink key={n.to} to={n.to} end={n.end} className={({ isActive }) => `chip ${isActive ? 'chip-active' : ''}`}>
-              <n.icon size={15} aria-hidden="true" /> {n.label}
-            </NavLink>
-          ))}
-        </nav>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-5 lg:px-8 lg:py-8">
+      {/* Phone / tablet bottom tabs (same look as the business app's bottom menu) */}
+      <nav className="pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface/95 backdrop-blur-md lg:hidden" aria-label={t('adm.panel')}>
+        <div className="mx-auto grid h-16 max-w-2xl grid-cols-4">
+          {NAV.map((n) => (
+            <NavLink
+              key={n.to}
+              to={n.to}
+              end={n.end}
+              className={({ isActive }) => `relative flex h-16 flex-col items-center justify-end pb-2 text-[11px] font-medium leading-none ${isActive ? 'text-brand-600' : 'text-slate-500'}`}
+            >
+              {({ isActive }) => (
+                <>
+                  {isActive && <span className="absolute inset-x-6 top-0 h-[2.5px] rounded-b-full bg-brand-600" />}
+                  <n.icon size={21} strokeWidth={isActive ? 2.3 : 1.9} className="mb-1.5" aria-hidden="true" />
+                  <span className={`max-w-full truncate px-1 ${isActive ? 'font-semibold' : ''}`}>{n.label}</span>
+                </>
+              )}
+            </NavLink>
+          ))}
+        </div>
+      </nav>
+
+      <main className="mx-auto max-w-6xl px-4 pb-[calc(var(--nav-h)+1.5rem)] pt-5 lg:px-8 lg:py-8">
         <Outlet />
         <DevCredit className="mt-10" />
       </main>

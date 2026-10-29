@@ -1,15 +1,20 @@
 import { Pencil } from 'lucide-react';
+import { useSettings } from '../context/SettingsContext';
 import { t } from '../i18n';
 import { fmtDate, money } from '../lib/format';
+import { BOTTLE, features } from '../lib/products';
 import { Badge } from './ui';
 
 const dash = <span className="text-slate-400">–</span>;
 
 /**
- * Date | Given | Returned | Net Jar | Amount | Paid | Udhari | Balance | Jars
+ * Date | Given | Returned | Net Jar | Amount | Paid | Udhari | Balance | Jars [| Bottles] [| Deposit]
+ * Bottle rows carry a "bottle" tag; the Bottles / Deposit columns show only when the company uses them.
  * flush: the table runs edge-to-edge inside a `.card !p-0` (no outer gutter, no last-row border).
  */
 export default function LedgerTable({ rows, onEdit, flush = false }) {
+  const { settings } = useSettings();
+  const feat = features(settings);
   return (
     <div
       className={
@@ -30,6 +35,8 @@ export default function LedgerTable({ rows, onEdit, flush = false }) {
             <th className="num">{t('ledger.udhari')}</th>
             <th className="num">{t('ledger.balance')}</th>
             <th className="num">{t('ledger.jars')}</th>
+            {feat.bottles && <th className="num">{t('prod.ledgerBottles')}</th>}
+            {feat.deposit && <th className="num">{t('prod.ledgerDeposit')}</th>}
           </tr>
         </thead>
         <tbody>
@@ -50,6 +57,9 @@ export default function LedgerTable({ rows, onEdit, flush = false }) {
                   )}
                   <span className="tabular-nums">{fmtDate(r.entry_date)}</span>
                   {r.entry_type === 'payment' && <Badge kind="cash">{t('ledger.payment')}</Badge>}
+                  {r.product === BOTTLE && r.entry_type !== 'payment' && (
+                    <span className="rounded-full bg-sky-50 px-2 py-0.5 text-[11px] font-semibold text-sky-700 ring-1 ring-inset ring-sky-600/20">{t('prod.bottle')}</span>
+                  )}
                 </div>
               </td>
               <td className="num">{r.jars_given || dash}</td>
@@ -60,6 +70,13 @@ export default function LedgerTable({ rows, onEdit, flush = false }) {
               <td className="num text-amber-700">{r.udhari ? money(r.udhari) : dash}</td>
               <td className={`num font-semibold ${r.balance > 0 ? 'text-red-600' : 'text-emerald-700'}`}>{money(r.balance)}</td>
               <td className="num font-medium">{r.jar_balance}</td>
+              {feat.bottles && <td className="num font-medium">{r.bottle_balance ?? 0}</td>}
+              {feat.deposit && (
+                <td className="num">
+                  {r.deposit ? <span className={r.entry_type === 'returned' ? 'text-red-600' : 'text-emerald-700'}>{r.entry_type === 'returned' ? '−' : '+'}{money(r.deposit)}</span> : dash}
+                  <div className="text-[11px] text-muted">{money(r.deposit_balance ?? 0)}</div>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>

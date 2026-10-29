@@ -14,8 +14,8 @@ class CustomerLedger extends Model
 
     protected $fillable = [
         'customer_id', 'entry_date', 'entry_type', 'jar_transaction_id', 'payment_id',
-        'jars_given', 'jars_returned', 'amount', 'paid', 'udhari', 'balance', 'jar_balance',
-        'description',
+        'product', 'jars_given', 'jars_returned', 'amount', 'paid', 'udhari', 'deposit', 'balance',
+        'jar_balance', 'bottle_balance', 'deposit_balance', 'description',
     ];
 
     protected function casts(): array
@@ -29,6 +29,9 @@ class CustomerLedger extends Model
             'udhari' => 'float',
             'balance' => 'float',
             'jar_balance' => 'integer',
+            'deposit' => 'float',
+            'bottle_balance' => 'integer',
+            'deposit_balance' => 'float',
         ];
     }
 

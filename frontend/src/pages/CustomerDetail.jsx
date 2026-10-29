@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
-  Bell, BookOpen, CalendarDays, ChevronRight, Droplets, MapPin, MessageCircle, Pencil, Phone, Plus, RotateCcw, Trash2, Wallet,
+  Bell, BookOpen, CalendarDays, ChevronRight, Droplets, Landmark, MapPin, MessageCircle, Pencil, Phone, Plus, RotateCcw, Trash2, Wallet,
 } from 'lucide-react';
 import api, { errorMessage } from '../api/client';
 import EditEntryModal from '../components/EditEntryModal';
@@ -11,6 +11,7 @@ import { useSettings } from '../context/SettingsContext';
 import { useUi } from '../context/UiContext';
 import { t } from '../i18n';
 import { fmtDate, money } from '../lib/format';
+import { BOTTLE, JAR, features, productName } from '../lib/products';
 import { useApi } from '../lib/useApi';
 import { messages, openWhatsApp } from '../lib/whatsapp';
 
@@ -21,6 +22,7 @@ export default function CustomerDetail() {
   const { toast, confirm } = useUi();
   const { data, loading, error, reload } = useApi(`/customers/${id}/ledger`);
   const [editing, setEditing] = useState(null);
+  const feat = features(settings);
 
   if (error) return <ErrorBox message={error} onRetry={reload} />;
   if (loading || !data) return <Loader />;
@@ -106,7 +108,30 @@ export default function CustomerDetail() {
                   {money(Math.abs(c.pending_amount))}
                 </div>
               </div>
+              {feat.bottles && (
+                <div className="rounded-lg bg-sky-50 p-3 ring-1 ring-inset ring-sky-600/10">
+                  <div className="flex items-center gap-1.5 text-xs font-medium text-sky-700">
+                    <Droplets size={14} aria-hidden="true" /> {t('prod.currentBottlesRow')}
+                  </div>
+                  <div className="mt-1 text-2xl font-semibold tracking-tight text-ink tabular-nums">{c.current_bottles ?? 0}</div>
+                </div>
+              )}
+              {feat.deposit && (
+                <div className="rounded-lg bg-surface-2 p-3 ring-1 ring-inset ring-line">
+                  <div className="flex items-center gap-1.5 text-xs font-medium text-muted">
+                    <Landmark size={14} aria-hidden="true" /> {t('prod.depositHeld')}
+                  </div>
+                  <div className="mt-1 text-2xl font-semibold tracking-tight text-ink tabular-nums">{money(c.deposit_held ?? 0)}</div>
+                </div>
+              )}
             </div>
+            {(feat.bottles || feat.deposit) && (c.jar_rate !== null || c.bottle_rate !== null || c.no_deposit) && (
+              <div className="flex flex-wrap gap-1.5 text-xs">
+                {c.jar_rate !== null && c.jar_rate !== undefined && <span className="chip !cursor-default">{productName(JAR)} · {money(c.jar_rate)}</span>}
+                {feat.bottles && c.bottle_rate !== null && c.bottle_rate !== undefined && <span className="chip !cursor-default">{productName(BOTTLE)} · {money(c.bottle_rate)}</span>}
+                {feat.deposit && c.no_deposit && <span className="chip !cursor-default">{t('prod.noDepositCustomer')}</span>}
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-2">
               <a href={`tel:${c.mobile}`} className="btn-light btn-sm !py-2">

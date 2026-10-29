@@ -57,7 +57,7 @@ export default function Companies() {
             </button>
           )}
         </div>
-        <div className="no-scrollbar flex gap-2 overflow-x-auto">
+        <div className="no-scrollbar flex flex-wrap gap-2 lg:flex-nowrap lg:overflow-x-auto">
           {FILTERS.map((f) => (
             <button key={f} type="button" className={`chip ${status === f ? 'chip-active' : ''}`} onClick={() => setStatus(f)} aria-pressed={status === f}>
               {t(`adm.filter.${f || 'all'}`)}

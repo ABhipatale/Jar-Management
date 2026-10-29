@@ -7,13 +7,14 @@ use App\Http\Requests\JarTransactionRequest;
 use App\Http\Requests\UpdateJarTransactionRequest;
 use App\Models\JarTransaction;
 use App\Services\JarTransactionService;
+use App\Support\Products;
 use Illuminate\Http\Request;
 
 class JarTransactionController extends Controller
 {
     public function __construct(private JarTransactionService $service) {}
 
-    /** ?from ?to ?customer_id ?type=given|returned ?search (customer name/mobile) */
+    /** ?from ?to ?customer_id ?type=given|returned ?product=jar|bottle ?search (customer name/mobile) */
     public function index(Request $request)
     {
         $request->validate([
@@ -21,6 +22,7 @@ class JarTransactionController extends Controller
             'to' => ['nullable', 'date_format:Y-m-d'],
             'customer_id' => ['nullable', 'integer'],
             'type' => ['nullable', 'in:given,returned'],
+            'product' => ['nullable', 'in:'.implode(',', Products::ALL)],
         ]);
 
         $search = trim((string) $request->input('search'));
@@ -30,6 +32,7 @@ class JarTransactionController extends Controller
             ->when($request->input('to'), fn ($q, $v) => $q->where('transaction_date', '<=', $v))
             ->when($request->input('customer_id'), fn ($q, $v) => $q->where('customer_id', $v))
             ->when($request->input('type'), fn ($q, $v) => $q->where('transaction_type', $v))
+            ->when($request->input('product'), fn ($q, $v) => $q->where('product', $v))
             ->when($search !== '', fn ($q) => $q->whereHas('customer', fn ($c) => $c
                 ->whereRaw('LOWER(name) LIKE ?', ['%'.mb_strtolower($search).'%'])
                 ->orWhere('mobile', 'like', '%'.$search.'%')))
@@ -43,16 +46,20 @@ class JarTransactionController extends Controller
 
     public function store(JarTransactionRequest $request)
     {
-        [$tx, $created, $balance, $returned] = $this->service->create($request->validated(), $request->user()?->id);
+        [$tx, $created, $balance, $returned, $rows] = $this->service->create($request->validated(), $request->user()?->id);
         $tx->load('customer:id,name,mobile');
 
         return response()->json([
             'message' => __('जार नोंद यशस्वीरित्या जतन झाली.'),
             'duplicate' => ! $created,
-            'data' => $this->present($tx) + [
-                'current_jars' => $balance['current_jars'],
-                'pending_amount' => $balance['pending'],
+            'data' => $this->present($tx) + $this->balance($balance) + [
                 'returned_quantity' => $returned,
+                // Every product row of this entry (one per product). Totals are for the whole entry.
+                'lines' => array_map(fn ($r) => $this->present($r), $rows),
+                'total_amount' => round(array_sum(array_map(fn ($r) => $r->amount, $rows)), 2),
+                'total_paid' => round(array_sum(array_map(fn ($r) => $r->paid_amount + $r->advance_amount, $rows)), 2),
+                'total_udhari' => round(array_sum(array_map(fn ($r) => $r->udhari_amount, $rows)), 2),
+                'total_deposit' => round(array_sum(array_map(fn ($r) => $r->deposit_amount, $rows)), 2),
             ],
         ], $created ? 201 : 200);
     }
@@ -69,10 +76,7 @@ class JarTransactionController extends Controller
 
         return response()->json([
             'message' => __('नोंद बदलली.'),
-            'data' => $this->present($tx) + [
-                'current_jars' => $balance['current_jars'],
-                'pending_amount' => $balance['pending'],
-            ],
+            'data' => $this->present($tx) + $this->balance($balance),
         ]);
     }
 
@@ -81,6 +85,16 @@ class JarTransactionController extends Controller
         $this->service->delete($jarTransaction);
 
         return response()->json(['message' => __('नोंद हटवली.')]);
+    }
+
+    private function balance(array $b): array
+    {
+        return [
+            'current_jars' => $b['current_jars'],
+            'current_bottles' => $b['current_bottles'],
+            'pending_amount' => $b['pending'],
+            'deposit_held' => $b['deposit_held'],
+        ];
     }
 
     private function present(JarTransaction $t): array
@@ -92,6 +106,7 @@ class JarTransactionController extends Controller
             'customer_mobile' => $t->customer?->mobile,
             'transaction_date' => $t->transaction_date->toDateString(),
             'transaction_type' => $t->transaction_type,
+            'product' => $t->product,
             'jar_quantity' => $t->jar_quantity,
             'payment_type' => $t->payment_type,
             'rate' => $t->rate,
@@ -99,6 +114,7 @@ class JarTransactionController extends Controller
             'paid_amount' => $t->paid_amount,
             'udhari_amount' => $t->udhari_amount,
             'advance_amount' => $t->advance_amount,
+            'deposit_amount' => $t->deposit_amount,
             'notes' => $t->notes,
         ];
     }

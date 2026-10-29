@@ -9,6 +9,7 @@ import { useSettings } from '../context/SettingsContext';
 import { t } from '../i18n';
 import { exportExcel } from '../lib/export';
 import { businessName, fmtDate, money } from '../lib/format';
+import { features, productName } from '../lib/products';
 import { useApi } from '../lib/useApi';
 import { ledgerText, openWhatsApp } from '../lib/whatsapp';
 
@@ -19,6 +20,7 @@ export default function Ledger() {
   const [to, setTo] = useState('');
   const { data, loading, error, reload } = useApi(`/customers/${id}/ledger`, { from: from || undefined, to: to || undefined });
   const [editing, setEditing] = useState(null);
+  const feat = features(settings);
 
   if (error) return <ErrorBox message={error} onRetry={reload} />;
   if (!data) return <Loader />;
@@ -34,6 +36,7 @@ export default function Ledger() {
       [
         { label: t('ledger.date'), value: (r) => fmtDate(r.entry_date) },
         { label: t('ledger.type'), value: (r) => ({ given: t('ledger.typeGiven'), returned: t('ledger.typeReturned'), payment: t('ledger.typePayment') })[r.entry_type] || r.entry_type },
+        ...(feat.bottles ? [{ label: t('prod.custSection'), value: (r) => (r.entry_type === 'payment' ? '' : productName(r.product)) }] : []),
         { label: t('ledger.given'), key: 'jars_given' },
         { label: t('ledger.returned'), key: 'jars_returned' },
         { label: t('ledger.netJar'), key: 'net_jars' },
@@ -42,6 +45,8 @@ export default function Ledger() {
         { label: t('ledger.udhari'), key: 'udhari' },
         { label: t('ledger.balance'), key: 'balance' },
         { label: t('ledger.jarsWithCustomer'), key: 'jar_balance' },
+        ...(feat.bottles ? [{ label: t('prod.ledgerBottles'), key: 'bottle_balance' }] : []),
+        ...(feat.deposit ? [{ label: t('prod.ledgerDeposit'), value: (r) => (r.entry_type === 'returned' ? -r.deposit : r.deposit) }, { label: t('prod.depositHeld'), key: 'deposit_balance' }] : []),
       ],
       rows,
       [businessName(settings), t('ledger.excelTitle', { name: c.name, mobile: c.mobile }), period, t('ledger.excelSummary', { jars: c.current_jars, pending: c.pending_amount })]
@@ -54,6 +59,8 @@ export default function Ledger() {
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
         <StatCard label={t('common.currentJars')} value={c.current_jars} icon={Droplets} tone="blue" />
+        {feat.bottles && <StatCard label={t('prod.currentBottlesRow')} value={c.current_bottles ?? 0} icon={Droplets} tone="blue" />}
+        {feat.deposit && <StatCard label={t('prod.depositHeld')} value={money(c.deposit_held ?? 0)} icon={Receipt} tone="slate" />}
         <StatCard label={t('common.totalPending')} value={<PendingText amount={c.pending_amount} />} icon={Clock} tone={c.pending_amount > 0 ? 'red' : 'green'} />
         <div className="col-span-2 lg:col-span-1">
           <StatCard label={t('ledger.entriesCount')} value={rows.length} icon={Receipt} tone="slate" sub={period} />

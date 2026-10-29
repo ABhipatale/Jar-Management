@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Support\CurrentCompany;
+use App\Support\Products;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Query\Builder;
@@ -27,8 +28,14 @@ class ReportService
             ->whereNull('deleted_at')
             ->whereBetween('transaction_date', [$from, $to])
             ->when($customerId, fn ($q) => $q->where('customer_id', $customerId))
-            ->selectRaw("COALESCE(SUM(CASE WHEN transaction_type = 'given' THEN jar_quantity ELSE 0 END), 0) AS given")
-            ->selectRaw("COALESCE(SUM(CASE WHEN transaction_type = 'returned' THEN jar_quantity ELSE 0 END), 0) AS returned")
+            ->selectRaw("COALESCE(SUM(CASE WHEN transaction_type = 'given' AND product = 'jar' THEN jar_quantity ELSE 0 END), 0) AS given")
+            ->selectRaw("COALESCE(SUM(CASE WHEN transaction_type = 'returned' AND product = 'jar' THEN jar_quantity ELSE 0 END), 0) AS returned")
+            ->selectRaw("COALESCE(SUM(CASE WHEN transaction_type = 'given' AND product = 'bottle' THEN jar_quantity ELSE 0 END), 0) AS bottles_given")
+            ->selectRaw("COALESCE(SUM(CASE WHEN transaction_type = 'returned' AND product = 'bottle' THEN jar_quantity ELSE 0 END), 0) AS bottles_returned")
+            ->selectRaw("COALESCE(SUM(CASE WHEN transaction_type = 'given' AND product = 'jar' THEN amount ELSE 0 END), 0) AS jar_sales")
+            ->selectRaw("COALESCE(SUM(CASE WHEN transaction_type = 'given' AND product = 'bottle' THEN amount ELSE 0 END), 0) AS bottle_sales")
+            ->selectRaw("COALESCE(SUM(CASE WHEN transaction_type = 'given' THEN deposit_amount ELSE 0 END), 0) AS deposit_in")
+            ->selectRaw("COALESCE(SUM(CASE WHEN transaction_type = 'returned' THEN deposit_amount ELSE 0 END), 0) AS deposit_out")
             ->selectRaw('COALESCE(SUM(amount), 0) AS sales')
             ->selectRaw('COALESCE(SUM(paid_amount + advance_amount), 0) AS entry_cash')
             ->selectRaw('COALESCE(SUM(udhari_amount), 0) AS udhari')
@@ -54,8 +61,10 @@ class ReportService
         $jarStatus = CurrentCompany::table('jars')
             ->whereIn('status', ['damaged', 'lost'])
             ->whereBetween('status_date', [$from, $to])
-            ->selectRaw("COALESCE(SUM(CASE WHEN status = 'damaged' THEN 1 ELSE 0 END), 0) AS damaged")
-            ->selectRaw("COALESCE(SUM(CASE WHEN status = 'lost' THEN 1 ELSE 0 END), 0) AS lost")
+            ->selectRaw("COALESCE(SUM(CASE WHEN status = 'damaged' AND product = 'jar' THEN 1 ELSE 0 END), 0) AS damaged")
+            ->selectRaw("COALESCE(SUM(CASE WHEN status = 'lost' AND product = 'jar' THEN 1 ELSE 0 END), 0) AS lost")
+            ->selectRaw("COALESCE(SUM(CASE WHEN status = 'damaged' AND product = 'bottle' THEN 1 ELSE 0 END), 0) AS bottles_damaged")
+            ->selectRaw("COALESCE(SUM(CASE WHEN status = 'lost' AND product = 'bottle' THEN 1 ELSE 0 END), 0) AS bottles_lost")
             ->first();
 
         $cash = round((float) $tx->entry_cash + (float) $pay->cash, 2);
@@ -81,6 +90,16 @@ class ReportService
             'pending' => $this->balances->totalPending($customerId),
             'damaged' => (int) $jarStatus->damaged,
             'lost' => (int) $jarStatus->lost,
+            // given / returned / damaged / lost above are 30 L jars only; bottles are counted apart.
+            'bottles_given' => (int) $tx->bottles_given,
+            'bottles_returned' => (int) $tx->bottles_returned,
+            'bottles_damaged' => (int) $jarStatus->bottles_damaged,
+            'bottles_lost' => (int) $jarStatus->bottles_lost,
+            'jar_sales' => round((float) $tx->jar_sales, 2),
+            'bottle_sales' => round((float) $tx->bottle_sales, 2),
+            // Refundable deposits: kept out of cash / sales (the customer's money).
+            'deposit_in' => round((float) $tx->deposit_in, 2),
+            'deposit_out' => round((float) $tx->deposit_out, 2),
         ];
     }
 
@@ -94,8 +113,10 @@ class ReportService
             ->whereNull('deleted_at')
             ->whereBetween('transaction_date', [$from, $to])
             ->select('customer_id')
-            ->selectRaw("SUM(CASE WHEN transaction_type = 'given' THEN jar_quantity ELSE 0 END) AS given")
-            ->selectRaw("SUM(CASE WHEN transaction_type = 'returned' THEN jar_quantity ELSE 0 END) AS returned")
+            ->selectRaw("SUM(CASE WHEN transaction_type = 'given' AND product = 'jar' THEN jar_quantity ELSE 0 END) AS given")
+            ->selectRaw("SUM(CASE WHEN transaction_type = 'returned' AND product = 'jar' THEN jar_quantity ELSE 0 END) AS returned")
+            ->selectRaw("SUM(CASE WHEN transaction_type = 'given' AND product = 'bottle' THEN jar_quantity ELSE 0 END) AS bottles_given")
+            ->selectRaw("SUM(CASE WHEN transaction_type = 'returned' AND product = 'bottle' THEN jar_quantity ELSE 0 END) AS bottles_returned")
             ->selectRaw('SUM(amount) AS amount')
             ->selectRaw('SUM(paid_amount + advance_amount) AS paid')
             ->selectRaw('SUM(udhari_amount) AS udhari')
@@ -111,9 +132,11 @@ class ReportService
         $q = $this->balances->balancesTable()
             ->leftJoinSub($tx, 'rt', 'rt.customer_id', '=', 'b.id')
             ->leftJoinSub($pay, 'rp', 'rp.customer_id', '=', 'b.id')
-            ->select('b.id', 'b.name', 'b.mobile', 'b.current_jars', 'b.pending_amount')
+            ->select('b.id', 'b.name', 'b.mobile', 'b.current_jars', 'b.current_bottles', 'b.pending_amount')
             ->selectRaw('COALESCE(rt.given, 0) AS given')
             ->selectRaw('COALESCE(rt.returned, 0) AS returned')
+            ->selectRaw('COALESCE(rt.bottles_given, 0) AS bottles_given')
+            ->selectRaw('COALESCE(rt.bottles_returned, 0) AS bottles_returned')
             ->selectRaw('COALESCE(rt.amount, 0) AS amount')
             ->selectRaw('COALESCE(rt.paid, 0) AS paid')
             ->selectRaw('COALESCE(rt.udhari, 0) AS udhari')
@@ -140,6 +163,9 @@ class ReportService
             'payments' => round((float) $r->payments, 2),
             'current_jars' => (int) $r->current_jars,
             'pending_amount' => round((float) $r->pending_amount, 2),
+            'bottles_given' => (int) $r->bottles_given,
+            'bottles_returned' => (int) $r->bottles_returned,
+            'current_bottles' => (int) $r->current_bottles,
         ])->all();
     }
 
@@ -153,8 +179,8 @@ class ReportService
             ->whereBetween('transaction_date', [$from, $to])
             ->groupBy('transaction_date')
             ->selectRaw('transaction_date AS d')
-            ->selectRaw("SUM(CASE WHEN transaction_type = 'given' THEN jar_quantity ELSE 0 END) AS given")
-            ->selectRaw("SUM(CASE WHEN transaction_type = 'returned' THEN jar_quantity ELSE 0 END) AS returned")
+            ->selectRaw("SUM(CASE WHEN transaction_type = 'given' AND product = 'jar' THEN jar_quantity ELSE 0 END) AS given")
+            ->selectRaw("SUM(CASE WHEN transaction_type = 'returned' AND product = 'jar' THEN jar_quantity ELSE 0 END) AS returned")
             ->selectRaw('SUM(paid_amount + advance_amount) AS entry_cash')
             ->selectRaw('SUM(udhari_amount) AS udhari')
             ->get()->keyBy(fn ($r) => substr((string) $r->d, 0, 10));
@@ -248,27 +274,31 @@ class ReportService
             'name' => $r->name,
             'mobile' => $r->mobile,
             'current_jars' => (int) $r->current_jars,
+            'current_bottles' => (int) $r->current_bottles,
             'pending_amount' => round((float) $r->pending_amount, 2),
             'last_payment_date' => $r->last_payment_date ? substr((string) $r->last_payment_date, 0, 10) : null,
         ])->all();
     }
 
-    /** Stock summary + who is holding jars. */
+    /** Stock summary + who is holding jars (or bottles). */
     public function jarStatus(?string $search = null, ?int $customerId = null): array
     {
         $q = $this->balances->balancesTable()
-            ->where('current_jars', '>', 0)
+            ->where(fn ($w) => $w->where('current_jars', '>', 0)->orWhere('current_bottles', '>', 0))
             ->when($customerId, fn ($w) => $w->where('id', $customerId))
-            ->orderByDesc('current_jars');
+            ->orderByDesc('current_jars')
+            ->orderByDesc('current_bottles');
         $this->applySearch($q, $search);
 
         return [
             'summary' => $this->jars->summary(),
+            'bottle_summary' => in_array(Products::BOTTLE, Products::enabled(), true) ? $this->jars->summary(Products::BOTTLE) : null,
             'customers' => $q->get()->map(fn ($r) => [
                 'customer_id' => (int) $r->id,
                 'name' => $r->name,
                 'mobile' => $r->mobile,
                 'current_jars' => (int) $r->current_jars,
+                'current_bottles' => (int) $r->current_bottles,
                 'pending_amount' => round((float) $r->pending_amount, 2),
             ])->all(),
         ];

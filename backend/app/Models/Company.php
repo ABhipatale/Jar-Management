@@ -21,11 +21,14 @@ class Company extends Model
         'status' => self::ACTIVE,
         'locale' => 'mr',
         'assets_version' => 0,
+        'bottles_enabled' => false,
+        'deposit_enabled' => false,
     ];
 
     protected $fillable = [
         'name', 'name_mr', 'short_name', 'slug', 'locale',
         'status', 'plan', 'plan_id', 'expires_at', 'assets_version',
+        'bottles_enabled', 'deposit_enabled',
     ];
 
     protected function casts(): array
@@ -33,6 +36,8 @@ class Company extends Model
         return [
             'expires_at' => 'datetime',
             'assets_version' => 'integer',
+            'bottles_enabled' => 'boolean',
+            'deposit_enabled' => 'boolean',
         ];
     }
 

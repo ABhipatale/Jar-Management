@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Banknote, CheckCircle2, Landmark, NotebookPen, Smartphone, UserRound } from 'lucide-react';
 import api, { errorMessage } from '../api/client';
+import { useSettings } from '../context/SettingsContext';
 import { useUi } from '../context/UiContext';
 import { t } from '../i18n';
 import { money, num, round2, today } from '../lib/format';
+import { BOTTLE, JAR, features, productName } from '../lib/products';
 import { Field, Loader, Modal, Segmented, Stepper } from './ui';
 
 /**
@@ -15,6 +17,8 @@ import { Field, Loader, Modal, Segmented, Stepper } from './ui';
  */
 export default function EditEntryModal({ kind, id, onClose, onSaved }) {
   const { toast, alert } = useUi();
+  const { settings } = useSettings();
+  const feat = features(settings);
   const [rec, setRec] = useState(null);
   const [form, setForm] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -35,6 +39,7 @@ export default function EditEntryModal({ kind, id, onClose, onSaved }) {
                 payment_type: r.udhari_amount > 0 ? 'udhari' : 'cash',
                 paid: String(r.paid_amount ?? ''),
                 advance: r.advance_amount ? String(r.advance_amount) : '',
+                deposit: r.deposit_amount ? String(r.deposit_amount) : '',
                 notes: r.notes || '',
               }
             : {
@@ -56,6 +61,7 @@ export default function EditEntryModal({ kind, id, onClose, onSaved }) {
   const money2 = (s) => s.replace(/[^\d.]/g, '');
 
   const isGive = rec?.transaction_type === 'given';
+  const product = rec?.product || JAR;
   const q = parseInt(form?.jar_quantity, 10) || 0;
   const amount = kind === 'jar' && isGive ? round2(q * num(form?.rate)) : 0;
   const paid = form?.payment_type === 'cash' ? amount : Math.min(round2(num(form?.paid)), amount);
@@ -69,6 +75,7 @@ export default function EditEntryModal({ kind, id, onClose, onSaved }) {
               transaction_date: form.transaction_date,
               jar_quantity: q,
               notes: form.notes || null,
+              ...(feat.deposit && { deposit_amount: num(form.deposit) }),
               ...(isGive && { rate: num(form.rate), payment_type: form.payment_type, paid_amount: paid, advance_amount: num(form.advance) }),
             }
           : {
@@ -101,7 +108,8 @@ export default function EditEntryModal({ kind, id, onClose, onSaved }) {
             <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-50 text-brand-700">
               <UserRound size={18} />
             </span>
-            <span className="min-w-0 truncate font-medium text-ink">{rec.customer_name}</span>
+            <span className="min-w-0 flex-1 truncate font-medium text-ink">{rec.customer_name}</span>
+            {kind === 'jar' && (feat.bottles || product === BOTTLE) && <span className="shrink-0 text-xs font-medium text-muted">{productName(product)}</span>}
           </div>
 
           {kind === 'jar' ? (
@@ -110,7 +118,7 @@ export default function EditEntryModal({ kind, id, onClose, onSaved }) {
                 <Field label={t('edit.date')}>
                   <input type="date" className="input" value={form.transaction_date} max={today()} onChange={set('transaction_date')} />
                 </Field>
-                <Field group label={isGive ? t('edit.jarsGiven') : t('edit.jarsReturned')}>
+                <Field group label={product === BOTTLE ? t(isGive ? 'prod.bottleGiven' : 'prod.bottleReturned') : isGive ? t('edit.jarsGiven') : t('edit.jarsReturned')}>
                   <Stepper value={form.jar_quantity} onChange={(v) => set('jar_quantity')(String(v))} min={1} />
                 </Field>
               </div>
@@ -153,6 +161,12 @@ export default function EditEntryModal({ kind, id, onClose, onSaved }) {
                     <input className="input tabular-nums" inputMode="decimal" value={form.advance} placeholder="0" onChange={(e) => set('advance')(money2(e.target.value))} />
                   </Field>
                 </>
+              )}
+
+              {feat.deposit && (
+                <Field label={t(isGive ? 'prod.depositTaken' : 'prod.depositRefund')}>
+                  <input className="input tabular-nums" inputMode="decimal" value={form.deposit} placeholder="0" onChange={(e) => set('deposit')(money2(e.target.value))} />
+                </Field>
               )}
             </>
           ) : (

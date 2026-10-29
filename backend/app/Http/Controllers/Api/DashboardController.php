@@ -9,6 +9,7 @@ use App\Services\JarService;
 use App\Services\ReminderService;
 use Carbon\CarbonImmutable;
 use App\Services\ReportService;
+use App\Support\Products;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
@@ -45,6 +46,7 @@ class DashboardController extends Controller
                 'customer_name' => $t->customer?->name,
                 'transaction_date' => $t->transaction_date->toDateString(),
                 'transaction_type' => $t->transaction_type,
+                'product' => $t->product,
                 'jar_quantity' => $t->jar_quantity,
                 'amount' => $t->amount,
                 'paid' => round($t->paid_amount + $t->advance_amount, 2),
@@ -57,6 +59,7 @@ class DashboardController extends Controller
             'from' => $from,
             'to' => $to,
             'stock' => $stock,
+            'bottle_stock' => in_array(Products::BOTTLE, Products::enabled(), true) ? $jars->summary(Products::BOTTLE) : null,
             'previous' => $previous,
             'series' => $series,
             // "Needs attention" panel.

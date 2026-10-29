@@ -197,37 +197,105 @@ export function openWhatsApp(mobile, text) {
   window.open(waMe, '_blank', 'noopener');
 }
 
+// Entries with 20 L bottles (company has bottles switched on) use these built-in texts:
+// the shop's own jar templates only know {jar_quantity}. Jar-only entries are unchanged.
+const MULTI_DELIVERY = `🙏 *नमस्कार {customer_name}*,
+
+💧 आज दिनांक *{date}* रोजी आपल्याला *{items}* देण्यात आले आहेत.
+{return_line}
+🧾 *बिल तपशील*
+${LINE}
+{item_lines}
+▫️ एकूण रक्कम : *₹{amount}*
+✅ भरलेली रक्कम : ₹{paid}
+📒 आजची उधारी : ₹{udhari}
+${LINE}
+
+💰 *उधारी हिशोब*
+${LINE}
+▫️ मागील बाकी : ₹{previous_pending}
+➕ आजची उधारी : ₹{udhari}
+{advance_line}🔴 *एकूण बाकी : ₹{total_pending}*
+${LINE}
+
+💧 सध्या आपल्याकडे एकूण *{holding}* आहेत.
+
+{footer}`;
+
+const MULTI_RETURN = `🙏 *नमस्कार {customer_name}*,
+
+↩️ आज दिनांक *{date}* रोजी *{items}* परत मिळाले.
+
+💧 सध्या आपल्याकडे एकूण *{holding}* आहेत.
+💰 एकूण बाकी : *₹{total_pending}*
+
+{footer}`;
+
+const itemMr = (product, n) => (product === 'bottle' ? `${n} बाटल्या (20 लि.)` : `${n} जार`);
+
+/** Product rows of a saved entry (old entries / jar-only: one jar row). */
+const entryLines = (t) => (t.lines?.length ? t.lines : [{ product: t.product || 'jar', jar_quantity: t.jar_quantity, rate: t.rate, amount: t.amount }]);
+const hasBottles = (t) => entryLines(t).some((l) => l.product === 'bottle');
+const holdingMr = (t) => `${t.current_jars ?? 0} जार व ${t.current_bottles ?? 0} बाटल्या`;
+/** Entry total when the server sent one (several product rows), else the row's own value. */
+const total = (t, key, fallback) => Number(t[key] !== undefined ? t[key] : fallback) || 0;
+
+/** "🔒 डिपॉझिट …" line before the footer when deposit was taken or refunded in this entry. */
+function withDeposit(text, t, refund) {
+  const d = Number(t.total_deposit ?? t.deposit_amount) || 0;
+  if (d <= 0) return text;
+  const line = refund
+    ? `🔓 डिपॉझिट परत दिले : ₹${amt(d)} (आता जमा ₹${amt(t.deposit_held)})\n\n`
+    : `🔒 डिपॉझिट जमा : ₹${amt(d)} (एकूण जमा ₹${amt(t.deposit_held)})\n\n`;
+  return text.replace('{footer}', `${line}{footer}`);
+}
+
 export const messages = {
   delivery(settings, t) {
+    const multi = hasBottles(t);
+    const udhari = total(t, 'total_udhari', t.udhari_amount);
+    const advance = Number(t.advance_amount || 0);
     // Udhari given in this entry → add the payment QR link (for the customer's total due).
-    const pay = Number(t.udhari_amount) > 0 ? payBlock(settings, t.pending_amount) : '';
-    return fillTemplate(withPay(tpl(settings, 'wa_delivery'), pay), {
+    const pay = udhari > 0 ? payBlock(settings, t.pending_amount) : '';
+    // Empties taken back: per product when the app sent them, else the jar count.
+    const back = t.taken_back ? Object.entries(t.taken_back).filter(([, n]) => n > 0) : t.returned_quantity > 0 ? [['jar', t.returned_quantity]] : [];
+    const lines = entryLines(t);
+    const template = multi ? MULTI_DELIVERY : tpl(settings, 'wa_delivery');
+    return fillTemplate(withDeposit(withPay(template, pay), t, false), {
       ...shopValues(settings),
       pay_block: pay,
       customer_name: t.customer_name,
       date: fmtDate(t.transaction_date || today()),
       jar_quantity: t.jar_quantity,
       rate: amt(t.rate),
-      amount: amt(t.amount),
-      paid: amt(Number(t.paid_amount) + Number(t.advance_amount || 0)),
-      udhari: amt(t.udhari_amount),
+      amount: amt(total(t, 'total_amount', t.amount)),
+      paid: amt(total(t, 'total_paid', Number(t.paid_amount) + advance)),
+      udhari: amt(udhari),
       // pending_amount is the customer's total AFTER this entry (from the server).
       // Before it: total − today's udhari + advance paid today.
-      previous_pending: pendingAmt(Number(t.pending_amount) - Number(t.udhari_amount || 0) + Number(t.advance_amount || 0)),
-      advance_line: Number(t.advance_amount) > 0 ? `➖ आगाऊ जमा : ₹${amt(t.advance_amount)}\n` : '',
+      previous_pending: pendingAmt(Number(t.pending_amount) - udhari + advance),
+      advance_line: advance > 0 ? `➖ आगाऊ जमा : ₹${amt(advance)}\n` : '',
       total_pending: pendingAmt(t.pending_amount),
       current_jars: t.current_jars,
-      return_line: t.returned_quantity > 0 ? `↩️ आपल्याकडून *${t.returned_quantity} रिकामे जार* परत घेतले.\n` : '',
+      return_line: back.length ? `↩️ आपल्याकडून *${back.map(([p, n]) => itemMr(p, n)).join(' व ')} रिकामे* परत घेतले.\n` : '',
+      items: lines.map((l) => itemMr(l.product, l.jar_quantity)).join(' व '),
+      item_lines: lines
+        .map((l) => `▫️ ${l.product === 'bottle' ? 'बाटली (20 लि.)' : 'जार'} : ${l.jar_quantity} × ₹${amt(l.rate)} = ₹${amt(l.amount ?? l.jar_quantity * l.rate)}`)
+        .join('\n'),
+      holding: holdingMr(t),
     });
   },
   returned(settings, t) {
-    return fillTemplate(tpl(settings, 'wa_return'), {
+    const template = hasBottles(t) ? MULTI_RETURN : tpl(settings, 'wa_return');
+    return fillTemplate(withDeposit(template, t, true), {
       ...shopValues(settings),
       customer_name: t.customer_name,
       date: fmtDate(t.transaction_date || today()),
       returned_jars: t.jar_quantity,
       current_jars: t.current_jars,
       total_pending: pendingAmt(t.pending_amount),
+      items: entryLines(t).map((l) => itemMr(l.product, l.jar_quantity)).join(' व '),
+      holding: holdingMr(t),
     });
   },
   payment(settings, p) {

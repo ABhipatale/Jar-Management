@@ -13,10 +13,12 @@ import shell from './shell';
 import entry from './entry';
 import reports from './reports';
 import admin from './admin';
+import products from './products';
 import hiShell from './hi/shell.json';
 import hiEntry from './hi/entry.json';
 import hiReports from './hi/reports.json';
 import hiAdmin from './hi/admin.json';
+import hiProducts from './hi/products.json';
 
 const STORAGE_KEY = 'rws_lang';
 /** All languages (Settings). */
@@ -49,8 +51,8 @@ export const isDeva = lang !== 'en';
 /** Locale for dates/numbers (Latin digits in Marathi/Hindi, like the rest of the app). */
 export const LOCALE = { mr: 'mr-IN-u-nu-latn', hi: 'hi-IN-u-nu-latn', en: 'en-IN' }[lang];
 
-const parts = [shell, entry, reports, admin];
-const HINDI = [hiShell, hiEntry, hiReports, hiAdmin];
+const parts = [shell, entry, reports, admin, products];
+const HINDI = [hiShell, hiEntry, hiReports, hiAdmin, hiProducts];
 // Empty Hindi strings count as missing (fall back to Marathi).
 const dict = lang === 'hi'
   ? Object.fromEntries(HINDI.flatMap((h) => Object.entries(h)).filter(([, v]) => v))

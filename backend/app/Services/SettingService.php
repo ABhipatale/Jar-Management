@@ -19,6 +19,10 @@ class SettingService
         'owner_name_mr' => '',
         'contact_numbers' => '',
         'default_rate' => '30',
+        // Used only when the super admin switches bottles / deposits on for the company.
+        'bottle_rate' => '20',
+        'jar_deposit' => '0',
+        'bottle_deposit' => '0',
         'jar_tracking' => '0',
         'expense_types' => 'डिझेल,पगार,वीज बिल,जार खरेदी,दुरुस्ती,इतर',
         'wa_delivery' => '',

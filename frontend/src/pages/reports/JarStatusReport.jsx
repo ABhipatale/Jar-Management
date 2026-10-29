@@ -46,6 +46,7 @@ export default function JarStatusReport() {
                   { label: t('rep.col.customer'), key: 'name' },
                   { label: t('rep.col.mobile'), key: 'mobile' },
                   { label: t('rep.jarStatus.col.withCustomer'), key: 'current_jars' },
+                  ...(data.bottle_summary ? [{ label: t('prod.ledgerBottles'), key: 'current_bottles' }] : []),
                   { label: t('rep.col.pending'), key: 'pending_amount' },
                 ],
                 rows,
@@ -102,6 +103,7 @@ export default function JarStatusReport() {
                       <SortTh k="name" sort={sort}>{t('rep.col.customer')}</SortTh>
                       <th>{t('rep.col.mobile')}</th>
                       <SortTh k="current_jars" sort={sort} num>{t('rep.col.jars')}</SortTh>
+                      {data.bottle_summary && <SortTh k="current_bottles" sort={sort} num>{t('prod.ledgerBottles')}</SortTh>}
                       <SortTh k="pending_amount" sort={sort} num>{t('rep.col.pending')}</SortTh>
                     </tr>
                   </thead>
@@ -115,6 +117,7 @@ export default function JarStatusReport() {
                         </td>
                         <td className="text-muted tabular-nums">{r.mobile}</td>
                         <td className="num text-base font-semibold text-brand-700">{r.current_jars}</td>
+                        {data.bottle_summary && <td className="num text-base font-semibold text-sky-700">{r.current_bottles}</td>}
                         <td className="num"><PendingText amount={r.pending_amount} /></td>
                       </tr>
                     ))}
