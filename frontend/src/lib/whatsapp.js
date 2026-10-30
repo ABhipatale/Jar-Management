@@ -231,7 +231,7 @@ const MULTI_RETURN = `🙏 *नमस्कार {customer_name}*,
 
 {footer}`;
 
-const itemMr = (product, n) => (product === 'bottle' ? `${n} बाटल्या (20 लि.)` : `${n} जार`);
+const itemMr = (product, n) => (product === 'bottle' ? `${n} बाटल्या` : `${n} जार`);
 
 /** Product rows of a saved entry (old entries / jar-only: one jar row). */
 const entryLines = (t) => (t.lines?.length ? t.lines : [{ product: t.product || 'jar', jar_quantity: t.jar_quantity, rate: t.rate, amount: t.amount }]);
@@ -280,7 +280,7 @@ export const messages = {
       return_line: back.length ? `↩️ आपल्याकडून *${back.map(([p, n]) => itemMr(p, n)).join(' व ')} रिकामे* परत घेतले.\n` : '',
       items: lines.map((l) => itemMr(l.product, l.jar_quantity)).join(' व '),
       item_lines: lines
-        .map((l) => `▫️ ${l.product === 'bottle' ? 'बाटली (20 लि.)' : 'जार'} : ${l.jar_quantity} × ₹${amt(l.rate)} = ₹${amt(l.amount ?? l.jar_quantity * l.rate)}`)
+        .map((l) => `▫️ ${l.product === 'bottle' ? 'बाटली' : 'जार'} : ${l.jar_quantity} × ₹${amt(l.rate)} = ₹${amt(l.amount ?? l.jar_quantity * l.rate)}`)
         .join('\n'),
       holding: holdingMr(t),
     });
@@ -327,7 +327,7 @@ ${LINE}
         // Jar line as before; a bottles line only when the booking has bottles.
         items_lines:
           (b.jar_quantity > 0 || !(b.bottle_quantity > 0) ? `💧 जार : *${b.jar_quantity} पाण्याचे जार*\n` : '') +
-          (b.bottle_quantity > 0 ? `💧 बाटली : *${b.bottle_quantity} बाटल्या (20 लि.)*\n` : ''),
+          (b.bottle_quantity > 0 ? `💧 बाटली : *${b.bottle_quantity} बाटल्या*\n` : ''),
         notes_line: b.notes ? `📝 ${b.notes}\n` : '',
       }
     );

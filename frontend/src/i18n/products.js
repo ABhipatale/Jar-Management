@@ -2,12 +2,12 @@
 // daily entry, customer form, stock, settings, ledger and the super-admin company screen.
 export default {
   mr: {
-    'prod.jar': 'जार (30 लि.)',
-    'prod.bottle': 'बाटली (20 लि.)',
+    'prod.jar': 'जार',
+    'prod.bottle': 'बाटली',
     'prod.bottlesN': '{n} बाटल्या',
     'prod.bottleGiven': 'किती बाटल्या दिल्या?',
     'prod.bottleReturned': 'किती बाटल्या परत आल्या?',
-    'prod.bookQtyBottles': 'किती बाटल्या (20 लि.) हव्या?',
+    'prod.bookQtyBottles': 'किती बाटल्या हव्या?',
     'prod.bottleTakeBackQ': 'रिकाम्या बाटल्या परत घेतल्या?',
     'prod.bottleTakeBackLabel': 'परत घेतलेल्या रिकाम्या बाटल्या',
     'prod.bottleTakeBackHint': 'ग्राहकाकडे सध्या {n} बाटल्या आहेत',
@@ -56,8 +56,8 @@ export default {
 
     'prod.adminFeatures': 'सुविधा',
     'prod.adminFeaturesHint': 'फक्त तुम्ही (सुपर ॲडमिन) या सुविधा सुरू/बंद करू शकता. दर व डिपॉझिटची रक्कम मालक सेटिंग्जमध्ये ठरवतो.',
-    'prod.adminBottles': 'बाटली (20 लि.) विक्री',
-    'prod.adminBottlesHint': 'जारसोबत 20 लिटर बाटल्या – वेगळा दर, वेगळा स्टॉक, वेगळी मोजणी.',
+    'prod.adminBottles': 'बाटली विक्री',
+    'prod.adminBottlesHint': 'जारसोबत बाटल्या – वेगळा दर, वेगळा स्टॉक, वेगळी मोजणी.',
     'prod.adminDeposit': 'डिपॉझिट',
     'prod.adminDepositHint': 'प्रत्येक जार/बाटलीसाठी परत मिळणारे डिपॉझिट.',
     'prod.adminOffBottles': 'ग्राहकांकडे अजून {n} बाटल्या आहेत. बंद केल्यावर बाटल्यांची नवीन नोंद करता येणार नाही (जुनी माहिती सुरक्षित राहील). तरी बंद करायचे?',
@@ -68,12 +68,12 @@ export default {
     'prod.off': 'बंद',
   },
   en: {
-    'prod.jar': 'Jar (30 L)',
-    'prod.bottle': 'Bottle (20 L)',
+    'prod.jar': 'Jar',
+    'prod.bottle': 'Bottle',
     'prod.bottlesN': '{n} bottles',
     'prod.bottleGiven': 'Bottles Given',
     'prod.bottleReturned': 'Bottles Returned',
-    'prod.bookQtyBottles': 'How many bottles (20 L)?',
+    'prod.bookQtyBottles': 'How many bottles?',
     'prod.bottleTakeBackQ': 'Took back empty bottles?',
     'prod.bottleTakeBackLabel': 'Empty bottles taken back',
     'prod.bottleTakeBackHint': 'Customer holds {n} bottles now',
@@ -122,8 +122,8 @@ export default {
 
     'prod.adminFeatures': 'Features',
     'prod.adminFeaturesHint': 'Only you (super admin) can switch these on or off. The owner sets the rates and deposit amounts in Settings.',
-    'prod.adminBottles': 'Bottles (20 L)',
-    'prod.adminBottlesHint': '20 litre bottles besides jars – own rate, own stock, counted separately.',
+    'prod.adminBottles': 'Bottles',
+    'prod.adminBottlesHint': 'Bottles besides jars – own rate, own stock, counted separately.',
     'prod.adminDeposit': 'Deposit',
     'prod.adminDepositHint': 'Refundable deposit for each jar/bottle held.',
     'prod.adminOffBottles': 'Customers still hold {n} bottles. When switched off, no new bottle entries can be made (old data is kept). Switch off anyway?',
