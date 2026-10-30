@@ -8,8 +8,10 @@ use App\Http\Resources\CustomerResource;
 use App\Models\Customer;
 use App\Models\CustomerLedger;
 use App\Services\BalanceService;
+use App\Services\LedgerService;
 use App\Services\ReportService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class CustomerController extends Controller
@@ -36,7 +38,9 @@ class CustomerController extends Controller
 
     public function store(CustomerRequest $request)
     {
-        $customer = Customer::create($request->validated() + ['status' => 'active']);
+        $data = $request->validated();
+        $data['opening_balance'] = (float) ($data['opening_balance'] ?? 0);
+        $customer = Customer::create($data + ['status' => 'active']);
 
         return (new CustomerResource($this->row($customer->id)))
             ->additional(['message' => __('ग्राहक यशस्वीरित्या जोडला.')])
@@ -48,12 +52,22 @@ class CustomerController extends Controller
         return new CustomerResource($this->row($customer->id));
     }
 
-    public function update(CustomerRequest $request, Customer $customer)
+    public function update(CustomerRequest $request, Customer $customer, LedgerService $ledger)
     {
         $data = $request->validated();
+        if (array_key_exists('opening_balance', $data)) {
+            $data['opening_balance'] = (float) ($data['opening_balance'] ?? 0);
+        }
         // A special price may be cleared (null = default rate); other empty fields keep their value.
         $clearable = array_intersect_key($data, array_flip(['jar_rate', 'bottle_rate']));
-        $customer->update(array_filter($data, fn ($v) => $v !== null) + $clearable + ['address' => $request->input('address')]);
+        $oldOpening = (float) $customer->opening_balance;
+        DB::transaction(function () use ($customer, $data, $clearable, $request, $oldOpening, $ledger) {
+            $customer->update(array_filter($data, fn ($v) => $v !== null) + $clearable + ['address' => $request->input('address')]);
+            // The statement's running balance starts from the old udhari, so rebuild it when that changes.
+            if (abs((float) $customer->opening_balance - $oldOpening) > 0.004) {
+                $ledger->rebuild($customer->id);
+            }
+        });
 
         return (new CustomerResource($this->row($customer->id)))
             ->additional(['message' => __('ग्राहक यशस्वीरित्या अपडेट झाला.')]);
@@ -93,7 +107,7 @@ class CustomerController extends Controller
         ]);
 
         $q = CustomerLedger::where('customer_id', $customer->id)->orderBy('id');
-        $opening = ['balance' => 0.0, 'jar_balance' => 0, 'bottle_balance' => 0, 'deposit_balance' => 0.0];
+        $opening = ['balance' => (float) $customer->opening_balance, 'jar_balance' => 0, 'bottle_balance' => 0, 'deposit_balance' => 0.0];
 
         if ($from = $request->input('from')) {
             $prev = CustomerLedger::where('customer_id', $customer->id)->where('entry_date', '<', $from)->orderByDesc('id')->first();

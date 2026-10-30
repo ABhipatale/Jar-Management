@@ -31,6 +31,8 @@ class CustomerResource extends JsonResource
             'jar_rate' => isset($r->jar_rate) ? (float) $r->jar_rate : null,
             'bottle_rate' => isset($r->bottle_rate) ? (float) $r->bottle_rate : null,
             'no_deposit' => (bool) ($r->no_deposit ?? false),
+            // Old udhari entered when the customer was added (already inside pending_amount).
+            'opening_balance' => round((float) ($r->opening_balance ?? 0), 2),
             'last_payment_date' => isset($r->last_payment_date) ? substr((string) $r->last_payment_date, 0, 10) : null,
             'created_at' => $r->created_at ? substr((string) $r->created_at, 0, 10) : null,
         ];

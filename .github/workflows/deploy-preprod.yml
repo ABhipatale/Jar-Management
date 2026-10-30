@@ -1,0 +1,134 @@
+# Pre-production deploy: every push to the "prepod" branch updates
+# https://preproduction-easyjar.abnexa.in on Hostinger over SSH.
+#
+# STRICTLY pre-prod only:
+#   - runs only for the "prepod" branch (pushing main deploys nothing)
+#   - target folders are fixed below and must contain "preproduction"; anything else aborts
+#   - the folders must already exist on the server with an index.php / artisan + .env, so a
+#     wrong path fails instead of creating files somewhere else
+#   - never touches the live site (public_html/easyjar, laravel/)
+#   - no migrations, no database changes (done by hand in phpMyAdmin)
+#   - never uploads or deletes .env, storage/, bootstrap/cache or backups (BKP/, *.zip, *.sql) on the server
+#
+# GitHub → Settings → Secrets and variables → Actions → secrets:
+#   SSH_HOST, SSH_PORT, SSH_USER, SSH_KEY   (see deploy/hostinger/PIPELINE.md)
+name: Deploy pre-production
+
+on:
+  push:
+    branches: [prepod]
+  workflow_dispatch:
+
+# One deploy at a time; a newer push waits for the running one.
+concurrency:
+  group: deploy-preprod
+  cancel-in-progress: false
+
+env:
+  # Paths on the server, relative to the SSH home folder.
+  WEB_DIR: domains/abnexa.in/public_html/preproduction-easyjar
+  APP_DIR: domains/abnexa.in/preproduction-easyjar-laravel
+  BACKEND_FOLDER: preproduction-easyjar-laravel
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/prepod'
+    runs-on: ubuntu-latest
+    environment: preproduction
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Refuse anything that is not pre-prod
+        run: |
+          for p in "$WEB_DIR" "$APP_DIR" "$BACKEND_FOLDER"; do
+            case "$p" in
+              *preproduction*) ;;
+              *) echo "::error::$p is not a pre-production path - aborting"; exit 1 ;;
+            esac
+          done
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer:v2
+          coverage: none
+
+      - name: Build React app
+        working-directory: frontend
+        run: |
+          npm ci
+          # API on the same domain (same as build.sh)
+          printf 'VITE_API_URL=\n' > .env.production.local
+          npm run build
+
+      - name: Assemble upload folders
+        run: |
+          set -e
+          mkdir -p out/web out/app
+          cp -r frontend/dist/. out/web/
+          sed "s#__BACKEND_FOLDER__#$BACKEND_FOLDER#" deploy/hostinger/index.php > out/web/index.php
+          cp deploy/hostinger/htaccess.txt out/web/.htaccess
+          cp deploy/hostinger/assets-htaccess.txt out/web/assets/.htaccess
+          [ -f out/web/robots.txt ] || cp backend/public/robots.txt out/web/ 2>/dev/null || true
+
+          (cd backend && tar -cf - \
+            --exclude=./vendor --exclude=./node_modules --exclude=./tests --exclude=./public \
+            --exclude='./.env' --exclude='./.env.*' --exclude=./storage --exclude=./bootstrap/cache \
+            --exclude=./.phpunit.result.cache --exclude=./phpunit.xml \
+            --exclude=./Dockerfile.vercel --exclude=./Caddyfile.vercel --exclude=./vercel-start.sh --exclude=./.dockerignore \
+            .) | (cd out/app && tar -xf -)
+          # Empty folders so composer's package:discover can run; they are never uploaded (see rsync excludes).
+          mkdir -p out/app/bootstrap/cache out/app/storage/framework/cache/data out/app/storage/framework/sessions \
+                   out/app/storage/framework/views out/app/storage/logs out/app/storage/app
+          (cd out/app && composer install --no-dev --optimize-autoloader --no-interaction --no-progress)
+          printf 'Require all denied\nDeny from all\n' > out/app/.htaccess
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.SSH_KEY }}" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          ssh-keyscan -p "${{ secrets.SSH_PORT }}" "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+          cat > ~/.ssh/config <<EOF
+          Host preprod
+            HostName ${{ secrets.SSH_HOST }}
+            Port ${{ secrets.SSH_PORT }}
+            User ${{ secrets.SSH_USER }}
+            IdentityFile ~/.ssh/id_deploy
+            IdentitiesOnly yes
+          EOF
+
+      - name: Check the pre-prod folders exist on the server
+        run: |
+          ssh preprod "set -e
+            test -f '$WEB_DIR/index.php' || { echo 'Missing $WEB_DIR/index.php'; exit 1; }
+            test -f '$APP_DIR/artisan'   || { echo 'Missing $APP_DIR/artisan'; exit 1; }
+            test -f '$APP_DIR/.env'      || { echo 'Missing $APP_DIR/.env'; exit 1; }
+            grep -q '^APP_URL=https://preproduction-' '$APP_DIR/.env' || { echo '$APP_DIR/.env is not the pre-prod .env'; exit 1; }
+            echo 'Pre-prod folders OK'"
+
+      - name: Upload Laravel app
+        run: |
+          rsync -az --delete \
+            --exclude='/.env' --exclude='/storage/' --exclude='/bootstrap/cache/' \
+            --exclude='/BKP*/' --exclude='/bkp*/' --exclude='/backup*/' --exclude='*.zip' --exclude='*.sql' \
+            out/app/ "preprod:$APP_DIR/"
+
+      - name: Upload React app
+        run: |
+          rsync -az --delete \
+            --exclude='/.well-known/' --exclude='/.user.ini' --exclude='/error_log' \
+            --exclude='/BKP*/' --exclude='/bkp*/' --exclude='/backup*/' --exclude='*.zip' \
+            out/web/ "preprod:$WEB_DIR/"
+
+      - name: Clear Laravel caches (no database changes)
+        run: |
+          ssh preprod "set -e; cd '$APP_DIR'
+            mkdir -p storage/logs storage/app storage/framework/cache/data storage/framework/sessions storage/framework/views bootstrap/cache
+            php artisan optimize:clear"

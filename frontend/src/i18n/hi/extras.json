@@ -51,5 +51,9 @@
   "bc.groupHint": "WhatsApp Business में \"Broadcast list\" या ग्रुप चुनकर एक बार भेजें. (नाम की जगह \"ग्राहक\" आएगा.)",
   "bc.groupBtn": "WhatsApp खोलें – संपर्क / लिस्ट चुनें",
   "bc.oneByOne": "एक-एक ग्राहक को (नाम के साथ)",
-  "bc.oneByOneHint": "हर ग्राहक को उसके नाम के साथ संदेश जाएगा. \"भेजें\" दबाएं, WhatsApp में Send करें और वापस आएं."
+  "bc.oneByOneHint": "हर ग्राहक को उसके नाम के साथ संदेश जाएगा. \"भेजें\" दबाएं, WhatsApp में Send करें और वापस आएं.",
+  "cust.openingBalance": "पुरानी उधारी (₹)",
+  "cust.openingBalanceHint": "ऐप इस्तेमाल करने से पहले का इस ग्राहक का बकाया हो तो डालें. न हो तो खाली छोड़ें.",
+  "cust.openingBalanceEditHint": "ऐप से पहले का बकाया. बदलने पर ग्राहक का कुल बकाया और खाता उसी हिसाब से बदलेगा.",
+  "ledger.oldUdhari": "पुरानी उधारी:"
 }

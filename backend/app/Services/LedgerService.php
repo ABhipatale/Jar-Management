@@ -75,7 +75,8 @@ class LedgerService
 
         $now = now();
         $companyId = CurrentCompany::require();
-        $balance = 0.0;
+        // Old udhari entered with the customer: the statement starts from it.
+        $balance = round((float) CurrentCompany::table('customers')->where('id', $customerId)->value('opening_balance'), 2);
         $held = [Products::JAR => 0, Products::BOTTLE => 0];
         $deposit = 0.0;
         $rows = [];

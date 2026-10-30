@@ -53,6 +53,10 @@ export default {
     'bc.groupHint': 'WhatsApp Business मधील "Broadcast list" किंवा ग्रुप निवडून एकदाच पाठवा. (नावाऐवजी "ग्राहक" असे येईल.)',
     'bc.groupBtn': 'WhatsApp उघडा – संपर्क / लिस्ट निवडा',
     'bc.oneByOne': 'एकेक ग्राहकाला (नावासह)',
+    'cust.openingBalance': 'जुनी उधारी (₹)',
+    'cust.openingBalanceHint': 'ॲप वापरण्याआधीची या ग्राहकाची बाकी असेल तर टाका. नसेल तर रिकामे ठेवा.',
+    'cust.openingBalanceEditHint': 'ॲप वापरण्याआधीची बाकी. बदलल्यास ग्राहकाची एकूण बाकी आणि खातेवही त्याप्रमाणे बदलेल.',
+    'ledger.oldUdhari': 'जुनी उधारी:',
     'bc.oneByOneHint': 'प्रत्येक ग्राहकाला त्याच्या नावाने संदेश जाईल. "पाठवा" दाबा, WhatsApp मध्ये Send करा आणि परत या.',
   },
   en: {
@@ -108,6 +112,10 @@ export default {
     'bc.groupHint': 'Pick a "Broadcast list" or group in WhatsApp Business and send once. (Says "customer" instead of the name.)',
     'bc.groupBtn': 'Open WhatsApp – choose contacts / list',
     'bc.oneByOne': 'One by one (with name)',
+    'cust.openingBalance': 'Old udhari (₹)',
+    'cust.openingBalanceHint': 'Money this customer already owed before you started using the app. Leave empty if none.',
+    'cust.openingBalanceEditHint': 'Balance from before the app. Changing it changes the customer’s total pending and statement.',
+    'ledger.oldUdhari': 'Old udhari:',
     'bc.oneByOneHint': 'Each customer gets the message with their own name. Tap "Send", press Send in WhatsApp, and come back.',
   },
 };
