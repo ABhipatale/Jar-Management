@@ -12,11 +12,11 @@ class Customer extends Model
     use BelongsToCompany, SoftDeletes;
 
     /** Same defaults as the database, so a freshly created model has them too. */
-    protected $attributes = ['takes_jar' => true, 'takes_bottle' => false, 'no_deposit' => false];
+    protected $attributes = ['takes_jar' => true, 'takes_bottle' => false, 'no_deposit' => false, 'opening_balance' => 0];
 
     protected $fillable = [
         'name', 'mobile', 'address', 'status',
-        'takes_jar', 'takes_bottle', 'jar_rate', 'bottle_rate', 'no_deposit',
+        'takes_jar', 'takes_bottle', 'jar_rate', 'bottle_rate', 'no_deposit', 'opening_balance',
     ];
 
     protected function casts(): array
@@ -27,6 +27,7 @@ class Customer extends Model
             'jar_rate' => 'float',
             'bottle_rate' => 'float',
             'no_deposit' => 'boolean',
+            'opening_balance' => 'float',
         ];
     }
 

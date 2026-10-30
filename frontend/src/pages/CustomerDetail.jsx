@@ -132,6 +132,11 @@ export default function CustomerDetail() {
                 {feat.deposit && c.no_deposit && <span className="chip !cursor-default">{t('prod.noDepositCustomer')}</span>}
               </div>
             )}
+            {c.opening_balance > 0 && (
+              <p className="text-xs text-muted">
+                {t('ledger.oldUdhari')} <b className="font-semibold tabular-nums text-amber-800">{money(c.opening_balance)}</b>
+              </p>
+            )}
 
             <div className="grid grid-cols-2 gap-2">
               <a href={`tel:${c.mobile}`} className="btn-light btn-sm !py-2">

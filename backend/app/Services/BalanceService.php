@@ -13,11 +13,12 @@ use Illuminate\Support\Facades\DB;
  *
  *   current_jars    = SUM(jars given) - SUM(jars returned)        (30 L jars only)
  *   current_bottles = SUM(bottles given) - SUM(bottles returned)
- *   pending_amount  = SUM(udhari) - SUM(advance) - SUM(payments)
+ *   pending_amount  = opening_balance + SUM(udhari) - SUM(advance) - SUM(payments)
  *   deposit_held    = SUM(deposit on gives) - SUM(deposit refunded on returns)
  *
  * Jars and bottles are never added together. A negative pending_amount means the
  * customer has paid in advance. Deposit is the customer's money and never in pending.
+ * opening_balance is the old udhari entered when the customer was added.
  */
 class BalanceService
 {
@@ -65,13 +66,13 @@ class BalanceService
             ->leftJoinSub($this->paymentTotals(), 'p', 'p.customer_id', '=', 'c.id')
             ->whereNull('c.deleted_at')
             ->select('c.id', 'c.name', 'c.mobile', 'c.address', 'c.status', 'c.created_at', 'p.last_payment_date')
-            ->addSelect('c.takes_jar', 'c.takes_bottle', 'c.jar_rate', 'c.bottle_rate', 'c.no_deposit')
+            ->addSelect('c.takes_jar', 'c.takes_bottle', 'c.jar_rate', 'c.bottle_rate', 'c.no_deposit', 'c.opening_balance')
             ->selectRaw('COALESCE(t.jars, 0) AS current_jars')
             ->selectRaw('COALESCE(t.bottles, 0) AS current_bottles')
             ->selectRaw('COALESCE(t.jar_deposit, 0) AS jar_deposit_held')
             ->selectRaw('COALESCE(t.bottle_deposit, 0) AS bottle_deposit_held')
             ->selectRaw('COALESCE(t.jar_deposit, 0) + COALESCE(t.bottle_deposit, 0) AS deposit_held')
-            ->selectRaw('COALESCE(t.udhari, 0) - COALESCE(t.advance, 0) - COALESCE(p.paid, 0) AS pending_amount');
+            ->selectRaw('COALESCE(c.opening_balance, 0) + COALESCE(t.udhari, 0) - COALESCE(t.advance, 0) - COALESCE(p.paid, 0) AS pending_amount');
     }
 
     /** Wraps customersQuery so computed columns can be used in WHERE (SQL can't filter on SELECT aliases). */
@@ -102,13 +103,15 @@ class BalanceService
             ->where('customer_id', $customerId)
             ->sum('amount');
 
+        $opening = (float) CurrentCompany::table('customers')->where('id', $customerId)->value('opening_balance');
+
         $held = [Products::JAR => (int) $t->jars, Products::BOTTLE => (int) $t->bottles];
         $deposits = [Products::JAR => round((float) $t->jar_deposit, 2), Products::BOTTLE => round((float) $t->bottle_deposit, 2)];
 
         return [
             'current_jars' => $held[Products::JAR],
             'current_bottles' => $held[Products::BOTTLE],
-            'pending' => round((float) $t->due - (float) $paid, 2),
+            'pending' => round($opening + (float) $t->due - (float) $paid, 2),
             'deposit_held' => round(array_sum($deposits), 2),
             'held' => $held,
             'deposits' => $deposits,

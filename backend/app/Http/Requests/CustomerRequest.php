@@ -25,6 +25,8 @@ class CustomerRequest extends ApiRequest
             'jar_rate' => ['sometimes', 'nullable', 'numeric', 'min:0', 'max:100000'],
             'bottle_rate' => ['sometimes', 'nullable', 'numeric', 'min:0', 'max:100000'],
             'no_deposit' => ['sometimes', 'boolean'],
+            // Old udhari from before the app (added to the pending amount).
+            'opening_balance' => ['sometimes', 'nullable', 'numeric', 'min:0', 'max:10000000'],
         ];
     }
 
@@ -38,6 +40,7 @@ class CustomerRequest extends ApiRequest
             'status.in' => __('चुकीची ग्राहक स्थिती.'),
             'jar_rate.min' => __('दर उणे असू शकत नाही.'),
             'bottle_rate.min' => __('दर उणे असू शकत नाही.'),
+            'opening_balance.min' => __('जुनी उधारी उणे असू शकत नाही.'),
         ];
     }
 }

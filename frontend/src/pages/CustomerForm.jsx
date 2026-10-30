@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import api, { errorMessage } from '../api/client';
-import { AlertTriangle, ArrowRight, Droplets, MapPin, Phone, Save, User, UserPlus, Users } from 'lucide-react';
+import { AlertTriangle, ArrowRight, Droplets, IndianRupee, MapPin, Phone, Save, User, UserPlus, Users } from 'lucide-react';
 import ContactButton from '../components/ContactButton';
 import { Field, Loader, PageHeader, Segmented } from '../components/ui';
 import { useSettings } from '../context/SettingsContext';
@@ -50,7 +50,7 @@ export default function CustomerForm() {
   const { toast, confirm } = useUi();
   const [params] = useSearchParams();
   // "Add as new customer" from a contact picked elsewhere pre-fills name + mobile.
-  const [form, setForm] = useState(() => ({ name: params.get('name') || '', mobile: params.get('mobile') || '', address: '', status: 'active' }));
+  const [form, setForm] = useState(() => ({ name: params.get('name') || '', mobile: params.get('mobile') || '', address: '', status: 'active', opening_balance: '' }));
   // What the customer takes and their special rates (only when bottles / deposit are switched on).
   const { settings } = useSettings();
   const feat = features(settings);
@@ -67,7 +67,7 @@ export default function CustomerForm() {
       .get(`/customers/${id}`)
       .then(({ data }) => {
         const c = data.data;
-        setForm({ name: c.name, mobile: c.mobile, address: c.address || '', status: c.status });
+        setForm({ name: c.name, mobile: c.mobile, address: c.address || '', status: c.status, opening_balance: c.opening_balance ? String(c.opening_balance) : '' });
         setItems({
           takes_jar: c.takes_jar !== false,
           takes_bottle: Boolean(c.takes_bottle),
@@ -122,7 +122,7 @@ export default function CustomerForm() {
         setDup(other);
         return;
       }
-      const body = { ...form, ...extra };
+      const body = { ...form, opening_balance: num(form.opening_balance), ...extra };
       const { data } = editing ? await api.put(`/customers/${id}`, body) : await api.post('/customers', body);
       toast(data.message || t('cust.saved'));
       navigate(returnTo(params.get('return'), data.data.id) || `/customers/${data.data.id}`, { replace: true });
@@ -183,6 +183,17 @@ export default function CustomerForm() {
         <Field label={t('cust.address')} hint={t('cust.addressHint')}>
           <WithIcon icon={MapPin}>
             <textarea className="input pl-10" rows={2} value={form.address} onChange={set('address')} maxLength={500} />
+          </WithIcon>
+        </Field>
+        <Field label={t('cust.openingBalance')} hint={editing ? t('cust.openingBalanceEditHint') : t('cust.openingBalanceHint')}>
+          <WithIcon icon={IndianRupee}>
+            <input
+              className="input pl-10 tabular-nums"
+              inputMode="decimal"
+              value={form.opening_balance}
+              placeholder="0"
+              onChange={(e) => setForm({ ...form, opening_balance: e.target.value.replace(/[^\d.]/g, '') })}
+            />
           </WithIcon>
         </Field>
         {editing && (
