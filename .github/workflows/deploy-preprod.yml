@@ -94,7 +94,19 @@ jobs:
           mkdir -p ~/.ssh
           printf '%s\n' "${{ secrets.SSH_KEY }}" > ~/.ssh/id_deploy
           chmod 600 ~/.ssh/id_deploy
-          ssh-keyscan -p "${{ secrets.SSH_PORT }}" "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+          # Shared hosting sometimes refuses a connection for a moment: try a few times.
+          for i in 1 2 3 4 5 6; do
+            if ssh-keyscan -T 20 -p "${{ secrets.SSH_PORT }}" "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null && [ -s ~/.ssh/known_hosts ]; then
+              echo "Server reached (try $i)"
+              break
+            fi
+            if [ "$i" = 6 ]; then
+              echo "::error::Could not reach the Hostinger server over SSH after 6 tries. Check hPanel → SSH Access is enabled, and the SSH_HOST / SSH_PORT secrets."
+              exit 1
+            fi
+            echo "Server not reachable yet (try $i), waiting 15 s…"
+            sleep 15
+          done
           cat > ~/.ssh/config <<EOF
           Host preprod
             HostName ${{ secrets.SSH_HOST }}
@@ -102,6 +114,10 @@ jobs:
             User ${{ secrets.SSH_USER }}
             IdentityFile ~/.ssh/id_deploy
             IdentitiesOnly yes
+            ConnectTimeout 30
+            ServerAliveInterval 15
+            ServerAliveCountMax 4
+            ConnectionAttempts 3
           EOF
 
       - name: Check the pre-prod folders exist on the server
@@ -115,17 +131,18 @@ jobs:
 
       - name: Upload Laravel app
         run: |
-          rsync -az --delete \
+          # rsync only sends what changed, so a retry after a dropped connection is cheap.
+          for i in 1 2 3; do rsync -az --delete \
             --exclude='/.env' --exclude='/storage/' --exclude='/bootstrap/cache/' \
             --exclude='/BKP*/' --exclude='/bkp*/' --exclude='/backup*/' --exclude='*.zip' --exclude='*.sql' \
-            out/app/ "preprod:$APP_DIR/"
+            out/app/ "preprod:$APP_DIR/" && break; [ "$i" = 3 ] && exit 1; echo "Retrying upload…"; sleep 15; done
 
       - name: Upload React app
         run: |
-          rsync -az --delete \
+          for i in 1 2 3; do rsync -az --delete \
             --exclude='/.well-known/' --exclude='/.user.ini' --exclude='/error_log' \
             --exclude='/BKP*/' --exclude='/bkp*/' --exclude='/backup*/' --exclude='*.zip' \
-            out/web/ "preprod:$WEB_DIR/"
+            out/web/ "preprod:$WEB_DIR/" && break; [ "$i" = 3 ] && exit 1; echo "Retrying upload…"; sleep 15; done
 
       - name: Clear Laravel caches (no database changes)
         run: |
