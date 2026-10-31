@@ -21,8 +21,11 @@ function rangeOf(p) {
   return { from: monthStart(today()), to: today() };
 }
 
-/** Business name in the bill's language: the only text sent with the PDF (and its file name). */
+/** Business name in the bill's language (also the PDF's file name). */
 const shopName = (b, lang) => (lang === 'en' ? b.shop.nameEn || b.shop.name : b.shop.name);
+
+/** The text sent with the PDF: business name and its mobile number(s) from Settings. */
+const shareText = (b, lang) => [shopName(b, lang), ...b.shop.contacts.map((n) => `📞 ${n}`)].join('\n');
 
 export default function CustomerBill() {
   const { id } = useParams();
@@ -57,7 +60,7 @@ export default function CustomerBill() {
     setBusy(true);
     try {
       const pdf = await billPdf(sheet.current);
-      const text = shopName(bill, lang);
+      const text = shareText(bill, lang);
       const res = await shareBillFile(pdf, fileName, text);
       if (res === 'unsupported') {
         // Computer / phone without file sharing: save the PDF, open the chat with the text.
