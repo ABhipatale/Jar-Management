@@ -1,5 +1,5 @@
-// Customer bills: the numbers (from the customer's statement), amount in words, the UPI QR,
-// and turning the rendered bill into a PNG for WhatsApp. The three designs live in
+// Customer bills: the numbers (from the customer's statement), amount in words, and turning
+// the rendered bill into a PDF for WhatsApp. The three designs live in
 // components/bill/BillDesigns.jsx; the bill text is always mr or en (customer-facing).
 import { brandName, getBranding, logoSrc } from './branding';
 
@@ -48,7 +48,6 @@ export function buildBill(ledger, settings, { from, to }) {
     .filter(Boolean);
 
   return {
-    no: billNo(c.id, from, to),
     from,
     to,
     oneDay: from === to,
@@ -60,8 +59,6 @@ export function buildBill(ledger, settings, { from, to }) {
       contacts,
       owner: settings?.owner_name_mr || '',
       logo: logoSrc(settings?.branding || b),
-      upi: settings?.upi_id || '',
-      qrImage: settings?.pay_qr_url || '',
     },
     customer: { name: c.name, mobile: c.mobile, address: c.address || '' },
     items,
@@ -102,13 +99,6 @@ export function sampleBill(settings, lang = 'mr') {
     ? { id: 7, name: 'Rahul Patil', mobile: '9876543210', address: 'Shivaji Nagar' }
     : { id: 7, name: 'राहुल पाटील', mobile: '9876543210', address: 'शिवाजी नगर' };
   return buildBill({ customer, rows, opening: { balance: 200, jar_balance: 2 } }, settings, { from, to });
-}
-
-/** B-2610-045 (month bill) or B-261024-045 (one day): stable, so re-sending gives the same number. */
-function billNo(customerId, from, to) {
-  const ymd = (to || from || '').replace(/-/g, '').slice(2);
-  const id = String(customerId).padStart(3, '0');
-  return from === to ? `B-${ymd}-${id}` : `B-${ymd.slice(0, 4)}-${id}`;
 }
 
 // ── Amount in words (Indian system: crore / lakh / thousand / hundred) ──
@@ -160,18 +150,9 @@ export function amountInWords(amount, lang = 'mr') {
   return w.charAt(0).toUpperCase() + w.slice(1);
 }
 
-// ── QR + images ──
+// ── Images ──
 
-/** UPI QR (with the amount filled in) as a data URL, or null without a UPI ID. */
-export async function upiQr(upi, payee, amount) {
-  if (!upi) return null;
-  const { toDataURL } = await import('qrcode');
-  const am = amount > 0 ? `&am=${r2(amount).toFixed(2)}` : '';
-  const uri = `upi://pay?pa=${encodeURIComponent(upi)}&pn=${encodeURIComponent(payee || '')}${am}&cu=INR`;
-  return toDataURL(uri, { margin: 1, width: 360, errorCorrectionLevel: 'M' });
-}
-
-/** Image URL → data URL, so the logo / QR photo end up inside the PNG. Null when it can't be read. */
+/** Image URL → data URL, so the logo ends up inside the PDF. Null when it can't be read. */
 export async function inlineImage(url) {
   if (!url || url.startsWith('data:')) return url || null;
   try {

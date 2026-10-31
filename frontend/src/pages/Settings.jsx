@@ -4,7 +4,7 @@ import { ChevronRight, CreditCard, Droplets, ExternalLink, FileText, ImagePlus, 
 import api, { errorMessage } from '../api/client';
 import { ThemeSwitch } from '../components/Layout';
 import { Field, Loader, Modal, PageHeader, Segmented } from '../components/ui';
-import BillPreview, { useBillImages } from '../components/bill/BillPreview';
+import BillPreview, { useBillLogo } from '../components/bill/BillPreview';
 import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext';
 import { useUi } from '../context/UiContext';
@@ -28,11 +28,11 @@ const TEMPLATES = [
 function BillDesignPreview({ design, settings, chosen, onUse, onClose }) {
   const billLang = lang === 'en' ? 'en' : 'mr';
   const bill = sampleBill(settings, billLang);
-  const { logo, qr } = useBillImages(settings, bill.shop.logo, bill.closing);
+  const logo = useBillLogo(bill.shop.logo);
   return (
     <Modal title={t(`bill.d.${design}`)} description={t('bill.sampleNote')} onClose={onClose} size="lg">
       <div className="space-y-4">
-        <BillPreview design={design} bill={{ ...bill, shop: { ...bill.shop, logo } }} lang={billLang} qr={qr} />
+        <BillPreview design={design} bill={{ ...bill, shop: { ...bill.shop, logo } }} lang={billLang} />
         <div className="grid grid-cols-2 gap-2">
           <button type="button" className="btn-light" onClick={onClose}>{t('common.close')}</button>
           <button type="button" className="btn-primary" onClick={onUse} disabled={chosen}>

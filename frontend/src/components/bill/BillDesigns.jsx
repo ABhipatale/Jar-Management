@@ -6,23 +6,23 @@ import { amountInWords } from '../../lib/bill';
 
 const L = {
   mr: {
-    bill: 'बिल', billNo: 'बिल क्र.', date: 'दिनांक', period: 'कालावधी', billTo: 'ग्राहक', mobile: 'मोबाईल', address: 'पत्ता',
+    bill: 'बिल', date: 'दिनांक', period: 'कालावधी', billTo: 'ग्राहक', mobile: 'मोबाईल', address: 'पत्ता',
     sr: 'क्र.', desc: 'तपशील', qty: 'नग', rate: 'दर', amount: 'रक्कम',
     jarGiven: 'पाण्याचे जार दिले', bottleGiven: 'बाटल्या दिल्या', jarReturned: 'रिकामे जार परत', bottleReturned: 'रिकाम्या बाटल्या परत',
     deposit: 'डिपॉझिट', noItems: 'या कालावधीत डिलिव्हरी नाही', payments: 'मिळालेले पेमेंट', payment: 'पेमेंट',
     prev: 'मागील बाकी', thisBill: 'या बिलाची रक्कम', paid: 'भरलेली रक्कम', total: 'एकूण बाकी', advance: 'आगाऊ जमा',
     inWords: 'अक्षरी', holding: 'आपल्याकडे सध्या', jars: 'जार', bottles: 'बाटल्या', depositHeld: 'डिपॉझिट जमा',
-    scan: 'स्कॅन करा व पैसे भरा', thanks: 'धन्यवाद! आपल्या विश्वासाबद्दल आभार.', sign: 'सही / शिक्का', paidStamp: 'पूर्ण भरले',
+    thanks: 'धन्यवाद! आपल्या विश्वासाबद्दल आभार.', sign: 'सही / शिक्का', paidStamp: 'पूर्ण भरले',
     contact: 'संपर्क', returnNote: 'कृपया रिकामे जार वेळेवर परत करावे.', terms: 'सूचना', made: 'EasyJar द्वारे तयार',
   },
   en: {
-    bill: 'INVOICE', billNo: 'Bill No.', date: 'Date', period: 'Period', billTo: 'Bill To', mobile: 'Mobile', address: 'Address',
+    bill: 'INVOICE', date: 'Date', period: 'Period', billTo: 'Bill To', mobile: 'Mobile', address: 'Address',
     sr: '#', desc: 'Description', qty: 'Qty', rate: 'Rate', amount: 'Amount',
     jarGiven: 'Water jars delivered', bottleGiven: 'Bottles delivered', jarReturned: 'Empty jars returned', bottleReturned: 'Empty bottles returned',
     deposit: 'Deposit', noItems: 'No deliveries in this period', payments: 'Payments received', payment: 'Payment',
     prev: 'Previous balance', thisBill: 'This bill', paid: 'Paid', total: 'Total due', advance: 'Advance (credit)',
     inWords: 'In words', holding: 'With you now', jars: 'jars', bottles: 'bottles', depositHeld: 'Deposit held',
-    scan: 'Scan & pay', thanks: 'Thank you for your business!', sign: 'Signature', paidStamp: 'PAID',
+    thanks: 'Thank you for your business!', sign: 'Signature', paidStamp: 'PAID',
     contact: 'Contact', returnNote: 'Please return empty jars on time.', terms: 'Note', made: 'Made with EasyJar',
   },
 };
@@ -54,7 +54,7 @@ const FONT = 'system-ui, -apple-system, "Segoe UI", Roboto, "Nirmala UI", "Helve
 
 /* ───────────── 1. Modern Water ───────────── */
 
-const ModernBill = forwardRef(function ModernBill({ bill: b, lang, qr }, ref) {
+const ModernBill = forwardRef(function ModernBill({ bill: b, lang }, ref) {
   const l = L[lang];
   const due = b.closing;
   const blue = '#1d4ed8';
@@ -73,8 +73,7 @@ const ModernBill = forwardRef(function ModernBill({ bill: b, lang, qr }, ref) {
           </div>
           <div style={{ textAlign: 'right', flexShrink: 0, whiteSpace: 'nowrap' }}>
             <div style={{ display: 'inline-block', background: 'rgb(255 255 255 / .18)', border: '1px solid rgb(255 255 255 / .4)', borderRadius: 999, padding: '4px 18px', fontWeight: 700, fontSize: 18, letterSpacing: 1 }}>{l.bill}</div>
-            <div style={{ marginTop: 8, fontSize: 13, opacity: 0.95 }}>{l.billNo} <b>{b.no}</b></div>
-            <div style={{ fontSize: 13, opacity: 0.95 }}>{l.date} <b>{dmy(b.to)}</b></div>
+            <div style={{ marginTop: 8, fontSize: 13, opacity: 0.95 }}>{l.date} <b>{dmy(b.to)}</b></div>
           </div>
         </div>
         <svg viewBox="0 0 794 40" preserveAspectRatio="none" style={{ position: 'absolute', left: 0, bottom: -1, width: '100%', height: 40, display: 'block' }}>
@@ -129,19 +128,9 @@ const ModernBill = forwardRef(function ModernBill({ bill: b, lang, qr }, ref) {
           </div>
         )}
 
-        {/* QR + totals */}
+        {/* Holding + totals */}
         <div style={{ display: 'flex', gap: 16, marginTop: 18, alignItems: 'stretch' }}>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {qr && due > 0 && (
-              <div style={{ display: 'flex', gap: 14, alignItems: 'center', border: '1px dashed #93c5fd', borderRadius: 14, padding: 12 }}>
-                <img src={qr} alt="" style={{ width: 118, height: 118, borderRadius: 8 }} />
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: 16, color: blue }}>{l.scan}</div>
-                  <div style={{ fontSize: 22, fontWeight: 800, marginTop: 2 }}>{rs(due)}</div>
-                  {b.shop.upi && <div style={{ fontSize: 12, color: '#475569', marginTop: 2 }}>UPI: {b.shop.upi}</div>}
-                </div>
-              </div>
-            )}
             <div style={{ background: '#ecfeff', border: '1px solid #a5f3fc', borderRadius: 14, padding: '10px 14px' }}>
               <div style={{ fontSize: 12, color: '#0e7490', fontWeight: 700 }}>💧 {l.holding}</div>
               <div style={{ fontWeight: 600, marginTop: 2 }}>{holdingText(b, l)}</div>
@@ -193,7 +182,7 @@ function Row({ k, v, color }) {
 
 /* ───────────── 2. Classic bill book (default) ───────────── */
 
-const ClassicBill = forwardRef(function ClassicBill({ bill: b, lang, qr }, ref) {
+const ClassicBill = forwardRef(function ClassicBill({ bill: b, lang }, ref) {
   const l = L[lang];
   const red = '#c1121f';
   const gold = '#f5b301';
@@ -224,8 +213,7 @@ const ClassicBill = forwardRef(function ClassicBill({ bill: b, lang, qr }, ref) 
           <Line k={l.mobile} v={b.customer.mobile} />
         </div>
         <div style={{ width: 250 }}>
-          <Line k={l.billNo} v={b.no} bold line={line} />
-          <Line k={l.date} v={dmy(b.to)} line={line} />
+          <Line k={l.date} v={dmy(b.to)} bold line={line} />
           <Line k={l.period} v={period(b)} />
         </div>
       </div>
@@ -284,12 +272,6 @@ const ClassicBill = forwardRef(function ClassicBill({ bill: b, lang, qr }, ref) 
           <div>• {l.returnNote}</div>
           {b.payments.length > 0 && <div>• {l.payments}: {b.payments.map((p) => `${dmy(p.date).slice(0, 5)} ${rs(p.amount)}`).join(', ')}</div>}
         </div>
-        {qr && due > 0 && (
-          <div style={{ textAlign: 'center', fontSize: 11 }}>
-            <img src={qr} alt="" style={{ width: 96, height: 96 }} />
-            <div>{l.scan}</div>
-          </div>
-        )}
         <div style={{ textAlign: 'center', minWidth: 160 }}>
           {due <= 0 && <div style={stamp}>{l.paidStamp}</div>}
           <div style={{ height: 34 }} />
@@ -313,7 +295,7 @@ function Line({ k, v, bold, line }) {
 
 /* ───────────── 3. Simple receipt ───────────── */
 
-const SimpleBill = forwardRef(function SimpleBill({ bill: b, lang, qr }, ref) {
+const SimpleBill = forwardRef(function SimpleBill({ bill: b, lang }, ref) {
   const l = L[lang];
   const due = b.closing;
   const dash = { borderTop: '1px dashed #9ca3af', margin: '10px 0' };
@@ -328,7 +310,6 @@ const SimpleBill = forwardRef(function SimpleBill({ bill: b, lang, qr }, ref) {
         <div style={{ marginTop: 6, fontWeight: 700, letterSpacing: 2 }}>— {l.bill} —</div>
       </div>
       <div style={dash} />
-      <div style={kv}><span>{l.billNo}</span><b>{b.no}</b></div>
       <div style={kv}><span>{l.date}</span><span>{dmy(b.to)}</span></div>
       {!b.oneDay && <div style={kv}><span>{l.period}</span><span>{period(b)}</span></div>}
       <div style={kv}><span>{l.billTo}</span><b style={{ textAlign: 'right' }}>{b.customer.name}</b></div>
@@ -352,12 +333,6 @@ const SimpleBill = forwardRef(function SimpleBill({ bill: b, lang, qr }, ref) {
       <div style={{ fontSize: 11, color: '#4b5563', marginTop: 2 }}>{amountInWords(Math.max(due, 0), lang)}</div>
       <div style={dash} />
       <div style={{ fontSize: 12 }}>💧 {l.holding}: {holdingText(b, l)}</div>
-      {qr && due > 0 && (
-        <div style={{ textAlign: 'center', marginTop: 10 }}>
-          <img src={qr} alt="" style={{ width: 130, height: 130 }} />
-          <div style={{ fontSize: 12 }}>{l.scan}</div>
-        </div>
-      )}
       <div style={{ textAlign: 'center', marginTop: 10, fontWeight: 600 }}>{l.thanks}</div>
       <div style={{ textAlign: 'center', fontSize: 10, color: '#9ca3af', marginTop: 4 }}>{l.made}</div>
     </div>

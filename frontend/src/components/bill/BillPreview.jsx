@@ -1,33 +1,23 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { inlineImage, upiQr } from '../../lib/bill';
+import { inlineImage } from '../../lib/bill';
 import { BILL_COMPONENTS, BILL_WIDTH } from './BillDesigns';
 
-/**
- * Logo and payment QR as data URLs (so they end up inside the bill image):
- * a UPI QR with the exact amount when the shop has a UPI ID, else its uploaded QR photo.
- */
-export function useBillImages(settings, logoUrl, due) {
+/** The shop logo as a data URL, so it ends up inside the PDF. */
+export function useBillLogo(logoUrl) {
   const [logo, setLogo] = useState(null);
-  const [qr, setQr] = useState(null);
   useEffect(() => {
     let live = true;
     inlineImage(logoUrl).then((v) => live && setLogo(v));
     return () => { live = false; };
   }, [logoUrl]);
-  useEffect(() => {
-    let live = true;
-    const s = settings || {};
-    (s.upi_id ? upiQr(s.upi_id, s.business_name || '', due) : inlineImage(s.pay_qr_url)).then((v) => live && setQr(v));
-    return () => { live = false; };
-  }, [settings, due]);
-  return { logo, qr };
+  return logo;
 }
 
 /**
  * A bill at full size (for the image / print), shown scaled down to the available width.
  * sheetRef gets the full-size bill element (what billPdf() captures).
  */
-export default function BillPreview({ design, bill, lang, qr, sheetRef }) {
+export default function BillPreview({ design, bill, lang, sheetRef }) {
   const box = useRef(null);
   const own = useRef(null);
   const sheet = sheetRef || own;
@@ -52,7 +42,7 @@ export default function BillPreview({ design, bill, lang, qr, sheetRef }) {
   return (
     <div ref={box} className="bill-box overflow-hidden rounded-xl bg-white shadow-soft ring-1 ring-line" style={{ height: height || undefined }}>
       <div className="bill-sheet" style={{ transform: `scale(${scale})`, transformOrigin: 'top left', width: BILL_WIDTH[design] }}>
-        <Bill ref={sheet} bill={bill} lang={lang} qr={qr} />
+        <Bill ref={sheet} bill={bill} lang={lang} />
       </div>
     </div>
   );

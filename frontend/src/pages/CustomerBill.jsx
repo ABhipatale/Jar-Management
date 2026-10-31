@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { Download, MessageCircle, Printer } from 'lucide-react';
-import BillPreview, { useBillImages } from '../components/bill/BillPreview';
+import BillPreview, { useBillLogo } from '../components/bill/BillPreview';
 import { ErrorBox, Loader, PageHeader } from '../components/ui';
 import { useSettings } from '../context/SettingsContext';
 import { useUi } from '../context/UiContext';
@@ -21,14 +21,8 @@ function rangeOf(p) {
   return { from: monthStart(today()), to: today() };
 }
 
-/** Text sent along with the bill image (customer-facing, so in the bill's language). */
-function shareText(b, lang, payUrl) {
-  const amt = `₹${Math.max(b.closing, 0)}`;
-  const pay = payUrl && b.closing > 0 ? `\n💳 ${payUrl}?a=${b.closing}` : '';
-  return lang === 'en'
-    ? `🙏 Hello ${b.customer.name},\nHere is your bill ${b.no}.\nTotal due: *${amt}*${pay}\n\n${b.shop.nameEn || b.shop.name}`
-    : `🙏 नमस्कार ${b.customer.name},\nआपले बिल ${b.no} पाठवत आहोत.\nएकूण बाकी: *${amt}*${pay}\n\n💧 ${b.shop.name}`;
-}
+/** Business name in the bill's language: the only text sent with the PDF (and its file name). */
+const shopName = (b, lang) => (lang === 'en' ? b.shop.nameEn || b.shop.name : b.shop.name);
 
 export default function CustomerBill() {
   const { id } = useParams();
@@ -47,8 +41,8 @@ export default function CustomerBill() {
   const { data, loading, error, reload } = useApi(`/customers/${id}/ledger`, range);
   const bill = data ? buildBill(data, settings, range) : null;
 
-  // Logo / QR inside the image; UPI QR with the exact amount due.
-  const { logo, qr } = useBillImages(settings, bill?.shop.logo, bill?.closing ?? 0);
+  // Logo inside the PDF.
+  const logo = useBillLogo(bill?.shop.logo);
   const sheet = useRef(null);
 
   const pickPeriod = (p) => {
@@ -56,14 +50,14 @@ export default function CustomerBill() {
     if (p !== 'custom') setRange(rangeOf(p));
   };
 
-  const fileName = bill ? `${bill.no}-${bill.customer.name.replace(/[^\p{L}\p{N}]+/gu, '-')}.pdf` : 'bill.pdf';
+  const fileName = bill ? `${shopName(bill, lang).replace(/[\\/:*?"<>|]+/g, ' ').trim() || 'bill'}.pdf` : 'bill.pdf';
 
   const send = async () => {
     if (!sheet.current || !bill) return;
     setBusy(true);
     try {
       const pdf = await billPdf(sheet.current);
-      const text = shareText(bill, lang, settings?.pay_url);
+      const text = shopName(bill, lang);
       const res = await shareBillFile(pdf, fileName, text);
       if (res === 'unsupported') {
         // Computer / phone without file sharing: save the PDF, open the chat with the text.
@@ -156,7 +150,7 @@ export default function CustomerBill() {
             </button>
           </div>
 
-          <BillPreview design={design} bill={shown} lang={lang} qr={qr} sheetRef={sheet} />
+          <BillPreview design={design} bill={shown} lang={lang} sheetRef={sheet} />
           <p className="no-print text-center text-xs text-muted">{t('bill.sendHint')}</p>
         </>
       )}
