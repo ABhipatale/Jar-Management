@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
+  FileText,
   AlertTriangle,
   ArrowDownLeft,
   ArrowRight,
@@ -784,6 +785,11 @@ function SavedCard({ result, settings, onNew }) {
       {!result.queued && (
         <Link to={`/payments/new?customer=${result.customer_id}`} className="btn-light w-full">
           <Wallet size={18} /> {t('entry.receivePayLbl')}
+        </Link>
+      )}
+      {!result.queued && (
+        <Link to={`/customers/${result.customer_id}/bill?from=${result.transaction_date}&to=${result.transaction_date}`} className="btn-light w-full">
+          <FileText size={18} /> {t('bill.title')}
         </Link>
       )}
     </div>

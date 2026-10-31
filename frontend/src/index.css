@@ -207,6 +207,9 @@ input[type="date"]::-webkit-calendar-picker-indicator { opacity: 0.6; cursor: po
   .table-wrap { overflow: visible !important; margin: 0 !important; padding: 0 !important; }
   .tbl { min-width: 0 !important; font-size: 11px; }
   main { padding: 0 !important; }
+  /* Customer bill: full size (not the phone preview scale), fitted to the A4 page width. */
+  .bill-box { height: auto !important; overflow: visible !important; box-shadow: none !important; border: 0 !important; }
+  .bill-sheet { transform: none !important; zoom: 0.88; }
 }
 
 /* ───────────── Login page ─────────────

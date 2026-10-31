@@ -32,6 +32,8 @@ class SettingService
         'wa_summary' => '',
         // UPI ID for the "pay" button on the payment page linked from udhari messages.
         'upi_id' => '',
+        // Customer bill look: classic (bill book, default), modern (water theme) or simple (receipt).
+        'bill_design' => 'classic',
     ];
 
     public function all(): array

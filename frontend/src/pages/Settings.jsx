@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { ChevronRight, CreditCard, Droplets, ExternalLink, ImagePlus, KeyRound, Landmark, Languages, LogOut, MessageCircle, MessageSquareText, Palette, QrCode, Save, Sparkles, Store, Trash2 } from 'lucide-react';
+import { BILL_DESIGNS, sampleBill } from '../lib/bill';
+import { ChevronRight, CreditCard, Droplets, ExternalLink, FileText, ImagePlus, KeyRound, Landmark, Languages, LogOut, MessageCircle, MessageSquareText, Palette, QrCode, Save, Sparkles, Store, Trash2 } from 'lucide-react';
 import api, { errorMessage } from '../api/client';
 import { ThemeSwitch } from '../components/Layout';
-import { Field, Loader, PageHeader, Segmented } from '../components/ui';
+import { Field, Loader, Modal, PageHeader, Segmented } from '../components/ui';
+import BillPreview, { useBillImages } from '../components/bill/BillPreview';
 import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext';
 import { useUi } from '../context/UiContext';
@@ -22,6 +24,53 @@ const TEMPLATES = [
 ];
 
 /** Card with an icon + title header. */
+/** Full preview of a bill design with sample data (Settings). */
+function BillDesignPreview({ design, settings, chosen, onUse, onClose }) {
+  const billLang = lang === 'en' ? 'en' : 'mr';
+  const bill = sampleBill(settings, billLang);
+  const { logo, qr } = useBillImages(settings, bill.shop.logo, bill.closing);
+  return (
+    <Modal title={t(`bill.d.${design}`)} description={t('bill.sampleNote')} onClose={onClose} size="lg">
+      <div className="space-y-4">
+        <BillPreview design={design} bill={{ ...bill, shop: { ...bill.shop, logo } }} lang={billLang} qr={qr} />
+        <div className="grid grid-cols-2 gap-2">
+          <button type="button" className="btn-light" onClick={onClose}>{t('common.close')}</button>
+          <button type="button" className="btn-primary" onClick={onUse} disabled={chosen}>
+            {chosen ? t('bill.inUse') : t('bill.useThis')}
+          </button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+/** Tiny drawing of each bill design for the Settings picker (fixed colours, like the bill). */
+function BillThumb({ design }) {
+  const lines = (n, c = '#cbd5e1') => Array.from({ length: n }, (_, i) => <div key={i} style={{ height: 3, background: c, borderRadius: 2, margin: '3px 6px', width: `${80 - i * 12}%` }} />);
+  if (design === 'simple') {
+    return (
+      <div className="h-24 w-16 shrink-0 self-center rounded bg-white py-2 shadow-soft ring-1 ring-slate-200">
+        <div style={{ height: 4, background: '#111827', margin: '0 14px 4px', borderRadius: 2 }} />
+        <div style={{ borderTop: '1px dashed #9ca3af', margin: '4px 4px' }} />
+        {lines(4, '#9ca3af')}
+        <div style={{ borderTop: '1px dashed #9ca3af', margin: '4px 4px' }} />
+        <div style={{ height: 5, background: '#111827', margin: '3px 6px', borderRadius: 2 }} />
+      </div>
+    );
+  }
+  const modern = design === 'modern';
+  return (
+    <div className="h-24 w-20 shrink-0 overflow-hidden rounded bg-white shadow-soft ring-1 ring-slate-200 sm:h-28 sm:w-full">
+      <div style={{ height: 22, background: modern ? 'linear-gradient(135deg,#1e3a8a,#0ea5e9)' : '#fff', borderBottom: modern ? 0 : '3px solid #f5b301', position: 'relative' }}>
+        {!modern && <div style={{ height: 6, width: '50%', background: '#c1121f', margin: '8px auto 0', borderRadius: 2 }} />}
+      </div>
+      {lines(2)}
+      <div style={{ margin: '4px 6px', height: 26, border: `1px solid ${modern ? '#dbeafe' : '#f5b301'}`, borderRadius: modern ? 4 : 0, background: modern ? '#f0f7ff' : '#fff' }} />
+      <div style={{ margin: '0 6px 0 auto', width: '45%', height: 8, background: modern ? '#1d4ed8' : '#fff8e1', border: modern ? 0 : '1px solid #f5b301', borderRadius: modern ? 3 : 0 }} />
+    </div>
+  );
+}
+
 function Section({ icon: I, tone = 'bg-brand-50 text-brand-700', title, hint, children, as: Tag = 'section', ...rest }) {
   return (
     <Tag className="card space-y-4" {...rest}>
@@ -50,6 +99,7 @@ export default function Settings() {
   const [logoBusy, setLogoBusy] = useState(false);
   const logoInput = useRef(null);
   const [qrBusy, setQrBusy] = useState(false);
+  const [billPreview, setBillPreview] = useState(null); // design shown in the preview popup
   const qrInput = useRef(null);
 
   useEffect(() => {
@@ -69,6 +119,19 @@ export default function Settings() {
 
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
   const feat = features(form);
+
+  // Choosing a bill design saves just that, straight away (other unsaved edits stay in the form).
+  const chooseBillDesign = async (d) => {
+    try {
+      const { data } = await api.put('/settings', { bill_design: d });
+      setSettings(data);
+      setForm((f) => ({ ...f, bill_design: d }));
+      setBillPreview(null);
+      toast(t('bill.designSaved'));
+    } catch (err) {
+      toast(errorMessage(err), 'error');
+    }
+  };
 
   const save = async (e) => {
     e.preventDefault();
@@ -302,6 +365,40 @@ export default function Settings() {
           <Field label={t('set.upiId')} hint={t('set.upiIdHint')}>
             <input className="input" value={form.upi_id || ''} onChange={set('upi_id')} maxLength={100} autoCapitalize="none" autoCorrect="off" spellCheck={false} placeholder="9876543210@ybl" />
           </Field>
+        </Section>
+
+        <Section icon={FileText} tone="bg-violet-50 text-violet-700" title={t('bill.settingsTitle')} hint={t('bill.settingsHint')}>
+          <div className="grid gap-2.5 sm:grid-cols-3" role="radiogroup">
+            {BILL_DESIGNS.map((d) => {
+              const on = (form.bill_design || 'classic') === d;
+              return (
+                <button
+                  key={d}
+                  type="button"
+                  role="radio"
+                  aria-checked={on}
+                  onClick={() => setBillPreview(d)}
+                  className={`flex items-center gap-3 rounded-xl p-3 text-left ring-1 transition sm:flex-col sm:items-stretch ${on ? 'bg-brand-50 ring-2 ring-brand-600' : 'bg-surface ring-line hover:bg-surface-2'}`}
+                >
+                  <BillThumb design={d} />
+                  <span className="min-w-0">
+                    <span className="block font-semibold text-ink">{t(`bill.d.${d}`)}</span>
+                    <span className="block text-xs text-muted">{t(`bill.dd.${d}`)}</span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          <p className="-mt-1 text-xs text-muted">👁 {t('bill.tapPreview')}</p>
+          {billPreview && (
+            <BillDesignPreview
+              design={billPreview}
+              settings={form}
+              chosen={(form.bill_design || 'classic') === billPreview}
+              onUse={() => chooseBillDesign(billPreview)}
+              onClose={() => setBillPreview(null)}
+            />
+          )}
         </Section>
 
         <Section icon={Droplets} tone="bg-sky-50 text-sky-700" title={t('set.jars')}>
