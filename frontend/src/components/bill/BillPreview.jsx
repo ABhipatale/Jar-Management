@@ -25,7 +25,7 @@ export function useBillImages(settings, logoUrl, due) {
 
 /**
  * A bill at full size (for the image / print), shown scaled down to the available width.
- * sheetRef gets the full-size bill element (what billPng() captures).
+ * sheetRef gets the full-size bill element (what billPdf() captures).
  */
 export default function BillPreview({ design, bill, lang, qr, sheetRef }) {
   const box = useRef(null);

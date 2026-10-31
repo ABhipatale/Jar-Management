@@ -6,7 +6,7 @@ import { ErrorBox, Loader, PageHeader } from '../components/ui';
 import { useSettings } from '../context/SettingsContext';
 import { useUi } from '../context/UiContext';
 import { lang as appLang, t } from '../i18n';
-import { BILL_DESIGNS, billPng, buildBill, downloadBlob, shareBillImage } from '../lib/bill';
+import { BILL_DESIGNS, billPdf, buildBill, downloadBlob, shareBillFile } from '../lib/bill';
 import { addDays, monthStart, today } from '../lib/format';
 import { useApi } from '../lib/useApi';
 import { openWhatsApp } from '../lib/whatsapp';
@@ -56,18 +56,18 @@ export default function CustomerBill() {
     if (p !== 'custom') setRange(rangeOf(p));
   };
 
-  const fileName = bill ? `${bill.no}-${bill.customer.name.replace(/[^\p{L}\p{N}]+/gu, '-')}.png` : 'bill.png';
+  const fileName = bill ? `${bill.no}-${bill.customer.name.replace(/[^\p{L}\p{N}]+/gu, '-')}.pdf` : 'bill.pdf';
 
   const send = async () => {
     if (!sheet.current || !bill) return;
     setBusy(true);
     try {
-      const png = await billPng(sheet.current);
+      const pdf = await billPdf(sheet.current);
       const text = shareText(bill, lang, settings?.pay_url);
-      const res = await shareBillImage(png, fileName, text);
+      const res = await shareBillFile(pdf, fileName, text);
       if (res === 'unsupported') {
-        // Computer / iPhone without file sharing: save the image, open the chat with the text.
-        downloadBlob(png, fileName);
+        // Computer / phone without file sharing: save the PDF, open the chat with the text.
+        downloadBlob(pdf, fileName);
         toast(t('bill.attachHint'), 'info');
         openWhatsApp(bill.customer.mobile, text);
       }
@@ -82,7 +82,7 @@ export default function CustomerBill() {
     if (!sheet.current) return;
     setBusy(true);
     try {
-      downloadBlob(await billPng(sheet.current), fileName);
+      downloadBlob(await billPdf(sheet.current), fileName);
     } catch {
       toast(t('bill.imageFail'), 'error');
     } finally {
@@ -149,10 +149,10 @@ export default function CustomerBill() {
               <MessageCircle size={18} /> {busy ? t('bill.making') : t('bill.send')}
             </button>
             <button type="button" className="btn-light" disabled={busy} onClick={download}>
-              <Download size={17} /> {t('bill.image')}
+              <Download size={17} /> {t('bill.pdf')}
             </button>
             <button type="button" className="btn-light" onClick={() => window.print()}>
-              <Printer size={17} /> {t('bill.print')}
+              <Printer size={17} /> {t('bill.printOnly')}
             </button>
           </div>
 

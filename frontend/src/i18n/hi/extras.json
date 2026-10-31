@@ -66,13 +66,13 @@
   "bill.d.classic": "📒 क्लासिक",
   "bill.d.simple": "🧾 साधी रसीद",
   "bill.language": "बिल की भाषा",
-  "bill.send": "WhatsApp पर भेजें",
+  "bill.send": "WhatsApp पर PDF भेजें",
   "bill.making": "बिल बन रहा है…",
   "bill.image": "फ़ोटो",
   "bill.print": "PDF / प्रिंट",
-  "bill.sendHint": "WhatsApp पर बिल फ़ोटो के रूप में जाता है. PDF के लिए \"PDF / प्रिंट\" दबाएं और \"Save as PDF\" चुनें.",
-  "bill.attachHint": "बिल की फ़ोटो डाउनलोड हो गई. WhatsApp में 📎 दबाकर उसे जोड़ें.",
-  "bill.imageFail": "बिल की फ़ोटो नहीं बन सकी. फिर से कोशिश करें या PDF / प्रिंट इस्तेमाल करें.",
+  "bill.sendHint": "बिल PDF फ़ाइल के रूप में WhatsApp पर जाता है. भेजते समय WhatsApp में ग्राहक चुनें.",
+  "bill.attachHint": "बिल की PDF डाउनलोड हो गई. WhatsApp में 📎 → Document दबाकर उसे जोड़ें.",
+  "bill.imageFail": "बिल की PDF नहीं बन सकी. फिर से कोशिश करें या प्रिंट इस्तेमाल करें.",
   "bill.dayBill": "आज का बिल",
   "bill.settingsTitle": "ग्राहक बिल डिज़ाइन",
   "bill.settingsHint": "ग्राहक को भेजा जाने वाला बिल इसी डिज़ाइन में बनेगा. बिल बनाते समय बदल भी सकते हैं.",
@@ -83,5 +83,7 @@
   "bill.useThis": "यह डिज़ाइन इस्तेमाल करें",
   "bill.inUse": "✓ यही इस्तेमाल में है",
   "bill.tapPreview": "नमूना देखने के लिए दबाएं",
-  "bill.designSaved": "बिल डिज़ाइन सेव हो गया."
+  "bill.designSaved": "बिल डिज़ाइन सेव हो गया.",
+  "bill.pdf": "PDF डाउनलोड",
+  "bill.printOnly": "प्रिंट"
 }

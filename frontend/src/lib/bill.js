@@ -189,13 +189,6 @@ export async function inlineImage(url) {
   }
 }
 
-/** The rendered bill as a PNG Blob (2× for sharp text on phones). */
-export async function billPng(node) {
-  const { toBlob } = await import('html-to-image');
-  // The bill uses the phone's own fonts, so nothing needs embedding (faster, works offline).
-  return toBlob(node, { pixelRatio: 2, backgroundColor: '#ffffff', cacheBust: true, skipFonts: true });
-}
-
 export function downloadBlob(blob, filename) {
   const url = URL.createObjectURL(blob);
   const a = Object.assign(document.createElement('a'), { href: url, download: filename });
@@ -206,11 +199,56 @@ export function downloadBlob(blob, filename) {
 }
 
 /**
- * Share the bill image through the phone's share sheet (WhatsApp shows up there).
- * Returns 'shared', 'cancelled' or 'unsupported' (computer / iPhone without file sharing).
+ * The bill as a one-page PDF: the bill picture (sharp JPEG) on a page as wide as A4 and as
+ * tall as the bill. Marathi text looks exactly as on screen (PDF font tools can't shape it).
+ * Written by hand — a PDF with one image is a few objects, no library needed.
  */
-export async function shareBillImage(blob, filename, text) {
-  const file = new File([blob], filename, { type: 'image/png' });
+export async function billPdf(node) {
+  const { toCanvas } = await import('html-to-image');
+  const canvas = await toCanvas(node, { pixelRatio: 2, backgroundColor: '#ffffff', cacheBust: true, skipFonts: true });
+  const jpeg = new Uint8Array(await (await new Promise((res) => canvas.toBlob(res, 'image/jpeg', 0.92))).arrayBuffer());
+
+  const W = 595.28; // A4 width in points
+  const H = Math.round(((W * canvas.height) / canvas.width) * 100) / 100;
+  const enc = new TextEncoder();
+  const parts = [];
+  const offsets = [];
+  let size = 0;
+  const push = (x) => {
+    const bytes = typeof x === 'string' ? enc.encode(x) : x;
+    parts.push(bytes);
+    size += bytes.length;
+  };
+  const obj = (n, body) => {
+    offsets[n] = size;
+    push(`${n} 0 obj\n`);
+    body();
+    push('\nendobj\n');
+  };
+  const draw = `q ${W} 0 0 ${H} 0 0 cm /Im0 Do Q`;
+
+  push('%PDF-1.4\n%âãÏÓ\n');
+  obj(1, () => push('<< /Type /Catalog /Pages 2 0 R >>'));
+  obj(2, () => push('<< /Type /Pages /Kids [3 0 R] /Count 1 >>'));
+  obj(3, () => push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${W} ${H}] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>`));
+  obj(4, () => {
+    push(`<< /Type /XObject /Subtype /Image /Width ${canvas.width} /Height ${canvas.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpeg.length} >>\nstream\n`);
+    push(jpeg);
+    push('\nendstream');
+  });
+  obj(5, () => push(`<< /Length ${draw.length} >>\nstream\n${draw}\nendstream`));
+  const xref = size;
+  push(`xref\n0 6\n0000000000 65535 f \n${offsets.slice(1).map((o) => `${String(o).padStart(10, '0')} 00000 n \n`).join('')}`);
+  push(`trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`);
+  return new Blob(parts, { type: 'application/pdf' });
+}
+
+/**
+ * Share a bill file (PDF) through the phone's share sheet (WhatsApp shows up there).
+ * Returns 'shared', 'cancelled' or 'unsupported' (computer / phone without file sharing).
+ */
+export async function shareBillFile(blob, filename, text) {
+  const file = new File([blob], filename, { type: blob.type });
   if (!navigator.canShare?.({ files: [file] })) return 'unsupported';
   try {
     await navigator.share({ files: [file], text });
