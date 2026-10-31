@@ -171,50 +171,29 @@ export async function upiQr(upi, payee, amount) {
   return toDataURL(uri, { margin: 1, width: 360, errorCorrectionLevel: 'M' });
 }
 
-/**
- * Image URL → small data URL (longest side ≤ maxSide px), so the logo / QR photo end up
- * inside the PNG. Big phone photos are shrunk: inside the bill image, phones often leave a
- * large picture blank. Null when it can't be read.
- */
-export async function inlineImage(url, maxSide = 480) {
+/** Image URL → data URL, so the logo / QR photo end up inside the PNG. Null when it can't be read. */
+export async function inlineImage(url) {
   if (!url || url.startsWith('data:')) return url || null;
   try {
     const res = await fetch(url, { mode: 'cors', credentials: 'omit' });
     if (!res.ok) return null;
     const blob = await res.blob();
-    const src = URL.createObjectURL(blob);
-    try {
-      const img = new Image();
-      img.src = src;
-      await img.decode();
-      const k = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight));
-      const canvas = document.createElement('canvas');
-      canvas.width = Math.max(1, Math.round(img.naturalWidth * k));
-      canvas.height = Math.max(1, Math.round(img.naturalHeight * k));
-      const ctx = canvas.getContext('2d');
-      ctx.imageSmoothingQuality = 'high';
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      return canvas.toDataURL('image/png');
-    } finally {
-      URL.revokeObjectURL(src);
-    }
+    return await new Promise((resolve) => {
+      const fr = new FileReader();
+      fr.onload = () => resolve(fr.result);
+      fr.onerror = () => resolve(null);
+      fr.readAsDataURL(blob);
+    });
   } catch {
     return null;
   }
 }
 
-/**
- * The rendered bill as a PNG Blob (2× for sharp text on phones).
- * Waits until every picture (logo, QR) is decoded, then draws twice and keeps the second:
- * on phones the first drawing can leave pictures blank.
- */
+/** The rendered bill as a PNG Blob (2× for sharp text on phones). */
 export async function billPng(node) {
   const { toBlob } = await import('html-to-image');
-  await Promise.all([...node.querySelectorAll('img')].map((i) => (i.decode ? i.decode().catch(() => {}) : null)));
   // The bill uses the phone's own fonts, so nothing needs embedding (faster, works offline).
-  const opts = { pixelRatio: 2, backgroundColor: '#ffffff', skipFonts: true };
-  await toBlob(node, opts).catch(() => null);
-  return toBlob(node, opts);
+  return toBlob(node, { pixelRatio: 2, backgroundColor: '#ffffff', cacheBust: true, skipFonts: true });
 }
 
 export function downloadBlob(blob, filename) {
