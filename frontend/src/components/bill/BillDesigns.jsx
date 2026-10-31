@@ -50,6 +50,9 @@ function holdingText(b, l) {
 
 // The phone's own fonts only (no web fonts): the WhatsApp image is drawn with exactly the
 // fonts the preview used, so text never shifts or overlaps in the picture.
+/** English bills use the English business name. */
+const shopName = (b, lang) => (lang === 'en' ? b.shop.nameEn || b.shop.name : b.shop.name);
+
 const FONT = 'system-ui, -apple-system, "Segoe UI", Roboto, "Nirmala UI", "Helvetica Neue", Arial, sans-serif';
 
 /* ───────────── 1. Modern Water ───────────── */
@@ -67,7 +70,7 @@ const ModernBill = forwardRef(function ModernBill({ bill: b, lang, qr }, ref) {
             {b.shop.logo ? <img src={b.shop.logo} alt="" style={{ maxWidth: 62, maxHeight: 62, objectFit: 'contain' }} /> : <span style={{ fontSize: 34 }}>💧</span>}
           </div>
           <div style={{ minWidth: 0, flex: 1 }}>
-            <div style={{ fontSize: 28, fontWeight: 700, lineHeight: 1.2 }}>{b.shop.name}</div>
+            <div style={{ fontSize: 28, fontWeight: 700, lineHeight: 1.2 }}>{shopName(b, lang)}</div>
             {(b.shop.place || b.shop.address) && <div style={{ opacity: 0.9, marginTop: 2 }}>{[b.shop.place, b.shop.address].filter(Boolean).join(', ')}</div>}
             {b.shop.contacts.length > 0 && <div style={{ opacity: 0.9, marginTop: 2 }}>📞 {b.shop.contacts.join(' · ')}</div>}
           </div>
@@ -211,7 +214,7 @@ const ClassicBill = forwardRef(function ClassicBill({ bill: b, lang, qr }, ref) 
 
       <div style={{ padding: '34px 40px 0', textAlign: 'center', position: 'relative' }}>
         {b.shop.logo && <img src={b.shop.logo} alt="" style={{ height: 54, objectFit: 'contain', marginBottom: 4 }} />}
-        <div style={{ fontSize: 30, fontWeight: 800, color: red, textTransform: 'uppercase', lineHeight: 1.15 }}>{b.shop.name}</div>
+        <div style={{ fontSize: 30, fontWeight: 800, color: red, textTransform: 'uppercase', lineHeight: 1.15 }}>{shopName(b, lang)}</div>
         {b.shop.place && <div style={{ fontStyle: 'italic', color: '#4b5563' }}>{b.shop.place}</div>}
         {b.shop.address && <div style={{ marginTop: 2 }}>{b.shop.address}</div>}
         {b.shop.contacts.length > 0 && <div>{l.contact}: {b.shop.contacts.join(', ')}</div>}
@@ -322,7 +325,7 @@ const SimpleBill = forwardRef(function SimpleBill({ bill: b, lang, qr }, ref) {
     <div ref={ref} style={{ width: 384, background: '#fff', color: '#111827', fontFamily: FONT, fontSize: 14, lineHeight: 1.45, padding: '20px 18px' }}>
       <div style={{ textAlign: 'center' }}>
         {b.shop.logo && <img src={b.shop.logo} alt="" style={{ height: 44, objectFit: 'contain' }} />}
-        <div style={{ fontWeight: 800, fontSize: 19 }}>{b.shop.name}</div>
+        <div style={{ fontWeight: 800, fontSize: 19 }}>{shopName(b, lang)}</div>
         {b.shop.place && <div style={{ fontSize: 12 }}>{b.shop.place}</div>}
         {b.shop.contacts.length > 0 && <div style={{ fontSize: 12 }}>📞 {b.shop.contacts.join(', ')}</div>}
         <div style={{ marginTop: 6, fontWeight: 700, letterSpacing: 2 }}>— {l.bill} —</div>

@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\Admin\CompanyController as AdminCompanyController;
 use App\Http\Controllers\Api\Admin\PlanController as AdminPlanController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BillingController;
+use App\Http\Controllers\Api\BillLinkController;
 use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\BrandingController;
 use App\Http\Controllers\Api\CustomerController;
@@ -32,6 +33,8 @@ Route::get('/companies/{slug}/icons/{kind}.png', [BrandingController::class, 'ic
 // Payment QR page + image for udhari WhatsApp messages (public: the customer opens the link).
 Route::get('/pay/{slug}', [PayController::class, 'page'])->middleware('throttle:60,1');
 Route::get('/companies/{slug}/pay-qr.png', [PayController::class, 'qr'])->middleware('throttle:60,1');
+// Customer bill link from WhatsApp (public: signed token, shows only that bill).
+Route::get('/public/bills/{token}', [BillLinkController::class, 'show'])->middleware('throttle:60,1');
 
 // Daily reminder job (Vercel Cron). Idempotent: only sends due reminders, each once.
 Route::get('/cron/reminders', [NotificationController::class, 'cron'])->middleware('throttle:10,1');
@@ -68,6 +71,7 @@ Route::middleware(['auth:sanctum', 'company'])->group(function () {
     Route::get('/dashboard', DashboardController::class);
 
     Route::get('/customers/{customer}/ledger', [CustomerController::class, 'ledger']);
+    Route::post('/customers/{customer}/bill-link', [BillLinkController::class, 'store']);
     Route::apiResource('customers', CustomerController::class);
 
     Route::get('/jars', [JarController::class, 'index']);
