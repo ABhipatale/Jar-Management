@@ -26,7 +26,6 @@ import JarStatusReport from './pages/reports/JarStatusReport';
 import ProfitReport from './pages/reports/ProfitReport';
 import Broadcast from './pages/Broadcast';
 import CustomerBill from './pages/CustomerBill';
-import PublicBill from './pages/PublicBill';
 import AdminLayout from './pages/admin/AdminLayout';
 import AdminDashboard from './pages/admin/Dashboard';
 import Companies from './pages/admin/Companies';
@@ -39,10 +38,6 @@ import PlanExpired from './pages/PlanExpired';
 
 export default function App() {
   const { user } = useAuth();
-
-  // Bill link sent to a customer on WhatsApp: opens without logging in.
-  const billLink = window.location.pathname.match(/^\/b\/([^/]+)\/?$/);
-  if (billLink) return <PublicBill token={decodeURIComponent(billLink[1])} />;
 
   if (!user) {
     return (

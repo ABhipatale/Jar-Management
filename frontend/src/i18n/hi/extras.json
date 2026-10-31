@@ -70,7 +70,7 @@
   "bill.making": "बिल बन रहा है…",
   "bill.image": "फ़ोटो",
   "bill.print": "PDF / प्रिंट",
-  "bill.sendHint": "हरा बटन ग्राहक का WhatsApp सीधे खोलकर बिल का लिंक भेजता है. ग्राहक लिंक खोलकर बिल देख, डाउनलोड कर और पैसे भर सकता है.",
+  "bill.sendHint": "WhatsApp पर बिल फ़ोटो के रूप में जाता है. PDF के लिए \"PDF / प्रिंट\" दबाएं और \"Save as PDF\" चुनें.",
   "bill.attachHint": "बिल की फ़ोटो डाउनलोड हो गई. WhatsApp में 📎 दबाकर उसे जोड़ें.",
   "bill.imageFail": "बिल की फ़ोटो नहीं बन सकी. फिर से कोशिश करें या PDF / प्रिंट इस्तेमाल करें.",
   "bill.dayBill": "आज का बिल",
@@ -83,8 +83,5 @@
   "bill.useThis": "यह डिज़ाइन इस्तेमाल करें",
   "bill.inUse": "✓ यही इस्तेमाल में है",
   "bill.tapPreview": "नमूना देखने के लिए दबाएं",
-  "bill.designSaved": "बिल डिज़ाइन सेव हो गया.",
-  "bill.sendTo": "{name} को WhatsApp पर भेजें",
-  "bill.sharePhoto": "बिल की फ़ोटो शेयर करें",
-  "bill.linkFail": "बिल का लिंक नहीं बन सका. इंटरनेट जांचें."
+  "bill.designSaved": "बिल डिज़ाइन सेव हो गया."
 }

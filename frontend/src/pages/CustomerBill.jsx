@@ -1,7 +1,6 @@
 import { useRef, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { Download, MessageCircle, Printer, Share2 } from 'lucide-react';
-import api from '../api/client';
+import { Download, MessageCircle, Printer } from 'lucide-react';
 import BillPreview, { useBillImages } from '../components/bill/BillPreview';
 import { ErrorBox, Loader, PageHeader } from '../components/ui';
 import { useSettings } from '../context/SettingsContext';
@@ -10,7 +9,7 @@ import { lang as appLang, t } from '../i18n';
 import { BILL_DESIGNS, billPng, buildBill, downloadBlob, shareBillImage } from '../lib/bill';
 import { addDays, monthStart, today } from '../lib/format';
 import { useApi } from '../lib/useApi';
-import { openWhatsApp, openWhatsAppLater } from '../lib/whatsapp';
+import { openWhatsApp } from '../lib/whatsapp';
 
 const PERIODS = ['thisMonth', 'lastMonth', 'custom'];
 
@@ -22,18 +21,13 @@ function rangeOf(p) {
   return { from: monthStart(today()), to: today() };
 }
 
-/**
- * WhatsApp text (customer-facing, so in the bill's language). With `link` it carries the
- * "view your bill" page; otherwise it goes with the bill photo and has the pay link.
- */
-function shareText(b, lang, payUrl, link) {
+/** Text sent along with the bill image (customer-facing, so in the bill's language). */
+function shareText(b, lang, payUrl) {
   const amt = `₹${Math.max(b.closing, 0)}`;
-  const extra = link
-    ? (lang === 'en' ? `\n📄 View / download your bill:\n${link}` : `\n📄 बिल पाहा / डाउनलोड करा:\n${link}`)
-    : (payUrl && b.closing > 0 ? `\n💳 ${payUrl}?a=${b.closing}` : '');
+  const pay = payUrl && b.closing > 0 ? `\n💳 ${payUrl}?a=${b.closing}` : '';
   return lang === 'en'
-    ? `🙏 Hello ${b.customer.name},\nHere is your bill ${b.no}.\nTotal due: *${amt}*${extra}\n\n${b.shop.nameEn || b.shop.name}`
-    : `🙏 नमस्कार ${b.customer.name},\nआपले बिल ${b.no} पाठवत आहोत.\nएकूण बाकी: *${amt}*${extra}\n\n💧 ${b.shop.name}`;
+    ? `🙏 Hello ${b.customer.name},\nHere is your bill ${b.no}.\nTotal due: *${amt}*${pay}\n\n${b.shop.nameEn || b.shop.name}`
+    : `🙏 नमस्कार ${b.customer.name},\nआपले बिल ${b.no} पाठवत आहोत.\nएकूण बाकी: *${amt}*${pay}\n\n💧 ${b.shop.name}`;
 }
 
 export default function CustomerBill() {
@@ -64,25 +58,7 @@ export default function CustomerBill() {
 
   const fileName = bill ? `${bill.no}-${bill.customer.name.replace(/[^\p{L}\p{N}]+/gu, '-')}.png` : 'bill.png';
 
-  // Straight to this customer's chat: the message with a link to their bill (WhatsApp lets
-  // an app choose the person only for text, never for a file).
-  const sendLink = async () => {
-    if (!bill) return;
-    setBusy(true);
-    try {
-      await openWhatsAppLater(bill.customer.mobile, async () => {
-        const { data: res } = await api.post(`/customers/${id}/bill-link`, { ...range, lang, design });
-        return shareText(bill, lang, settings?.pay_url, `${window.location.origin}/b/${res.token}`);
-      });
-    } catch {
-      toast(t('bill.linkFail'), 'error');
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  // The bill picture through the phone's share menu (the person is picked inside WhatsApp).
-  const sharePhoto = async () => {
+  const send = async () => {
     if (!sheet.current || !bill) return;
     setBusy(true);
     try {
@@ -169,11 +145,8 @@ export default function CustomerBill() {
       {shown && (
         <>
           <div className="no-print grid grid-cols-2 gap-2 sm:grid-cols-3">
-            <button type="button" className="btn-wa col-span-2 py-3 text-base sm:col-span-3" disabled={busy} onClick={sendLink}>
-              <MessageCircle size={18} /> {busy ? t('bill.making') : t('bill.sendTo', { name: bill.customer.name })}
-            </button>
-            <button type="button" className="btn-light col-span-2 sm:col-span-1" disabled={busy} onClick={sharePhoto}>
-              <Share2 size={17} /> {t('bill.sharePhoto')}
+            <button type="button" className="btn-wa col-span-2 py-3 text-base sm:col-span-1" disabled={busy} onClick={send}>
+              <MessageCircle size={18} /> {busy ? t('bill.making') : t('bill.send')}
             </button>
             <button type="button" className="btn-light" disabled={busy} onClick={download}>
               <Download size={17} /> {t('bill.image')}

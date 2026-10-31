@@ -205,46 +205,16 @@ export async function inlineImage(url, maxSide = 480) {
 
 /**
  * The rendered bill as a PNG Blob (2× for sharp text on phones).
- * Some phone browsers leave pictures blank when a page is turned into an image, so after
- * drawing the bill, every picture (logo, payment QR) is painted again straight onto the
- * canvas at its place — the QR is always there.
+ * Waits until every picture (logo, QR) is decoded, then draws twice and keeps the second:
+ * on phones the first drawing can leave pictures blank.
  */
 export async function billPng(node) {
-  const { toCanvas } = await import('html-to-image');
-  const imgs = [...node.querySelectorAll('img')];
-  await Promise.all(imgs.map((i) => (i.decode ? i.decode().catch(() => {}) : null)));
-  const ratio = 2;
+  const { toBlob } = await import('html-to-image');
+  await Promise.all([...node.querySelectorAll('img')].map((i) => (i.decode ? i.decode().catch(() => {}) : null)));
   // The bill uses the phone's own fonts, so nothing needs embedding (faster, works offline).
-  const canvas = await toCanvas(node, { pixelRatio: ratio, backgroundColor: '#ffffff', skipFonts: true });
-
-  // On screen the bill is scaled down to fit; work in its full-size coordinates.
-  const box = node.getBoundingClientRect();
-  const k = node.offsetWidth / box.width;
-  const ctx = canvas.getContext('2d');
-  for (const img of imgs) {
-    if (!img.complete || !img.naturalWidth) continue;
-    const r = img.getBoundingClientRect();
-    let x = (r.left - box.left) * k;
-    let y = (r.top - box.top) * k;
-    let w = r.width * k;
-    let h = r.height * k;
-    // object-fit: contain (logos): keep the picture's shape inside its box.
-    if (getComputedStyle(img).objectFit === 'contain') {
-      const f = Math.min(w / img.naturalWidth, h / img.naturalHeight);
-      const cw = img.naturalWidth * f;
-      const ch = img.naturalHeight * f;
-      x += (w - cw) / 2;
-      y += (h - ch) / 2;
-      w = cw;
-      h = ch;
-    }
-    try {
-      ctx.drawImage(img, x * ratio, y * ratio, w * ratio, h * ratio);
-    } catch {
-      /* a picture that can't be drawn is left as html-to-image drew it */
-    }
-  }
-  return new Promise((resolve, reject) => canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('png'))), 'image/png'));
+  const opts = { pixelRatio: 2, backgroundColor: '#ffffff', skipFonts: true };
+  await toBlob(node, opts).catch(() => null);
+  return toBlob(node, opts);
 }
 
 export function downloadBlob(blob, filename) {
