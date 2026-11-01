@@ -85,5 +85,11 @@
   "bill.tapPreview": "नमूना देखने के लिए दबाएं",
   "bill.designSaved": "बिल डिज़ाइन सेव हो गया.",
   "bill.pdf": "PDF डाउनलोड",
-  "bill.printOnly": "प्रिंट"
+  "bill.printOnly": "प्रिंट",
+  "cust.openingJars": "पुराने जार",
+  "cust.openingBottles": "पुरानी बोतलें",
+  "cust.openingJarsHint": "ऐप इस्तेमाल करने से पहले से ग्राहक के पास जो जार हैं. ये दुकान के उपलब्ध जार में से कम होंगे. न हों तो खाली छोड़ें.",
+  "cust.openingJarsEditHint": "ऐप से पहले से ग्राहक के पास जो जार हैं. बदलने पर ग्राहक के जार, दुकान का स्टॉक और खाता उसी हिसाब से बदलेंगे.",
+  "ledger.oldJars": "पुराने जार:",
+  "ledger.oldBottles": "पुरानी बोतलें:"
 }
