@@ -25,6 +25,7 @@ import PendingReport from './pages/reports/PendingReport';
 import JarStatusReport from './pages/reports/JarStatusReport';
 import ProfitReport from './pages/reports/ProfitReport';
 import Broadcast from './pages/Broadcast';
+import CustomerBill from './pages/CustomerBill';
 import AdminLayout from './pages/admin/AdminLayout';
 import AdminDashboard from './pages/admin/Dashboard';
 import Companies from './pages/admin/Companies';
@@ -77,6 +78,7 @@ export default function App() {
           <Route path="customers/:id" element={<CustomerDetail />} />
           <Route path="customers/:id/edit" element={<CustomerForm />} />
           <Route path="customers/:id/ledger" element={<Ledger />} />
+          <Route path="customers/:id/bill" element={<CustomerBill />} />
           <Route path="jars" element={<Jars />} />
           <Route path="entry" element={<DailyEntry />} />
           <Route path="payments" element={<Payments />} />

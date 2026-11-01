@@ -27,6 +27,7 @@ class SettingsRequest extends ApiRequest
             'jar_deposit' => ['sometimes', 'numeric', 'min:0', 'max:100000'],
             'bottle_deposit' => ['sometimes', 'numeric', 'min:0', 'max:100000'],
             'jar_tracking' => ['sometimes', 'boolean'],
+            'bill_design' => ['sometimes', 'in:classic,modern,simple'],
             'total_jars' => ['sometimes', 'integer', 'min:0', 'max:100000'],
             'total_bottles' => ['sometimes', 'integer', 'min:0', 'max:100000'],
             'expense_types' => ['sometimes', 'nullable', 'string', 'max:500'],

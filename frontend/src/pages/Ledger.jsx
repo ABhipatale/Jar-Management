@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { CalendarRange, Clock, Droplets, MessageCircle, Receipt, X } from 'lucide-react';
+import { Link, useParams } from 'react-router-dom';
+import { CalendarRange, Clock, Droplets, FileText, MessageCircle, Receipt, X } from 'lucide-react';
 import ExportBar from '../components/ExportBar';
 import EditEntryModal from '../components/EditEntryModal';
 import LedgerTable from '../components/LedgerTable';
@@ -98,9 +98,14 @@ export default function Ledger() {
       <ExportBar
         onExcel={excel}
         extra={
-          <button className="btn-wa btn-sm shrink-0" onClick={() => openWhatsApp(c.mobile, ledgerText(settings, c, rows))}>
-            <MessageCircle size={16} /> {t('ledger.sendWhatsApp')}
-          </button>
+          <>
+            <button className="btn-wa btn-sm shrink-0" onClick={() => openWhatsApp(c.mobile, ledgerText(settings, c, rows))}>
+              <MessageCircle size={16} /> {t('ledger.sendWhatsApp')}
+            </button>
+            <Link to={`/customers/${c.id}/bill${from ? `?from=${from}${to ? `&to=${to}` : ''}` : ''}`} className="btn-light btn-sm shrink-0">
+              <FileText size={16} /> {t('bill.title')}
+            </Link>
+          </>
         }
       />
 

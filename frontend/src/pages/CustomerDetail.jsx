@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
-  Bell, BookOpen, CalendarDays, ChevronRight, Droplets, Landmark, MapPin, MessageCircle, Pencil, Phone, Plus, RotateCcw, Trash2, Wallet,
+  Bell, BookOpen, CalendarDays, ChevronRight, Droplets, FileText, Landmark, MapPin, MessageCircle, Pencil, Phone, Plus, RotateCcw, Trash2, Wallet,
 } from 'lucide-react';
 import api, { errorMessage } from '../api/client';
 import EditEntryModal from '../components/EditEntryModal';
@@ -46,6 +46,7 @@ export default function CustomerDetail() {
     { label: t('common.returnJar'), icon: RotateCcw, to: `/entry?type=returned&customer=${c.id}`, cls: 'card card-hover text-ink', iconCls: 'bg-sky-50 text-sky-700' },
     { label: t('common.receivePayment'), icon: Wallet, to: `/payments/new?customer=${c.id}`, cls: 'card card-hover text-ink', iconCls: 'bg-emerald-50 text-emerald-700' },
     { label: t('cust.viewLedger'), icon: BookOpen, to: `/customers/${c.id}/ledger`, cls: 'card card-hover text-ink', iconCls: 'bg-slate-100 text-slate-700' },
+    { label: t('bill.title'), icon: FileText, to: `/customers/${c.id}/bill`, cls: 'card card-hover col-span-2 text-ink', iconCls: 'bg-violet-50 text-violet-700' },
   ];
 
   const owes = c.pending_amount > 0;
