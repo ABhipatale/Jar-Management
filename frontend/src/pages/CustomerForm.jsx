@@ -50,7 +50,7 @@ export default function CustomerForm() {
   const { toast, confirm } = useUi();
   const [params] = useSearchParams();
   // "Add as new customer" from a contact picked elsewhere pre-fills name + mobile.
-  const [form, setForm] = useState(() => ({ name: params.get('name') || '', mobile: params.get('mobile') || '', address: '', status: 'active', opening_balance: '' }));
+  const [form, setForm] = useState(() => ({ name: params.get('name') || '', mobile: params.get('mobile') || '', address: '', status: 'active', opening_balance: '', opening_jars: '', opening_bottles: '' }));
   // What the customer takes and their special rates (only when bottles / deposit are switched on).
   const { settings } = useSettings();
   const feat = features(settings);
@@ -67,7 +67,11 @@ export default function CustomerForm() {
       .get(`/customers/${id}`)
       .then(({ data }) => {
         const c = data.data;
-        setForm({ name: c.name, mobile: c.mobile, address: c.address || '', status: c.status, opening_balance: c.opening_balance ? String(c.opening_balance) : '' });
+        setForm({ name: c.name, mobile: c.mobile, address: c.address || '', status: c.status,
+          opening_balance: c.opening_balance ? String(c.opening_balance) : '',
+          opening_jars: c.opening_jars ? String(c.opening_jars) : '',
+          opening_bottles: c.opening_bottles ? String(c.opening_bottles) : '',
+        });
         setItems({
           takes_jar: c.takes_jar !== false,
           takes_bottle: Boolean(c.takes_bottle),
@@ -122,7 +126,14 @@ export default function CustomerForm() {
         setDup(other);
         return;
       }
-      const body = { ...form, opening_balance: num(form.opening_balance), ...extra };
+      const body = {
+        ...form,
+        opening_balance: num(form.opening_balance),
+        opening_jars: parseInt(form.opening_jars, 10) || 0,
+        ...extra,
+      };
+      if (feat.bottles) body.opening_bottles = parseInt(form.opening_bottles, 10) || 0;
+      else delete body.opening_bottles;
       const { data } = editing ? await api.put(`/customers/${id}`, body) : await api.post('/customers', body);
       toast(data.message || t('cust.saved'));
       navigate(returnTo(params.get('return'), data.data.id) || `/customers/${data.data.id}`, { replace: true });
@@ -196,6 +207,33 @@ export default function CustomerForm() {
             />
           </WithIcon>
         </Field>
+        <div className={`grid gap-3 ${feat.bottles ? 'grid-cols-2' : ''}`}>
+          <Field label={t('cust.openingJars')}>
+            <WithIcon icon={Droplets}>
+              <input
+                className="input pl-10 tabular-nums"
+                inputMode="numeric"
+                value={form.opening_jars}
+                placeholder="0"
+                onChange={(e) => setForm({ ...form, opening_jars: e.target.value.replace(/\D/g, '') })}
+              />
+            </WithIcon>
+          </Field>
+          {feat.bottles && (
+            <Field label={t('cust.openingBottles')}>
+              <WithIcon icon={Droplets}>
+                <input
+                  className="input pl-10 tabular-nums"
+                  inputMode="numeric"
+                  value={form.opening_bottles}
+                  placeholder="0"
+                  onChange={(e) => setForm({ ...form, opening_bottles: e.target.value.replace(/\D/g, '') })}
+                />
+              </WithIcon>
+            </Field>
+          )}
+        </div>
+        <p className="-mt-2 text-xs leading-relaxed text-muted">{editing ? t('cust.openingJarsEditHint') : t('cust.openingJarsHint')}</p>
         {editing && (
           <Field group label={t('cust.status')} hint={t('cust.statusHint')}>
             <Segmented

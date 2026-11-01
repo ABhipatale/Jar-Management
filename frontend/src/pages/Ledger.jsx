@@ -115,10 +115,24 @@ export default function Ledger() {
             <h2 className="font-semibold text-ink">{t('ledger.entries')}</h2>
             <p className="text-xs text-muted">{period}</p>
           </div>
-          {!from && data?.customer?.opening_balance > 0 && (
-            <span className="rounded-md bg-amber-50 px-2 py-1 text-xs text-amber-900 ring-1 ring-amber-200">
-              {t('ledger.oldUdhari')} <b className="font-semibold tabular-nums">{money(data.customer.opening_balance)}</b>
-            </span>
+          {!from && (data?.customer?.opening_balance > 0 || data?.customer?.opening_jars > 0 || data?.customer?.opening_bottles > 0) && (
+            <div className="flex flex-wrap gap-2 text-xs">
+              {data.customer.opening_balance > 0 && (
+                <span className="rounded-md bg-amber-50 px-2 py-1 text-amber-900 ring-1 ring-amber-200">
+                  {t('ledger.oldUdhari')} <b className="font-semibold tabular-nums">{money(data.customer.opening_balance)}</b>
+                </span>
+              )}
+              {data.customer.opening_jars > 0 && (
+                <span className="rounded-md bg-sky-50 px-2 py-1 text-sky-900 ring-1 ring-sky-200">
+                  {t('ledger.oldJars')} <b className="font-semibold tabular-nums">{data.customer.opening_jars}</b>
+                </span>
+              )}
+              {data.customer.opening_bottles > 0 && (
+                <span className="rounded-md bg-sky-50 px-2 py-1 text-sky-900 ring-1 ring-sky-200">
+                  {t('ledger.oldBottles')} <b className="font-semibold tabular-nums">{data.customer.opening_bottles}</b>
+                </span>
+              )}
+            </div>
           )}
           {from && (
             <div className="flex flex-wrap gap-2 text-xs">

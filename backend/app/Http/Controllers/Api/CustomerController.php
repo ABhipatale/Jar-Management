@@ -7,9 +7,12 @@ use App\Http\Requests\CustomerRequest;
 use App\Http\Resources\CustomerResource;
 use App\Models\Customer;
 use App\Models\CustomerLedger;
+use App\Models\Jar;
 use App\Services\BalanceService;
+use App\Services\JarService;
 use App\Services\LedgerService;
 use App\Services\ReportService;
+use App\Support\Products;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -36,11 +39,16 @@ class CustomerController extends Controller
         return CustomerResource::collection($q->limit(1000)->get());
     }
 
-    public function store(CustomerRequest $request)
+    public function store(CustomerRequest $request, JarService $jars)
     {
-        $data = $request->validated();
+        $data = $this->oldJars($request->validated());
         $data['opening_balance'] = (float) ($data['opening_balance'] ?? 0);
-        $customer = Customer::create($data + ['status' => 'active']);
+        $data += ['opening_jars' => 0, 'opening_bottles' => 0];
+        $customer = DB::transaction(function () use ($data, $jars) {
+            $this->checkOldJars($data, null, $jars);
+
+            return Customer::create($data + ['status' => 'active']);
+        });
 
         return (new CustomerResource($this->row($customer->id)))
             ->additional(['message' => __('ग्राहक यशस्वीरित्या जोडला.')])
@@ -52,25 +60,75 @@ class CustomerController extends Controller
         return new CustomerResource($this->row($customer->id));
     }
 
-    public function update(CustomerRequest $request, Customer $customer, LedgerService $ledger)
+    public function update(CustomerRequest $request, Customer $customer, LedgerService $ledger, JarService $jars)
     {
-        $data = $request->validated();
+        $data = $this->oldJars($request->validated());
         if (array_key_exists('opening_balance', $data)) {
             $data['opening_balance'] = (float) ($data['opening_balance'] ?? 0);
         }
         // A special price may be cleared (null = default rate); other empty fields keep their value.
         $clearable = array_intersect_key($data, array_flip(['jar_rate', 'bottle_rate']));
-        $oldOpening = (float) $customer->opening_balance;
-        DB::transaction(function () use ($customer, $data, $clearable, $request, $oldOpening, $ledger) {
+        $before = $customer->only('opening_balance', 'opening_jars', 'opening_bottles');
+        DB::transaction(function () use ($customer, $data, $clearable, $request, $before, $ledger, $jars) {
+            $this->checkOldJars($data, $customer, $jars);
             $customer->update(array_filter($data, fn ($v) => $v !== null) + $clearable + ['address' => $request->input('address')]);
-            // The statement's running balance starts from the old udhari, so rebuild it when that changes.
-            if (abs((float) $customer->opening_balance - $oldOpening) > 0.004) {
+            // The statement starts from the old udhari / old jars, so rebuild it when they change.
+            if (abs((float) $customer->opening_balance - (float) $before['opening_balance']) > 0.004
+                || (int) $customer->opening_jars !== (int) $before['opening_jars']
+                || (int) $customer->opening_bottles !== (int) $before['opening_bottles']) {
                 $ledger->rebuild($customer->id);
             }
         });
 
         return (new CustomerResource($this->row($customer->id)))
             ->additional(['message' => __('ग्राहक यशस्वीरित्या अपडेट झाला.')]);
+    }
+
+    /** Old jars: empty means 0; old bottles only when the company has bottles switched on. */
+    private function oldJars(array $data): array
+    {
+        foreach (['opening_jars', 'opening_bottles'] as $k) {
+            if (array_key_exists($k, $data)) {
+                $data[$k] = (int) ($data[$k] ?? 0);
+            }
+        }
+        if (! in_array(Products::BOTTLE, Products::enabled(), true)) {
+            unset($data['opening_bottles']);
+        }
+
+        return $data;
+    }
+
+    /**
+     * Old jars are the shop's own jars, so an increase must fit in the available stock (like
+     * giving jars), and a decrease can't take the customer below zero (jars already returned).
+     */
+    private function checkOldJars(array $data, ?Customer $customer, JarService $jars): void
+    {
+        Jar::query()->lockForUpdate()->pluck('id'); // same lock as jar entries: no double-booking stock
+        foreach ([Products::JAR => 'opening_jars', Products::BOTTLE => 'opening_bottles'] as $product => $key) {
+            if (! array_key_exists($key, $data)) {
+                continue;
+            }
+            $change = (int) $data[$key] - (int) ($customer?->{$key} ?? 0);
+            if ($change > 0) {
+                $available = $jars->summary($product)['available_jars'];
+                if ($change > $available) {
+                    throw ValidationException::withMessages([$key => Products::msg($product,
+                        'दुकानात फक्त :n जार उपलब्ध आहेत. जुने जार दुकानाच्या एकूण जारमधूनच येतात – आधी सेटिंग्जमध्ये एकूण जार वाढवा.',
+                        'दुकानात फक्त :n बाटल्या उपलब्ध आहेत. जुन्या बाटल्या दुकानाच्या एकूण बाटल्यांमधूनच येतात – आधी सेटिंग्जमध्ये एकूण बाटल्या वाढवा.',
+                        ['n' => max(0, $available)])]);
+                }
+            } elseif ($change < 0 && $customer) {
+                $held = $this->balances->forCustomer($customer->id)['held'][$product];
+                if ($held + $change < 0) {
+                    throw ValidationException::withMessages([$key => Products::msg($product,
+                        'ग्राहकाकडे सध्या :n जार आहेत. जुने जार इतके कमी करता येणार नाहीत.',
+                        'ग्राहकाकडे सध्या :n बाटल्या आहेत. जुन्या बाटल्या इतक्या कमी करता येणार नाहीत.',
+                        ['n' => $held])]);
+                }
+            }
+        }
     }
 
     /** Soft delete. Blocked while the customer still holds jars/bottles, owes money or has a deposit. */
@@ -107,7 +165,7 @@ class CustomerController extends Controller
         ]);
 
         $q = CustomerLedger::where('customer_id', $customer->id)->orderBy('id');
-        $opening = ['balance' => (float) $customer->opening_balance, 'jar_balance' => 0, 'bottle_balance' => 0, 'deposit_balance' => 0.0];
+        $opening = ['balance' => (float) $customer->opening_balance, 'jar_balance' => (int) $customer->opening_jars, 'bottle_balance' => (int) $customer->opening_bottles, 'deposit_balance' => 0.0];
 
         if ($from = $request->input('from')) {
             $prev = CustomerLedger::where('customer_id', $customer->id)->where('entry_date', '<', $from)->orderByDesc('id')->first();

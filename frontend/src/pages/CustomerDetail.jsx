@@ -133,9 +133,11 @@ export default function CustomerDetail() {
                 {feat.deposit && c.no_deposit && <span className="chip !cursor-default">{t('prod.noDepositCustomer')}</span>}
               </div>
             )}
-            {c.opening_balance > 0 && (
-              <p className="text-xs text-muted">
-                {t('ledger.oldUdhari')} <b className="font-semibold tabular-nums text-amber-800">{money(c.opening_balance)}</b>
+            {(c.opening_balance > 0 || c.opening_jars > 0 || c.opening_bottles > 0) && (
+              <p className="flex flex-wrap gap-x-3 text-xs text-muted">
+                {c.opening_balance > 0 && <span>{t('ledger.oldUdhari')} <b className="font-semibold tabular-nums text-amber-800">{money(c.opening_balance)}</b></span>}
+                {c.opening_jars > 0 && <span>{t('ledger.oldJars')} <b className="font-semibold tabular-nums text-ink">{c.opening_jars}</b></span>}
+                {c.opening_bottles > 0 && <span>{t('ledger.oldBottles')} <b className="font-semibold tabular-nums text-ink">{c.opening_bottles}</b></span>}
               </p>
             )}
 
