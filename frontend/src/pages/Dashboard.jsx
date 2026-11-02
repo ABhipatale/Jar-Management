@@ -12,6 +12,8 @@ import { useAuth } from '../context/AuthContext';
 import { t } from '../i18n';
 import { fmtDate, fmtLongDate, money, today } from '../lib/format';
 import { useApi } from '../lib/useApi';
+import { features } from '../lib/products';
+import { DeliveryToday } from './Delivery';
 
 const QUICK = [
   { to: '/entry?type=given', label: t('common.giveJar'), icon: Plus, primary: true },
@@ -97,6 +99,8 @@ export default function Dashboard() {
           </Link>
         ))}
       </div>
+
+      {features(settings).routes && <DeliveryToday />}
 
       {/* Needs attention */}
       {data && (

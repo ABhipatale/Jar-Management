@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import api, { errorMessage } from '../api/client';
 import { AlertTriangle, ArrowRight, Droplets, IndianRupee, MapPin, Phone, Save, User, UserPlus, Users } from 'lucide-react';
 import ContactButton from '../components/ContactButton';
+import DeliveryScheduleFields, { ROUTE_DEFAULTS, routeFromCustomer, routeProblem, routeToApi } from '../components/DeliveryScheduleFields';
 import { Field, Loader, PageHeader, Segmented } from '../components/ui';
 import { useSettings } from '../context/SettingsContext';
 import { useUi } from '../context/UiContext';
@@ -55,6 +56,8 @@ export default function CustomerForm() {
   const { settings } = useSettings();
   const feat = features(settings);
   const [items, setItems] = useState({ takes_jar: true, takes_bottle: false, jar_rate: '', bottle_rate: '', no_deposit: false });
+  // Daily delivery route (only when routes are switched on for the company).
+  const [route, setRoute] = useState(ROUTE_DEFAULTS);
   const [dup, setDup] = useState(null); // existing customer with the same mobile
   const [mismatch, setMismatch] = useState(false); // picked contact doesn't have the typed number
   const [loading, setLoading] = useState(editing);
@@ -79,6 +82,7 @@ export default function CustomerForm() {
           bottle_rate: c.bottle_rate ?? '',
           no_deposit: Boolean(c.no_deposit),
         });
+        setRoute(routeFromCustomer(c));
       })
       .catch((e) => setError(errorMessage(e)))
       .finally(() => setLoading(false));
@@ -112,10 +116,12 @@ export default function CustomerForm() {
     const digits = normalizeMobile(form.mobile);
     if (!digits) return setError(t('cust.enterMobile'));
     if (feat.bottles && !items.takes_jar && !items.takes_bottle) return setError(t('prod.pickOne'));
+    if (feat.routes && routeProblem(route)) return setError(routeProblem(route));
     const extra = {
       ...(feat.bottles && { takes_jar: items.takes_jar, takes_bottle: items.takes_bottle, bottle_rate: items.bottle_rate === '' ? null : num(items.bottle_rate) }),
       ...((feat.bottles || feat.deposit) && { jar_rate: items.jar_rate === '' ? null : num(items.jar_rate) }),
       ...(feat.deposit && { no_deposit: items.no_deposit }),
+      ...(feat.routes && routeToApi(route)),
     };
     setBusy(true);
     setError('');
@@ -301,6 +307,8 @@ export default function CustomerForm() {
           )}
         </section>
       )}
+
+      {feat.routes && <DeliveryScheduleFields value={route} onChange={setRoute} />}
 
       {error && (
         <div className="flex animate-fade-in items-start gap-2.5 rounded-lg bg-red-50 p-3 text-sm font-medium text-red-700 ring-1 ring-red-200" role="alert">

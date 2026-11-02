@@ -23,12 +23,13 @@ class Company extends Model
         'assets_version' => 0,
         'bottles_enabled' => false,
         'deposit_enabled' => false,
+        'routes_enabled' => false,
     ];
 
     protected $fillable = [
         'name', 'name_mr', 'short_name', 'slug', 'locale',
         'status', 'plan', 'plan_id', 'expires_at', 'assets_version',
-        'bottles_enabled', 'deposit_enabled',
+        'bottles_enabled', 'deposit_enabled', 'routes_enabled',
     ];
 
     protected function casts(): array
@@ -38,6 +39,7 @@ class Company extends Model
             'assets_version' => 'integer',
             'bottles_enabled' => 'boolean',
             'deposit_enabled' => 'boolean',
+            'routes_enabled' => 'boolean',
         ];
     }
 

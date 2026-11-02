@@ -67,7 +67,7 @@ class CustomerController extends Controller
             $data['opening_balance'] = (float) ($data['opening_balance'] ?? 0);
         }
         // A special price may be cleared (null = default rate); other empty fields keep their value.
-        $clearable = array_intersect_key($data, array_flip(['jar_rate', 'bottle_rate']));
+        $clearable = array_intersect_key($data, array_flip(['jar_rate', 'bottle_rate', 'delivery_note', 'schedule_days']));
         $before = $customer->only('opening_balance', 'opening_jars', 'opening_bottles');
         DB::transaction(function () use ($customer, $data, $clearable, $request, $before, $ledger, $jars) {
             $this->checkOldJars($data, $customer, $jars);

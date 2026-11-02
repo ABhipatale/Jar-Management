@@ -26,6 +26,8 @@ import JarStatusReport from './pages/reports/JarStatusReport';
 import ProfitReport from './pages/reports/ProfitReport';
 import Broadcast from './pages/Broadcast';
 import CustomerBill from './pages/CustomerBill';
+import Delivery from './pages/Delivery';
+import DeliveryRoute from './pages/DeliveryRoute';
 import AdminLayout from './pages/admin/AdminLayout';
 import AdminDashboard from './pages/admin/Dashboard';
 import Companies from './pages/admin/Companies';
@@ -89,6 +91,8 @@ export default function App() {
           <Route path="billing" element={<Billing />} />
           <Route path="notifications" element={<Notifications />} />
           <Route path="bookings" element={<Bookings />} />
+          <Route path="delivery" element={<Delivery />} />
+          <Route path="delivery/:session" element={<DeliveryRoute />} />
           <Route path="reports" element={<Reports />} />
           <Route path="reports/daily" element={<PeriodReport kind="daily" />} />
           <Route path="reports/weekly" element={<PeriodReport kind="weekly" />} />
