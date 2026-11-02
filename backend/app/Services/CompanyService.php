@@ -33,6 +33,7 @@ class CompanyService
                 'status' => Company::ACTIVE,
                 'bottles_enabled' => (bool) ($data['bottles_enabled'] ?? false),
                 'deposit_enabled' => (bool) ($data['deposit_enabled'] ?? false),
+                'routes_enabled' => (bool) ($data['routes_enabled'] ?? false),
             ]);
 
             User::create([

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Customer;
 use App\Models\Jar;
 use App\Models\JarTransaction;
+use App\Models\RouteStop;
 use App\Support\Products;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
@@ -125,6 +126,9 @@ class JarTransactionService
                     }
                 }
 
+                if (! empty($data['route_stop_id'])) {
+                    RouteStop::markDone((int) $data['route_stop_id'], $main);
+                }
                 $this->ledger->rebuild($main->customer_id);
                 $this->reminders->syncCustomer($main->customer_id);
 
@@ -394,6 +398,7 @@ class JarTransactionService
             $tx->delete();
             $this->reminders->removeFor($tx);
             $this->bookings->reopenFor($tx);
+            RouteStop::reopenFor($tx);
             $this->ledger->rebuild($tx->customer_id);
             $this->reminders->syncCustomer($tx->customer_id);
         });

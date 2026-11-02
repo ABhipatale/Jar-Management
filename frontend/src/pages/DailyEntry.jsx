@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
+  Truck,
+  ChevronRight,
   FileText,
   AlertTriangle,
   ArrowDownLeft,
@@ -82,6 +84,10 @@ export default function DailyEntry() {
   const [qty, setQty] = useState(() => byProduct(params.get('qty') || '1', params.get('bqty') || '0'));
   // Delivery of an advance booking (closes the booking when saved).
   const [bookingId, setBookingId] = useState(params.get('booking') || null);
+  // Delivering a stop of today's route (from Daily delivery): saved with the entry, then
+  // "Next customer" goes back to the route. Only in-app paths are accepted for "back".
+  const routeStop = params.get('stop');
+  const routeBack = routeStop && /^\/delivery\/(morning|evening)$/.test(params.get('back') || '') ? params.get('back') : null;
   const [rates, setRates] = useState(() => byProduct(String(settings.default_rate || ''), String(settings.bottle_rate || '')));
   const [payType, setPayType] = useState('cash');
   const [paidInput, setPaidInput] = useState('');
@@ -238,6 +244,7 @@ export default function DailyEntry() {
           })),
           ...billing,
         };
+    if (routeStop) body.route_stop_id = Number(routeStop);
     try {
       const label = legacy
         ? r > 0 ? t('entry.outboxGiveReturn', { q, r, name: customer?.name }) : t(isGive ? 'entry.outboxGive' : 'entry.outboxReturn', { q, name: customer?.name })
@@ -274,6 +281,8 @@ export default function DailyEntry() {
   };
 
   const newEntry = (keepCustomer) => {
+    // Leaving route mode: a new entry is an ordinary one again.
+    if (routeStop) navigate(keepCustomer && customerId ? `/entry?customer=${customerId}` : '/entry', { replace: true });
     setResult(null);
     const theirs = customerProducts(keepCustomer ? customer : null, settings);
     setQty(theirs.length === 1 ? { ...byProduct('0', '0'), [theirs[0]]: '1' } : byProduct('1', '0'));
@@ -297,7 +306,7 @@ export default function DailyEntry() {
     }
   };
 
-  if (result) return <SavedCard result={result} settings={settings} onNew={newEntry} />;
+  if (result) return <SavedCard result={result} settings={settings} onNew={newEntry} routeBack={result.queued ? null : routeBack} />;
 
   const anyShort = isGive && items.some((p) => stockFor(p) !== null && nOf(p) > stockFor(p));
   const anyAfterNegative = items.some((p) => heldAfter(p) < 0);
@@ -308,6 +317,11 @@ export default function DailyEntry() {
   return (
     <form onSubmit={save} className="mx-auto max-w-2xl space-y-5">
       <PageHeader title={t('entry.title')} />
+      {routeBack && (
+        <Link to={routeBack} className="-mt-2 flex items-center gap-2 rounded-xl bg-brand-50 px-3 py-2.5 text-sm font-semibold text-brand-700 ring-1 ring-brand-500/30">
+          <Truck size={17} /> {t('route.backToRoute')}
+        </Link>
+      )}
 
       {bookingId && isGive && (
         <Callout tone="violet" icon={CalendarClock}>
@@ -685,7 +699,8 @@ function Section({ title, icon, children }) {
   );
 }
 
-function SavedCard({ result, settings, onNew }) {
+function SavedCard({ result, settings, onNew, routeBack }) {
+  const navigate = useNavigate();
   const isGive = result.transaction_type === 'given';
   const feat = features(settings);
   // Jar-only entries (and old app data) have no lines: one jar line.
@@ -772,6 +787,11 @@ function SavedCard({ result, settings, onNew }) {
       {!result.queued && (
         <button className="btn-wa w-full py-3.5 text-base" onClick={sendWa}>
           <MessageCircle size={20} /> {t('entry.sendWaLbl')}
+        </button>
+      )}
+      {routeBack && (
+        <button type="button" className="btn w-full bg-brand-600 py-4 text-lg text-white shadow-pop hover:bg-brand-700" onClick={() => navigate(routeBack)}>
+          <Truck size={21} /> {t('route.nextCustomer')} <ChevronRight size={20} />
         </button>
       )}
       <div className="grid grid-cols-2 gap-3">

@@ -297,6 +297,7 @@ class CompanyController extends Controller
             // Optional features of the business app (off for every company until switched on here).
             'bottles_enabled' => ['sometimes', 'boolean'],
             'deposit_enabled' => ['sometimes', 'boolean'],
+            'routes_enabled' => ['sometimes', 'boolean'],
         ];
     }
 
@@ -320,6 +321,7 @@ class CompanyController extends Controller
             'created_at' => $c->created_at?->toDateString(),
             'bottles_enabled' => (bool) $c->bottles_enabled,
             'deposit_enabled' => (bool) $c->deposit_enabled,
+            'routes_enabled' => (bool) $c->routes_enabled,
         ] + $extra;
     }
 

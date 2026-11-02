@@ -30,6 +30,15 @@ class CustomerRequest extends ApiRequest
             // Old jars / bottles the customer already has (checked against the shop's stock).
             'opening_jars' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:100000'],
             'opening_bottles' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:100000'],
+            // Daily delivery route (only shown when the company has routes switched on).
+            'route_morning' => ['sometimes', 'boolean'],
+            'route_evening' => ['sometimes', 'boolean'],
+            'morning_qty' => ['sometimes', 'integer', 'min:1', 'max:1000'],
+            'evening_qty' => ['sometimes', 'integer', 'min:1', 'max:1000'],
+            'schedule_type' => ['sometimes', 'in:daily,every,weekdays,booked'],
+            'schedule_every' => ['sometimes', 'integer', 'min:2', 'max:60'],
+            'schedule_days' => ['sometimes', 'nullable', 'string', 'regex:/^[1-7](,[1-7]){0,6}$/', 'required_if:schedule_type,weekdays'],
+            'delivery_note' => ['sometimes', 'nullable', 'string', 'max:255'],
         ];
     }
 
@@ -45,6 +54,9 @@ class CustomerRequest extends ApiRequest
             'bottle_rate.min' => __('दर उणे असू शकत नाही.'),
             'opening_balance.min' => __('जुनी उधारी उणे असू शकत नाही.'),
             'opening_jars.min' => __('जुने जार उणे असू शकत नाहीत.'),
+            'schedule_days.required_if' => __('किमान एक वार निवडा.'),
+            'morning_qty.min' => __('किमान 1 जार टाका.'),
+            'evening_qty.min' => __('किमान 1 जार टाका.'),
             'opening_bottles.min' => __('जुने जार उणे असू शकत नाहीत.'),
         ];
     }

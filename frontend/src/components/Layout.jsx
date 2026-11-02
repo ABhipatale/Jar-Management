@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   AlertTriangle, BarChart3, Bell, CalendarClock, CreditCard, ChevronsLeft, ChevronsRight, CloudOff, Droplets, Home, LayoutDashboard, ListChecks,
-  LogOut, Megaphone, Menu, MessageCircle, Monitor, Moon, Plus, PlusCircle, Receipt, Search, Settings as SettingsIcon, Sun, Users, Wallet, X,
+  LogOut, Megaphone, Menu, Truck, MessageCircle, Monitor, Moon, Plus, PlusCircle, Receipt, Search, Settings as SettingsIcon, Sun, Users, Wallet, X,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext';
@@ -16,6 +16,7 @@ import { messages, openWhatsAppLater } from '../lib/whatsapp';
 import { getTheme, setTheme } from '../lib/theme';
 import { useDebounced } from '../lib/useApi';
 import { DevCredit, PendingText } from './ui';
+import { features } from '../lib/products';
 import { autoPush, enablePush, pushLater } from '../lib/push';
 
 /* Phone: top bar + bottom menu + drawer. Laptop/desktop (lg+): collapsible sidebar + top bar. */
@@ -35,6 +36,7 @@ const GROUPS = [
     items: [
       { to: '/', label: t('nav.home'), icon: LayoutDashboard, end: true },
       { to: '/entry', label: t('nav.entry'), icon: PlusCircle },
+      { to: '/delivery', label: t('route.nav'), icon: Truck, feature: 'routes' },
       { to: '/customers', label: t('nav.customers'), icon: Users },
       { to: '/payments', label: t('nav.payments'), icon: Wallet },
     ],
@@ -69,6 +71,7 @@ const SB_KEY = 'rws_sidebar_collapsed';
 
 export default function Layout() {
   const { settings } = useSettings();
+  const feat = features(settings); // optional menu items (e.g. daily delivery routes)
   const { user, logout, stopImpersonating } = useAuth();
   const branding = useBranding();
   const place = [businessPlace(settings), t('common.jarMgmt')].filter(Boolean).join(' · ');
@@ -191,7 +194,7 @@ export default function Layout() {
               {g.title && !collapsed && <div className="mb-1.5 px-2.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400">{g.title}</div>}
               {g.title && collapsed && <div className="mx-auto mb-2 h-px w-6 bg-line" />}
               <div className="space-y-0.5">
-                {g.items.map((it) => (
+                {g.items.filter((it) => !it.feature || feat[it.feature]).map((it) => (
                   <SideLink key={it.to} item={it} collapsed={collapsed} badge={it.badge ? unread : 0} />
                 ))}
               </div>
@@ -361,7 +364,7 @@ export default function Layout() {
               {GROUPS.map((g, gi) => (
                 <div key={gi}>
                   {g.title && <div className="mb-1 px-2.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400">{g.title}</div>}
-                  {g.items.map((it) => (
+                  {g.items.filter((it) => !it.feature || feat[it.feature]).map((it) => (
                     <SideLink key={it.to} item={it} badge={it.badge ? unread : 0} />
                   ))}
                 </div>

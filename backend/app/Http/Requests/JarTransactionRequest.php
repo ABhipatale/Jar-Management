@@ -33,6 +33,8 @@ class JarTransactionRequest extends ApiRequest
             'reminder_days' => ['nullable', 'integer', 'in:0,1,7,15'],
             // GIVE only: this delivery fulfils an advance booking.
             'booking_id' => ['nullable', 'integer'],
+            // This entry delivers a stop on today's route (marked done in the same save).
+            'route_stop_id' => ['nullable', 'integer'],
             'payment_type' => ['nullable', 'in:cash,udhari'],
             'rate' => ['nullable', 'numeric', 'min:0', 'max:100000'],
             'paid_amount' => ['nullable', 'numeric', 'min:0', 'max:10000000'],

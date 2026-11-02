@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\JarTransactionController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\ReportController;
+use App\Http\Controllers\Api\RouteController;
 use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\PayController;
 use Illuminate\Support\Facades\Route;
@@ -90,6 +91,15 @@ Route::middleware(['auth:sanctum', 'company'])->group(function () {
         Route::get('/pending', 'pending');
         Route::get('/jar-status', 'jarStatus');
     });
+
+    // Daily delivery routes (companies with routes switched on).
+    Route::get('/routes', [RouteController::class, 'index']);
+    Route::get('/routes/{session}', [RouteController::class, 'show']);
+    Route::post('/routes/{session}/start', [RouteController::class, 'start']);
+    Route::post('/routes/{session}/stops', [RouteController::class, 'add']);
+    Route::post('/routes/{session}/order', [RouteController::class, 'order']);
+    Route::patch('/route-stops/{stop}', [RouteController::class, 'update']);
+    Route::delete('/route-stops/{stop}', [RouteController::class, 'destroy']);
 
     Route::get('/bookings', [BookingController::class, 'index']);
     Route::get('/bookings/today', [BookingController::class, 'today']);

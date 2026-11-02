@@ -36,6 +36,15 @@ class CustomerResource extends JsonResource
             // Old jars / bottles entered with the customer (already inside current_jars / current_bottles).
             'opening_jars' => (int) ($r->opening_jars ?? 0),
             'opening_bottles' => (int) ($r->opening_bottles ?? 0),
+            // Daily delivery route.
+            'route_morning' => (bool) ($r->route_morning ?? false),
+            'route_evening' => (bool) ($r->route_evening ?? false),
+            'morning_qty' => (int) ($r->morning_qty ?? 1),
+            'evening_qty' => (int) ($r->evening_qty ?? 1),
+            'schedule_type' => $r->schedule_type ?? 'daily',
+            'schedule_every' => (int) ($r->schedule_every ?? 2),
+            'schedule_days' => $r->schedule_days ?? null,
+            'delivery_note' => $r->delivery_note ?? null,
             'last_payment_date' => isset($r->last_payment_date) ? substr((string) $r->last_payment_date, 0, 10) : null,
             'created_at' => $r->created_at ? substr((string) $r->created_at, 0, 10) : null,
         ];

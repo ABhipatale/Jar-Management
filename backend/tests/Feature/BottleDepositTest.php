@@ -45,7 +45,7 @@ class BottleDepositTest extends TestCase
 
     public function test_everything_is_off_by_default_and_old_entries_are_jars(): void
     {
-        $this->getJson('/api/settings')->assertJsonPath('features', ['bottles' => false, 'deposit' => false]);
+        $this->getJson('/api/settings')->assertJsonPath('features', ['bottles' => false, 'deposit' => false, 'routes' => false]);
 
         $this->entry(['transaction_type' => 'given', 'jar_quantity' => 2, 'rate' => 30, 'deposit_amount' => 500])
             ->assertCreated()

@@ -9,7 +9,11 @@ export const BOTTLE = 'bottle';
 
 /** { bottles, deposit } — what the super admin has switched on for this company. */
 export function features(settings) {
-  return { bottles: Boolean(settings?.features?.bottles), deposit: Boolean(settings?.features?.deposit) };
+  return {
+    bottles: Boolean(settings?.features?.bottles),
+    deposit: Boolean(settings?.features?.deposit),
+    routes: Boolean(settings?.features?.routes), // daily delivery routes (morning / evening)
+  };
 }
 
 /** Products the company sells. */

@@ -291,3 +291,53 @@ input[type="date"]::-webkit-calendar-picker-indicator { opacity: 0.6; cursor: po
 
 /* Notification prompt: the bell wiggles twice */
 @keyframes bell-ring { 0%, 100% { transform: rotate(0); } 15% { transform: rotate(16deg); } 30% { transform: rotate(-14deg); } 45% { transform: rotate(10deg); } 60% { transform: rotate(-6deg); } 75% { transform: rotate(2deg); } }
+
+/* ───────────── Daily delivery: road view ─────────────
+   Moving centre line, the driven line drawing itself, stops popping in one by one, a pulse on
+   the current stop, a gently bobbing truck. All of it stops for "reduce motion" users. */
+@keyframes road-dash { to { stroke-dashoffset: -48; } }
+@keyframes road-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes road-pop { from { opacity: 0; transform: translate(var(--tx, -50%), -50%) scale(0.6); } to { opacity: 1; transform: translate(var(--tx, -50%), -50%) scale(1); } }
+@keyframes road-card { from { opacity: 0; transform: translate(0, calc(-50% + 10px)); } to { opacity: 1; transform: translate(0, -50%); } }
+@keyframes road-pulse { 0% { transform: scale(1); opacity: 0.55; } 100% { transform: scale(2.3); opacity: 0; } }
+@keyframes road-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
+@keyframes road-sway { 0%, 100% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } }
+.road-dash { animation: road-dash 1.1s linear infinite; }
+.road-draw { stroke-dasharray: 1; stroke-dashoffset: 1; animation: road-draw 1.4s cubic-bezier(0.4, 0, 0.2, 1) 0.2s forwards; }
+.road-node { animation: road-pop 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.3) both; }
+.road-card { animation: road-card 0.45s ease-out both; }
+.road-pulse { animation: road-pulse 1.6s ease-out infinite; }
+.road-bob { animation: road-bob 0.9s ease-in-out infinite; }
+.road-sway { transform-box: fill-box; transform-origin: 50% 100%; animation: road-sway 3.2s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .road-dash, .road-pulse, .road-bob, .road-sway { animation: none; }
+  .road-draw { animation: none; stroke-dashoffset: 0; }
+  .road-node, .road-card { animation: none; }
+}
+
+/* ───────────── Daily delivery: celebrations ─────────────
+   Confetti burst after a delivery, confetti rain + trophy when a route is finished. */
+@keyframes confetti-burst {
+  0% { transform: translate(0, 0) rotate(0) scale(0.4); opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: translate(var(--dx), var(--dy)) rotate(var(--rot)) scale(1); opacity: 0; }
+}
+@keyframes confetti-rain {
+  0% { transform: translate(0, -12vh) rotate(0); opacity: 1; }
+  85% { opacity: 1; }
+  100% { transform: translate(var(--dx), 108vh) rotate(var(--rot)); opacity: 0; }
+}
+@keyframes celebrate-pop { 0% { transform: scale(0.5); opacity: 0; } 60% { transform: scale(1.08); opacity: 1; } 100% { transform: scale(1); } }
+@keyframes celebrate-badge { 0% { transform: translate(-50%, -24px); opacity: 0; } 12% { transform: translate(-50%, 0); opacity: 1; } 85% { transform: translate(-50%, 0); opacity: 1; } 100% { transform: translate(-50%, -12px); opacity: 0; } }
+@keyframes trophy-bounce { 0%, 100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-10px) rotate(4deg); } }
+@keyframes shine-spin { to { transform: rotate(360deg); } }
+.confetti-burst { animation: confetti-burst var(--dur, 1.3s) cubic-bezier(0.1, 0.7, 0.3, 1) var(--delay, 0s) forwards; }
+.confetti-rain { animation: confetti-rain var(--dur, 3s) linear var(--delay, 0s) forwards; }
+.celebrate-pop { animation: celebrate-pop 0.55s cubic-bezier(0.2, 0.9, 0.3, 1.3) both; }
+.celebrate-badge { animation: celebrate-badge 2.8s ease-out forwards; }
+.trophy-bounce { animation: trophy-bounce 1.4s ease-in-out infinite; }
+.shine-spin { animation: shine-spin 9s linear infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .confetti-burst, .confetti-rain { display: none; }
+  .celebrate-pop, .trophy-bounce, .shine-spin { animation: none; }
+}
