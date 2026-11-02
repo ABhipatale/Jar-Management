@@ -1,22 +1,24 @@
 import { useEffect, useState } from 'react';
-import { Banknote, CheckCircle2, Landmark, NotebookPen, Smartphone, UserRound } from 'lucide-react';
+import { Banknote, CheckCircle2, Landmark, NotebookPen, Smartphone, Trash2, UserRound } from 'lucide-react';
 import api, { errorMessage } from '../api/client';
 import { useSettings } from '../context/SettingsContext';
 import { useUi } from '../context/UiContext';
 import { t } from '../i18n';
-import { money, num, round2, today } from '../lib/format';
+import { fmtDate, money, num, round2, today } from '../lib/format';
 import { BOTTLE, JAR, features, productName } from '../lib/products';
 import { Field, Loader, Modal, Segmented, Stepper } from './ui';
 
 /**
- * Correct a saved jar entry or payment (wrong amount, udhari that was really cash, wrong
- * date/quantity…). Customer and entry type can't change here — delete and re-enter for that.
+ * Correct or delete a saved jar entry or payment (wrong amount, udhari that was really cash,
+ * wrong date/quantity…). Customer and entry type can't change here — delete and re-enter for that.
  * The server recalculates everything and applies the same jar/stock/advance rules.
  *
  *   <EditEntryModal kind="jar" | "payment" id={…} onClose={…} onSaved={…} />
+ *
+ * onSaved also runs after a delete (with no argument), so the screen reloads either way.
  */
 export default function EditEntryModal({ kind, id, onClose, onSaved }) {
-  const { toast, alert } = useUi();
+  const { toast, alert, confirm } = useUi();
   const { settings } = useSettings();
   const feat = features(settings);
   const [rec, setRec] = useState(null);
@@ -91,6 +93,27 @@ export default function EditEntryModal({ kind, id, onClose, onSaved }) {
       onClose();
     } catch (err) {
       alert({ title: t('edit.cannotSave'), message: errorMessage(err) });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  // Same confirmation texts as the delete buttons on the entries / payments lists.
+  const remove = async () => {
+    const message = kind === 'payment'
+      ? t('payments.confirmDelete', { name: rec.customer_name, amount: money(rec.amount) })
+      : t('tx.confirmDelete', {
+          what: t(isGive ? 'tx.whatGiven' : 'tx.whatReturned', { n: rec.jar_quantity, name: rec.customer_name, date: fmtDate(rec.transaction_date) }),
+        });
+    if (!(await confirm({ message }))) return;
+    setBusy(true);
+    try {
+      await api.delete(url);
+      toast(t(kind === 'payment' ? 'payments.deleted' : 'tx.deleted'));
+      onSaved?.();
+      onClose();
+    } catch (err) {
+      alert({ title: t('edit.cannotDelete'), message: errorMessage(err) });
     } finally {
       setBusy(false);
     }
@@ -207,6 +230,9 @@ export default function EditEntryModal({ kind, id, onClose, onSaved }) {
               {busy ? t('edit.saving') : t('edit.save')}
             </button>
           </div>
+          <button type="button" className="btn-ghost btn-sm w-full !text-red-600 hover:!bg-red-50" disabled={busy} onClick={remove}>
+            <Trash2 size={16} /> {kind === 'payment' ? t('edit.deletePayment') : t('edit.deleteEntry')}
+          </button>
         </div>
       )}
     </Modal>
