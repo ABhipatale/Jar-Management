@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowDown, ArrowUp, ArrowUpDown, Check, List, Route as RouteIcon, ChevronLeft, ChevronRight, Clock, MapPin, MessageCircle, Minus, Navigation,
@@ -57,6 +57,13 @@ export default function DeliveryRoute() {
   const on = features(settings).routes;
   const { data, loading, error, reload } = useApi(on ? `/routes/${session}` : null);
   const [focus, setFocus] = useState(null); // stop id the owner picked; else the first pending
+  const cardRef = useRef(null);
+  // A customer tapped on the road, the list or the progress bar: open them in the big card
+  // and scroll smoothly up to it (it sits above the whole route).
+  const pick = (id) => {
+    setFocus(id);
+    setTimeout(() => cardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
+  };
   const [busy, setBusy] = useState(false);
   const [skipping, setSkipping] = useState(null);
   const [adding, setAdding] = useState(false);
@@ -164,7 +171,8 @@ export default function DeliveryRoute() {
   const Icon = look.icon;
   const resolved = totals.done + totals.skipped;
   const finished = route.started && totals.total > 0 && totals.pending === 0;
-  const live = route.started && current && !finished;
+  // The big card: the current customer, or (also after the route is finished) the one picked.
+  const live = route.started && current && (!finished || focus !== null);
 
   return (
     <div className="mx-auto max-w-2xl space-y-4 pb-4">
@@ -192,7 +200,7 @@ export default function DeliveryRoute() {
             className="mt-3.5"
             statuses={stops.map((s) => s.status)}
             current={live ? idx : -1}
-            onPick={(i) => setFocus(stops[i].id)}
+            onPick={(i) => pick(stops[i].id)}
           />
         )}
       </section>
@@ -220,6 +228,7 @@ export default function DeliveryRoute() {
 
       {live && (
         <CurrentCard
+          cardRef={cardRef}
           stop={current}
           number={idx + 1}
           total={stops.length}
@@ -283,7 +292,7 @@ export default function DeliveryRoute() {
             />
           ) : view === 'road' ? (
             <div className="px-3 pb-4 pt-3">
-              <RouteRoadView stops={stops} currentIndex={live ? idx : -1} onPick={route.started ? (i) => setFocus(stops[i].id) : null} />
+              <RouteRoadView stops={stops} currentIndex={live ? idx : -1} onPick={route.started ? (i) => pick(stops[i].id) : null} />
             </div>
           ) : (
             <ol className="px-3 pb-1 pt-3">
@@ -294,7 +303,7 @@ export default function DeliveryRoute() {
                   number={i + 1}
                   last={i === stops.length - 1}
                   active={live && current?.id === s.id}
-                  onPick={route.started ? () => setFocus(s.id) : null}
+                  onPick={route.started ? () => pick(s.id) : null}
                   onRemove={route.started && s.status !== 'done' ? () => remove(s) : null}
                 />
               ))}
@@ -347,13 +356,13 @@ export default function DeliveryRoute() {
 
 /* ───────────── Current customer ───────────── */
 
-function CurrentCard({ stop: s, number, total, busy, look, onDeliver, onSkip, onUnskip, onQty, onEntry, onPrev, onNext }) {
+function CurrentCard({ cardRef, stop: s, number, total, busy, look, onDeliver, onSkip, onUnskip, onQty, onEntry, onPrev, onNext }) {
   const done = s.status === 'done';
   const skipped = s.status === 'skipped';
   const owes = s.pending_amount > 0;
 
   return (
-    <section className="overflow-hidden rounded-2xl bg-surface shadow-pop ring-1 ring-line">
+    <section ref={cardRef} className="scroll-mt-20 overflow-hidden rounded-2xl bg-surface shadow-pop ring-1 ring-line">
       {/* Stop bar: number, state, previous / next */}
       <div className="flex items-center justify-between gap-2 border-b border-line bg-surface-2/60 px-3 py-2">
         <button type="button" className="icon-btn h-8 w-8" disabled={!onPrev} onClick={onPrev || undefined} aria-label={t('route.prev')} title={t('route.prev')}>
