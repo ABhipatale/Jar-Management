@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { BILL_DESIGNS, sampleBill } from '../lib/bill';
-import { ChevronRight, CreditCard, Droplets, ExternalLink, FileText, ImagePlus, KeyRound, Landmark, Languages, LogOut, MessageCircle, MessageSquareText, Palette, QrCode, Save, Sparkles, Store, Trash2 } from 'lucide-react';
+import { ChevronRight, CreditCard, Droplets, ExternalLink, FileText, ImagePlus, KeyRound, Landmark, Languages, LogOut, MessageCircle, MessageSquareText, Palette, QrCode, Save, Sparkles, Stamp, Store, Trash2 } from 'lucide-react';
 import api, { errorMessage } from '../api/client';
 import { ThemeSwitch } from '../components/Layout';
 import { Field, Loader, Modal, PageHeader, Segmented } from '../components/ui';
@@ -101,11 +101,15 @@ export default function Settings() {
   const [qrBusy, setQrBusy] = useState(false);
   const [billPreview, setBillPreview] = useState(null); // design shown in the preview popup
   const qrInput = useRef(null);
+  const [stampBusy, setStampBusy] = useState(false);
+  const [stampPic, setStampPic] = useState(null); // data URL of the saved stamp, for the small preview here
+  const stampInput = useRef(null);
 
   useEffect(() => {
     api.get('/settings').then(({ data }) => {
       setSettings(data);
       setForm(data);
+      if (data.has_stamp) api.get('/settings/stamp').then((r) => setStampPic(r.data.stamp)).catch(() => {});
     }).catch((e) => toast(errorMessage(e), 'error'));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -198,6 +202,30 @@ export default function Settings() {
       toast(errorMessage(err), 'error');
     } finally {
       setQrBusy(false);
+    }
+  };
+
+  // Signature & stamp for the bills: saved right away, like the logo and QR.
+  const stamp = async (file) => {
+    setStampBusy(true);
+    try {
+      let res;
+      if (file) {
+        const body = new FormData();
+        body.append('stamp', file);
+        res = await api.post('/settings/stamp', body);
+        setStampPic((await api.get('/settings/stamp')).data.stamp);
+      } else {
+        res = await api.delete('/settings/stamp');
+        setStampPic(null);
+      }
+      setSettings(res.data);
+      setForm((f) => ({ ...f, has_stamp: res.data.has_stamp }));
+      toast(res.data.message);
+    } catch (err) {
+      toast(errorMessage(err), 'error');
+    } finally {
+      setStampBusy(false);
     }
   };
 
@@ -365,6 +393,42 @@ export default function Settings() {
           <Field label={t('set.upiId')} hint={t('set.upiIdHint')}>
             <input className="input" value={form.upi_id || ''} onChange={set('upi_id')} maxLength={100} autoCapitalize="none" autoCorrect="off" spellCheck={false} placeholder="9876543210@ybl" />
           </Field>
+        </Section>
+
+        <Section icon={Stamp} tone="bg-violet-50 text-violet-700" title={t('set.stamp')} hint={t('set.stampHint')}>
+          <div className="flex flex-wrap items-start gap-4">
+            <div className="grid h-28 w-40 shrink-0 place-items-center overflow-hidden rounded-2xl bg-white ring-1 ring-line">
+              {form.has_stamp && stampPic ? (
+                <img src={stampPic} alt={t('set.stamp')} className="h-full w-full object-contain" />
+              ) : (
+                <Stamp size={40} className="text-slate-300" aria-hidden="true" />
+              )}
+            </div>
+            <div className="min-w-0 flex-1 space-y-2">
+              <input
+                ref={stampInput}
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  e.target.value = '';
+                  if (f) stamp(f);
+                }}
+              />
+              <div className="flex flex-wrap gap-2">
+                <button type="button" className="btn-light" onClick={() => stampInput.current?.click()} disabled={stampBusy}>
+                  <ImagePlus size={16} /> {form.has_stamp ? t('set.stampChange') : t('set.stampUpload')}
+                </button>
+                {form.has_stamp && (
+                  <button type="button" className="btn-light text-red-600" onClick={() => stamp(null)} disabled={stampBusy}>
+                    <Trash2 size={16} /> {t('set.stampRemove')}
+                  </button>
+                )}
+              </div>
+              <p className="text-xs text-muted">{t('set.stampPhotoHint')}</p>
+            </div>
+          </div>
         </Section>
 
         <Section icon={FileText} tone="bg-violet-50 text-violet-700" title={t('bill.settingsTitle')} hint={t('bill.settingsHint')}>

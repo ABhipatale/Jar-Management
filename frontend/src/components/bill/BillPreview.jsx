@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { inlineImage } from '../../lib/bill';
+import api from '../../api/client';
+import { inlineImage, upiQr } from '../../lib/bill';
 import { BILL_COMPONENTS, BILL_WIDTH } from './BillDesigns';
 
 /** The shop logo as a data URL, so it ends up inside the PDF. */
@@ -38,11 +39,30 @@ export default function BillPreview({ design, bill, lang, sheetRef }) {
     return () => ro.disconnect();
   }, [design, sheet]);
 
+  const [qr, setQr] = useState(null);
+  const upiKey = bill.upi ? `${bill.upi.id}|${bill.closing}` : '';
+  useEffect(() => {
+    let live = true;
+    upiQr(bill).then((v) => live && setQr(v));
+    return () => { live = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [upiKey]);
+
+  // The shop's signature & stamp (only when uploaded in Settings): without it the bill is unchanged.
+  const [stamp, setStamp] = useState(null);
+  const hasStamp = !!bill.shop.hasStamp;
+  useEffect(() => {
+    let live = true;
+    if (!hasStamp) setStamp(null);
+    else api.get('/settings/stamp').then((r) => live && setStamp(r.data.stamp)).catch(() => live && setStamp(null));
+    return () => { live = false; };
+  }, [hasStamp]);
+
   const Bill = BILL_COMPONENTS[design];
   return (
     <div ref={box} className="bill-box overflow-hidden rounded-xl bg-white shadow-soft ring-1 ring-line" style={{ height: height || undefined }}>
       <div className="bill-sheet" style={{ transform: `scale(${scale})`, transformOrigin: 'top left', width: BILL_WIDTH[design] }}>
-        <Bill ref={sheet} bill={bill} lang={lang} />
+        <Bill ref={sheet} bill={{ ...bill, qr, stamp }} lang={lang} />
       </div>
     </div>
   );

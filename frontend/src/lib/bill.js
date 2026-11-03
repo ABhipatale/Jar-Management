@@ -36,6 +36,31 @@ export function buildBill(ledger, settings, { from, to }) {
     .filter((r) => r.entry_type === 'payment')
     .map((r) => ({ id: r.id, date: r.entry_date, amount: r2(r.paid), mode: String(r.description || '').split(' - ')[0] }));
 
+  // One row per day: several entries on the same day are merged (same product → summed).
+  const dayMap = new Map();
+  items.forEach((i) => {
+    if (!dayMap.has(i.date)) dayMap.set(i.date, { date: i.date, given: [], returned: [], qty: 0, amount: 0 });
+    const d = dayMap.get(i.date);
+    const list = i.type === 'returned' ? d.returned : d.given;
+    const line = list.find((x) => x.product === i.product);
+    if (line) {
+      line.qty += i.qty;
+      line.amount += i.amount || 0;
+      line.deposit += i.deposit || 0;
+    } else {
+      list.push({ product: i.product, qty: i.qty, amount: i.amount || 0, deposit: i.deposit || 0 });
+    }
+    if (i.type !== 'returned') {
+      d.qty += i.qty;
+      d.amount = r2(d.amount + (i.amount || 0));
+    }
+  });
+  const days = [...dayMap.values()].map((d) => ({
+    ...d,
+    given: d.given.map((g) => ({ ...g, amount: r2(g.amount), rate: g.qty ? r2(g.amount / g.qty) : null })),
+  }));
+  const totalQty = days.reduce((s, d) => s + d.qty, 0);
+
   const sales = r2(items.reduce((s, i) => s + (i.amount || 0), 0));
   const paid = r2(rows.reduce((s, r) => s + (Number(r.paid) || 0), 0));
   const prev = r2(opening.balance);
@@ -59,9 +84,14 @@ export function buildBill(ledger, settings, { from, to }) {
       contacts,
       owner: settings?.owner_name_mr || '',
       logo: logoSrc(settings?.branding || b),
+      hasStamp: !!settings?.has_stamp,
     },
     customer: { name: c.name, mobile: c.mobile, address: c.address || '' },
     items,
+    days,
+    totalQty,
+    // Only when a UPI ID is saved in Settings: the bill then shows a pay-now QR.
+    upi: settings?.upi_id ? { id: settings.upi_id, name: settings?.business_name || b.name || '' } : null,
     payments,
     prev,
     sales,
@@ -148,6 +178,20 @@ export function amountInWords(amount, lang = 'mr') {
   }
   const w = `Rupees ${indianWords(rupees, 'en')}${paise ? ` and ${indianWords(paise, 'en')} paise` : ''} only`;
   return w.charAt(0).toUpperCase() + w.slice(1);
+}
+
+// ── UPI QR ──
+
+/** UPI QR (data URL) for the amount due, or null when there is no UPI ID or nothing to pay. */
+export async function upiQr(bill) {
+  if (!bill?.upi?.id || !(bill.closing > 0)) return null;
+  const q = new URLSearchParams({ pa: bill.upi.id, pn: bill.upi.name, am: bill.closing.toFixed(2), cu: 'INR' });
+  try {
+    const { toDataURL } = await import('qrcode');
+    return await toDataURL(`upi://pay?${q.toString().replace(/\+/g, '%20')}`, { margin: 1, width: 240, errorCorrectionLevel: 'M' });
+  } catch {
+    return null;
+  }
 }
 
 // ── Images ──

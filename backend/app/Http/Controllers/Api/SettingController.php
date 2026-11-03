@@ -10,6 +10,7 @@ use App\Services\IconService;
 use App\Services\JarService;
 use App\Services\PaymentQrService;
 use App\Services\SettingService;
+use App\Services\StampService;
 use App\Support\CurrentCompany;
 use App\Support\Products;
 use Illuminate\Http\Request;
@@ -30,6 +31,7 @@ class SettingController extends Controller
         private BrandingService $branding,
         private IconService $icons,
         private PaymentQrService $payQr,
+        private StampService $stamp,
     ) {}
 
     public function show()
@@ -116,6 +118,32 @@ class SettingController extends Controller
         return response()->json($this->payload() + ['message' => __('QR काढला.')]);
     }
 
+    /** The shop's seal / signature, printed on customer bills. */
+    public function stamp()
+    {
+        return response()->json(['stamp' => $this->stamp->dataUrl(CurrentCompany::get())]);
+    }
+
+    public function uploadStamp(Request $request)
+    {
+        $request->validate(['stamp' => ['required', 'image', 'mimes:png,jpg,jpeg,webp', 'max:4096']], [
+            'stamp.required' => __('कृपया शिक्क्याचा फोटो निवडा.'),
+            'stamp.image' => __('हा फोटो वाचता आला नाही. कृपया PNG किंवा JPG निवडा.'),
+            'stamp.mimes' => __('हा फोटो वाचता आला नाही. कृपया PNG किंवा JPG निवडा.'),
+            'stamp.max' => __('शिक्क्याचा फोटो 4 MB पेक्षा लहान असावा.'),
+        ]);
+        $this->stamp->store(CurrentCompany::get(), $request->file('stamp'));
+
+        return response()->json($this->payload() + ['message' => __('सही शिक्का जतन झाला.')]);
+    }
+
+    public function removeStamp()
+    {
+        $this->stamp->remove(CurrentCompany::get());
+
+        return response()->json($this->payload() + ['message' => __('सही शिक्का काढला.')]);
+    }
+
     private function payload(): array
     {
         $company = CurrentCompany::get()->refresh();
@@ -126,6 +154,7 @@ class SettingController extends Controller
             'pay_qr_url' => $this->payQr->imageUrl($company, $qr),
             // Link added to udhari WhatsApp messages (null = nothing set up yet).
             'pay_url' => $this->payQr->payUrl($company, (bool) $qr, (string) $settings['upi_id']),
+            'has_stamp' => $this->stamp->find($company) !== null,
             'business_name' => $company->name,
             'business_name_mr' => $company->name_mr ?? '',
             'short_name' => $company->short_name ?? '',

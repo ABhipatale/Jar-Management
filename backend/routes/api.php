@@ -127,4 +127,7 @@ Route::middleware(['auth:sanctum', 'company'])->group(function () {
     Route::delete('/settings/logo', [SettingController::class, 'removeLogo']);
     Route::post('/settings/pay-qr', [SettingController::class, 'uploadPayQr']);
     Route::delete('/settings/pay-qr', [SettingController::class, 'removePayQr']);
+    Route::get('/settings/stamp', [SettingController::class, 'stamp']);
+    Route::post('/settings/stamp', [SettingController::class, 'uploadStamp']);
+    Route::delete('/settings/stamp', [SettingController::class, 'removeStamp']);
 });
