@@ -14,7 +14,7 @@ const L = {
     inWords: 'अक्षरी', holding: 'आपल्याकडे सध्या', jars: 'जार', bottles: 'बाटल्या', depositHeld: 'डिपॉझिट जमा',
     thanks: 'धन्यवाद! आपल्या विश्वासाबद्दल आभार.', sign: 'सही / शिक्का', paidStamp: 'पूर्ण भरले',
     contact: 'संपर्क', returnNote: 'कृपया रिकामे जार वेळेवर परत करावे.', terms: 'सूचना', made: 'EasyJar द्वारे तयार',
-    jarName: 'पाण्याचा जार', bottleName: 'बाटली', scanPay: 'QR स्कॅन करून पैसे भरा', totalRow: 'एकूण', monthBill: 'या महिन्याचे बिल',
+    jarName: 'पाण्याचा जार', bottleName: 'बाटली', scanPay: 'QR स्कॅन करून पैसे भरा', totalRow: 'एकूण', returnedTotal: 'परत आलेले रिकामे जार', monthBill: 'या महिन्याचे बिल',
   },
   en: {
     bill: 'INVOICE', date: 'Date', period: 'Period', billTo: 'Bill To', mobile: 'Mobile', address: 'Address',
@@ -25,7 +25,7 @@ const L = {
     inWords: 'In words', holding: 'With you now', jars: 'jars', bottles: 'bottles', depositHeld: 'Deposit held',
     thanks: 'Thank you for your business!', sign: 'Signature', paidStamp: 'PAID',
     contact: 'Contact', returnNote: 'Please return empty jars on time.', terms: 'Note', made: 'Made with EasyJar',
-    jarName: 'Water jar', bottleName: 'Bottle', scanPay: 'Scan to pay (UPI)', totalRow: 'Total', monthBill: "This month's bill",
+    jarName: 'Water jar', bottleName: 'Bottle', scanPay: 'Scan to pay (UPI)', totalRow: 'Total', returnedTotal: 'Empty jars returned', monthBill: "This month's bill",
   },
 };
 
@@ -172,7 +172,7 @@ const ModernBill = forwardRef(function ModernBill({ bill: b, lang }, ref) {
             ))}
             {b.days.length > 0 && (
               <tr style={{ background: '#eff6ff', fontWeight: 700 }}>
-                <td style={td} colSpan={2}>{l.totalRow}</td>
+                <td style={td} colSpan={2}>{l.totalRow}{b.totalReturned > 0 && <span style={{ fontWeight: 500, color: '#475569' }}> · ↩ {l.returnedTotal}: {b.totalReturned}</span>}</td>
                 <td style={{ ...td, textAlign: 'right' }}>{b.totalQty}</td>
                 <td style={td} />
                 <td style={{ ...td, textAlign: 'right', color: blue }}>{rs(b.sales)}</td>
@@ -308,7 +308,7 @@ const ClassicBill = forwardRef(function ClassicBill({ bill: b, lang }, ref) {
             </tr>
           ))}
           <tr style={{ borderTop: line, fontWeight: 700 }}>
-            <td colSpan={2} style={{ ...cell, textAlign: 'right' }}>{l.totalRow}</td>
+            <td colSpan={2} style={{ ...cell, textAlign: 'right' }}>{b.totalReturned > 0 && <span style={{ fontWeight: 500, color: '#4b5563' }}>↩ {l.returnedTotal}: {b.totalReturned} · </span>}{l.totalRow}</td>
             <td style={{ ...cell, textAlign: 'right' }}>{b.totalQty}</td>
             <td style={cell} />
             <td style={{ ...cell, textAlign: 'right', borderRight: 'none' }}>{rs(b.sales)}</td>
@@ -403,6 +403,7 @@ const SimpleBill = forwardRef(function SimpleBill({ bill: b, lang }, ref) {
         </div>
       ))}
       {b.days.length > 0 && <div style={{ ...kv, fontWeight: 700, borderTop: '1px solid #d1d5db', paddingTop: 4 }}><span>{l.totalRow}: {b.totalQty}</span><span>{rs(b.sales)}</span></div>}
+      {b.totalReturned > 0 && <div style={{ fontSize: 12.5, color: '#4b5563' }}>↩ {l.returnedTotal}: {b.totalReturned}</div>}
       <div style={dash} />
       <div style={kv}><span>{l.prev}</span><span>{rs(b.prev)}</span></div>
       <div style={kv}><span>{l.thisBill}</span><span>+ {rs(b.sales)}</span></div>

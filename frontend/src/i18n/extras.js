@@ -22,6 +22,8 @@ export default {
 
     'bc.nav': 'WhatsApp संदेश',
     'mb.nav': "मॅन्युअल बिल",
+    'mb.ret': "रिकामे जार परत (नग)",
+    'mb.totalRet': "एकूण रिकामे जार परत",
     'mb.title': "मॅन्युअल बिल",
     'mb.sub': "ग्राहक न जोडता थेट बिल बनवा",
     'mb.customer': "ग्राहकाची माहिती",
@@ -157,6 +159,8 @@ export default {
 
     'bc.nav': 'WhatsApp Message',
     'mb.nav': "Manual Bill",
+    'mb.ret': "Empty jars returned (qty)",
+    'mb.totalRet': "Total empty jars returned",
     'mb.title': "Manual Bill",
     'mb.sub': "Make a bill directly, without adding a customer",
     'mb.customer': "Customer details",
