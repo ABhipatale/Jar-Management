@@ -231,10 +231,39 @@ export function downloadBlob(blob, filename) {
 export async function billPdf(node) {
   const { toCanvas } = await import('html-to-image');
   // Logo / stamp / QR must be fully decoded before the picture is taken, or they come out blank.
-  await Promise.all([...node.querySelectorAll('img')].map((img) => (img.decode ? img.decode().catch(() => {}) : null)));
+  const imgs = [...node.querySelectorAll('img')];
+  await Promise.all(imgs.map((img) => (img.decode ? img.decode().catch(() => {}) : null)));
+  // Fixed pixel sizes: iPhone Safari drops images that only have a max-size or an auto size.
+  imgs.forEach((img) => {
+    if (img.offsetWidth && img.offsetHeight) {
+      img.setAttribute('width', img.offsetWidth);
+      img.setAttribute('height', img.offsetHeight);
+    }
+  });
   const opts = { pixelRatio: 2, backgroundColor: '#ffffff', skipFonts: true };
   await toCanvas(node, opts); // warm-up pass: browsers often drop images on the very first capture
   const canvas = await toCanvas(node, opts);
+
+  // iPhone Safari still leaves images out of the picture, so draw each one onto it ourselves at
+  // the exact spot it has on the bill (harmless where the picture already contains it).
+  const ctx = canvas.getContext('2d');
+  const box = node.getBoundingClientRect();
+  const k = canvas.width / box.width;
+  imgs.forEach((img) => {
+    if (!img.complete || !img.naturalWidth) return;
+    const r = img.getBoundingClientRect();
+    let [dx, dy, dw, dh] = [(r.left - box.left) * k, (r.top - box.top) * k, r.width * k, r.height * k];
+    if (getComputedStyle(img).objectFit === 'contain') {
+      const f = Math.min(dw / img.naturalWidth, dh / img.naturalHeight);
+      const [w, h] = [img.naturalWidth * f, img.naturalHeight * f];
+      [dx, dy, dw, dh] = [dx + (dw - w) / 2, dy + (dh - h) / 2, w, h];
+    }
+    try {
+      ctx.drawImage(img, dx, dy, dw, dh);
+    } catch {
+      /* a picture the browser won't let us read: leave it as it is */
+    }
+  });
   const jpeg = new Uint8Array(await (await new Promise((res) => canvas.toBlob(res, 'image/jpeg', 0.92))).arrayBuffer());
 
   const W = 595.28; // A4 width in points
