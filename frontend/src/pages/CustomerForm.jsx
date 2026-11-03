@@ -52,7 +52,7 @@ export default function CustomerForm() {
   const [params] = useSearchParams();
   // "Add as new customer" from a contact picked elsewhere pre-fills name + mobile.
   const [form, setForm] = useState(() => ({ name: params.get('name') || '', mobile: params.get('mobile') || '', address: '', status: 'active', opening_balance: '', opening_jars: '', opening_bottles: '' }));
-  // What the customer takes and their special rates (only when bottles / deposit are switched on).
+  // What the customer takes and their special rates (the jar rate always; bottle / deposit only when switched on).
   const { settings } = useSettings();
   const feat = features(settings);
   const [items, setItems] = useState({ takes_jar: true, takes_bottle: false, jar_rate: '', bottle_rate: '', no_deposit: false });
@@ -119,7 +119,7 @@ export default function CustomerForm() {
     if (feat.routes && routeProblem(route)) return setError(routeProblem(route));
     const extra = {
       ...(feat.bottles && { takes_jar: items.takes_jar, takes_bottle: items.takes_bottle, bottle_rate: items.bottle_rate === '' ? null : num(items.bottle_rate) }),
-      ...((feat.bottles || feat.deposit) && { jar_rate: items.jar_rate === '' ? null : num(items.jar_rate) }),
+      jar_rate: items.jar_rate === '' ? null : num(items.jar_rate),
       ...(feat.deposit && { no_deposit: items.no_deposit }),
       ...(feat.routes && routeToApi(route)),
     };
@@ -255,58 +255,56 @@ export default function CustomerForm() {
         )}
       </section>
 
-      {(feat.bottles || feat.deposit) && (
-        <section className="card space-y-4 sm:!p-6">
-          <div className="flex items-center gap-3 border-b border-line pb-4">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-sky-50 text-sky-700">
-              <Droplets size={18} />
-            </span>
-            <div className="min-w-0">
-              <h2 className="font-semibold text-ink">{t('prod.custSection')}</h2>
-              <p className="text-xs text-muted">{t('prod.custSectionSub')}</p>
-            </div>
+      <section className="card space-y-4 sm:!p-6">
+        <div className="flex items-center gap-3 border-b border-line pb-4">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-sky-50 text-sky-700">
+            <Droplets size={18} />
+          </span>
+          <div className="min-w-0">
+            <h2 className="font-semibold text-ink">{t('prod.custSection')}</h2>
+            <p className="text-xs text-muted">{t('prod.custSectionSub')}</p>
           </div>
+        </div>
 
-          {(feat.bottles ? [JAR, BOTTLE] : [JAR]).map((p) => {
-            const takes = p === JAR ? items.takes_jar : items.takes_bottle;
-            const rateKey = `${p}_rate`;
-            return (
-              <div key={p} className={`grid grid-cols-[minmax(0,1fr)_9rem] items-end gap-3 rounded-lg p-3 ring-1 ring-inset ${takes ? 'ring-line' : 'bg-surface-2 ring-line'}`}>
-                {feat.bottles ? (
-                  <label className="flex cursor-pointer items-center gap-3 self-center">
-                    <input
-                      type="checkbox"
-                      className="h-5 w-5 accent-brand-700"
-                      checked={takes}
-                      onChange={(e) => setItems({ ...items, [p === JAR ? 'takes_jar' : 'takes_bottle']: e.target.checked })}
-                    />
-                    <span className="text-sm font-medium text-ink">{productName(p)}</span>
-                  </label>
-                ) : (
-                  <span className="self-center text-sm font-medium text-ink">{productName(p)}</span>
-                )}
-                <Field label={t('prod.specialRate')}>
+        {(feat.bottles ? [JAR, BOTTLE] : [JAR]).map((p) => {
+          const takes = p === JAR ? items.takes_jar : items.takes_bottle;
+          const rateKey = `${p}_rate`;
+          return (
+            <div key={p} className={`grid grid-cols-[minmax(0,1fr)_9rem] items-end gap-3 rounded-lg p-3 ring-1 ring-inset ${takes ? 'ring-line' : 'bg-surface-2 ring-line'}`}>
+              {feat.bottles ? (
+                <label className="flex cursor-pointer items-center gap-3 self-center">
                   <input
-                    className="input tabular-nums"
-                    inputMode="decimal"
-                    disabled={!takes}
-                    value={items[rateKey]}
-                    placeholder={t('prod.ratePh', { r: defaultRate(settings, p) || 0 })}
-                    onChange={(e) => setItems({ ...items, [rateKey]: e.target.value.replace(/[^\d.]/g, '') })}
+                    type="checkbox"
+                    className="h-5 w-5 accent-brand-700"
+                    checked={takes}
+                    onChange={(e) => setItems({ ...items, [p === JAR ? 'takes_jar' : 'takes_bottle']: e.target.checked })}
                   />
-                </Field>
-              </div>
-            );
-          })}
+                  <span className="text-sm font-medium text-ink">{productName(p)}</span>
+                </label>
+              ) : (
+                <span className="self-center text-sm font-medium text-ink">{productName(p)}</span>
+              )}
+              <Field label={t('prod.specialRate')}>
+                <input
+                  className="input tabular-nums"
+                  inputMode="decimal"
+                  disabled={!takes}
+                  value={items[rateKey]}
+                  placeholder={t('prod.ratePh', { r: defaultRate(settings, p) || 0 })}
+                  onChange={(e) => setItems({ ...items, [rateKey]: e.target.value.replace(/[^\d.]/g, '') })}
+                />
+              </Field>
+            </div>
+          );
+        })}
 
-          {feat.deposit && (
-            <label className="flex cursor-pointer items-center gap-3 rounded-lg bg-surface-2 px-3.5 py-3 ring-1 ring-line">
-              <input type="checkbox" className="h-5 w-5 accent-brand-700" checked={items.no_deposit} onChange={(e) => setItems({ ...items, no_deposit: e.target.checked })} />
-              <span className="text-sm font-medium text-ink">{t('prod.noDeposit')}</span>
-            </label>
-          )}
-        </section>
-      )}
+        {feat.deposit && (
+          <label className="flex cursor-pointer items-center gap-3 rounded-lg bg-surface-2 px-3.5 py-3 ring-1 ring-line">
+            <input type="checkbox" className="h-5 w-5 accent-brand-700" checked={items.no_deposit} onChange={(e) => setItems({ ...items, no_deposit: e.target.checked })} />
+            <span className="text-sm font-medium text-ink">{t('prod.noDeposit')}</span>
+          </label>
+        )}
+      </section>
 
       {feat.routes && <DeliveryScheduleFields value={route} onChange={setRoute} />}
 
