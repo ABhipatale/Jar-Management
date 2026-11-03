@@ -571,7 +571,10 @@ function CustomerSearch({ autoFocus = false, onDone }) {
           if (e.key === 'ArrowDown') setHi((h) => Math.min(h + 1, results.length - 1));
           if (e.key === 'ArrowUp') setHi((h) => Math.max(h - 1, 0));
           if (e.key === 'Enter' && results[hi]) go(results[hi]);
-          if (e.key === 'Escape') (setOpen(false), onDone?.());
+          if (e.key === 'Escape') {
+            setOpen(false);
+            onDone?.();
+          }
         }}
       />
       {open && q.trim() && (

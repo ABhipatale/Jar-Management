@@ -429,11 +429,11 @@ function CurrentCard({ cardRef, stop: s, number, total, busy, look, onDeliver, o
               <div className="mt-1 text-2xl font-bold tabular-nums text-ink">{done ? s.delivered?.jars ?? s.quantity : s.quantity}</div>
             ) : (
               <div className="mt-1 flex items-center justify-center gap-1">
-                <button type="button" className="grid h-7 w-7 place-items-center rounded-full bg-surface-2 text-ink ring-1 ring-line disabled:opacity-40" disabled={busy || s.quantity <= 1} onClick={() => onQty(s.quantity - 1)} aria-label="−">
+                <button type="button" className="tap grid h-8 w-8 place-items-center rounded-full bg-surface-2 text-ink ring-1 ring-line disabled:opacity-40" disabled={busy || s.quantity <= 1} onClick={() => onQty(s.quantity - 1)} aria-label="−">
                   <Minus size={13} />
                 </button>
                 <span className="min-w-7 text-2xl font-bold tabular-nums text-ink">{s.quantity}</span>
-                <button type="button" className="grid h-7 w-7 place-items-center rounded-full bg-surface-2 text-ink ring-1 ring-line" disabled={busy} onClick={() => onQty(s.quantity + 1)} aria-label="+">
+                <button type="button" className="tap grid h-8 w-8 place-items-center rounded-full bg-surface-2 text-ink ring-1 ring-line" disabled={busy} onClick={() => onQty(s.quantity + 1)} aria-label="+">
                   <Plus size={13} />
                 </button>
               </div>

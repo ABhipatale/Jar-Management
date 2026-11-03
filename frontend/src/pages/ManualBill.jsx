@@ -41,7 +41,7 @@ export default function ManualBill() {
   const { settings } = useSettings();
   const { toast, confirm } = useUi();
   const defaultRate = String(settings?.default_rate || '');
-  const draft = useRef(loadDraft()).current;
+  const [draft] = useState(loadDraft); // read once, when the page opens
 
   const [form, setForm] = useState(draft?.form || emptyForm);
   const [rows, setRows] = useState(() => (draft?.rows?.length ? draft.rows.map((r) => ({ ...r, id: ++seq })) : [newRow(defaultRate)]));
