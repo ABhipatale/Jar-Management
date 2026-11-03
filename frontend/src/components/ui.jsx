@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AlertTriangle, ArrowDownRight, ArrowUpRight, ChevronLeft, Inbox, Minus, Phone, Plus, RotateCw, X } from 'lucide-react';
 import { t } from '../i18n';
@@ -298,6 +298,9 @@ export function Fab({ to, label, icon = Plus }) {
 
 /** Bottom sheet on phones, centred dialog on larger screens. Esc / backdrop closes. */
 export function Modal({ title, description, onClose, children, size = 'md' }) {
+  const dialog = useRef(null);
+  // Keyboard / screen-reader focus moves into the dialog when it opens.
+  useEffect(() => { dialog.current?.focus({ preventScroll: true }); }, []);
   useEffect(() => {
     const onKey = (e) => e.key === 'Escape' && onClose?.();
     document.addEventListener('keydown', onKey);
@@ -315,7 +318,9 @@ export function Modal({ title, description, onClose, children, size = 'md' }) {
         role="dialog"
         aria-modal="true"
         aria-label={typeof title === 'string' ? title : undefined}
-        className={`max-h-[92vh] w-full ${size === 'lg' ? 'sm:max-w-xl' : 'sm:max-w-md'} animate-sheet-in overflow-y-auto rounded-t-2xl bg-surface p-5 pb-8 shadow-pop ring-1 ring-line sm:animate-pop-in sm:rounded-2xl sm:pb-5`}
+        className={`sheet sheet-pad w-full ${size === 'lg' ? 'sm:max-w-xl' : 'sm:max-w-md'} animate-sheet-in overflow-y-auto rounded-t-2xl bg-surface p-5 shadow-pop ring-1 ring-line outline-none sm:animate-pop-in sm:rounded-2xl`}
+        tabIndex={-1}
+        ref={dialog}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-slate-300 sm:hidden" />

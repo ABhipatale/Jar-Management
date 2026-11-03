@@ -7,6 +7,81 @@ export const BILL_DESIGNS = ['classic', 'modern', 'simple'];
 
 const r2 = (v) => Math.round((Number(v) || 0) * 100) / 100;
 
+/** The shop block of a bill (name, contacts, logo, stamp flag) and its UPI ID, from Settings. */
+function shopAndUpi(settings) {
+  const b = getBranding();
+  const contacts = String(settings?.contact_numbers || settings?.business_mobile || '')
+    .split(/[,\n]/)
+    .map((n) => n.trim())
+    .filter(Boolean);
+  return {
+    shop: {
+      name: settings?.business_name_mr || settings?.business_name || brandName(b),
+      nameEn: settings?.business_name || b.name,
+      place: settings?.business_place_mr || '',
+      address: settings?.business_address || '',
+      contacts,
+      owner: settings?.owner_name_mr || '',
+      logo: logoSrc(settings?.branding || b),
+      hasStamp: !!settings?.has_stamp,
+    },
+    // Only when a UPI ID is saved in Settings: the bill then shows a pay-now QR.
+    upi: settings?.upi_id ? { id: settings.upi_id, name: settings?.business_name || b.name || '' } : null,
+  };
+}
+
+/**
+ * A bill typed by hand (no customer / entries needed): customer details, a list of lines
+ * (date, details, qty, rate) and optional previous balance / paid. Same shape as buildBill(),
+ * so the three designs print it unchanged. Lines on one date share one row.
+ */
+export function buildManualBill(f, settings) {
+  const rows = (f.rows || [])
+    .map((r) => ({ date: r.date || f.billDate, label: String(r.text || '').trim(), qty: Math.max(0, parseInt(r.qty, 10) || 0), ret: Math.max(0, parseInt(r.ret, 10) || 0), rate: Math.max(0, Number(r.rate) || 0) }))
+    .filter((r) => r.qty > 0 || r.ret > 0)
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  const dayMap = new Map();
+  rows.forEach((r) => {
+    if (!dayMap.has(r.date)) dayMap.set(r.date, { date: r.date, given: [], returned: [], qty: 0, amount: 0 });
+    const d = dayMap.get(r.date);
+    if (r.qty > 0) {
+      const amount = r2(r.qty * r.rate);
+      d.given.push({ product: 'jar', label: r.label, qty: r.qty, rate: r.rate, amount, deposit: 0 });
+      d.qty += r.qty;
+      d.amount = r2(d.amount + amount);
+    }
+    if (r.ret > 0) d.returned.push({ product: 'jar', qty: r.ret });
+  });
+  const days = [...dayMap.values()];
+  const sales = r2(days.reduce((s, d) => s + d.amount, 0));
+  const prev = r2(f.prev);
+  const paid = r2(f.paid);
+  const { shop, upi } = shopAndUpi(settings);
+  return {
+    from: f.from,
+    to: f.to,
+    billDate: f.billDate,
+    oneDay: f.from === f.to,
+    shop,
+    customer: { name: String(f.name || '').trim(), mobile: String(f.mobile || '').trim(), address: String(f.address || '').trim() },
+    items: [],
+    days,
+    totalQty: days.reduce((s, d) => s + d.qty, 0),
+    totalReturned: days.reduce((s, d) => s + d.returned.reduce((x, r) => x + r.qty, 0), 0),
+    upi,
+    payments: [],
+    prev,
+    sales,
+    paid,
+    closing: r2(prev + sales - paid),
+    // "Jars with the customer" is optional on a manual bill; empty = the box is left out.
+    jars: f.jars === '' || f.jars == null ? null : parseInt(f.jars, 10) || 0,
+    bottles: 0,
+    deposit: 0,
+  };
+}
+
 /**
  * Bill figures for a period, from GET /customers/:id/ledger?from&to.
  * closing = opening + Σ bill amounts − Σ money received (the same running balance as the statement).
@@ -60,38 +135,26 @@ export function buildBill(ledger, settings, { from, to }) {
     given: d.given.map((g) => ({ ...g, amount: r2(g.amount), rate: g.qty ? r2(g.amount / g.qty) : null })),
   }));
   const totalQty = days.reduce((s, d) => s + d.qty, 0);
+  const totalReturned = days.reduce((s, d) => s + d.returned.reduce((x, r) => x + r.qty, 0), 0);
 
   const sales = r2(items.reduce((s, i) => s + (i.amount || 0), 0));
   const paid = r2(rows.reduce((s, r) => s + (Number(r.paid) || 0), 0));
   const prev = r2(opening.balance);
   const closing = last ? r2(last.balance) : prev;
 
-  const b = getBranding();
-  const contacts = String(settings?.contact_numbers || settings?.business_mobile || '')
-    .split(/[,\n]/)
-    .map((n) => n.trim())
-    .filter(Boolean);
+  const { shop, upi } = shopAndUpi(settings);
 
   return {
     from,
     to,
     oneDay: from === to,
-    shop: {
-      name: settings?.business_name_mr || settings?.business_name || brandName(b),
-      nameEn: settings?.business_name || b.name,
-      place: settings?.business_place_mr || '',
-      address: settings?.business_address || '',
-      contacts,
-      owner: settings?.owner_name_mr || '',
-      logo: logoSrc(settings?.branding || b),
-      hasStamp: !!settings?.has_stamp,
-    },
+    shop,
     customer: { name: c.name, mobile: c.mobile, address: c.address || '' },
     items,
     days,
     totalQty,
-    // Only when a UPI ID is saved in Settings: the bill then shows a pay-now QR.
-    upi: settings?.upi_id ? { id: settings.upi_id, name: settings?.business_name || b.name || '' } : null,
+    totalReturned,
+    upi,
     payments,
     prev,
     sales,

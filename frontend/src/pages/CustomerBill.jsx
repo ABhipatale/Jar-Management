@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { Download, MessageCircle, Printer } from 'lucide-react';
+import BillOptions from '../components/bill/BillOptions';
 import BillPreview, { useBillLogo } from '../components/bill/BillPreview';
 import { ErrorBox, Loader, PageHeader } from '../components/ui';
 import { useSettings } from '../context/SettingsContext';
@@ -112,28 +113,7 @@ export default function CustomerBill() {
             </div>
           )}
         </div>
-        <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
-          <div>
-            <span className="label">{t('bill.design')}</span>
-            <div className="flex flex-wrap gap-2">
-              {BILL_DESIGNS.map((d) => (
-                <button key={d} type="button" className={`chip ${design === d ? 'chip-active' : ''}`} onClick={() => setDesign(d)}>
-                  {t(`bill.d.${d}`)}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div>
-            <span className="label">{t('bill.language')}</span>
-            <div className="flex gap-2">
-              {[['mr', 'मराठी'], ['en', 'English']].map(([k, n]) => (
-                <button key={k} type="button" className={`chip ${lang === k ? 'chip-active' : ''}`} onClick={() => setLang(k)}>
-                  {n}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
+        <BillOptions design={design} setDesign={setDesign} lang={lang} setLang={setLang} />
       </section>
 
       {error && <ErrorBox message={error} onRetry={reload} />}
