@@ -3,7 +3,7 @@ import { BILL_DESIGNS, sampleBill } from '../lib/bill';
 import { ChevronRight, CreditCard, Droplets, ExternalLink, FileText, ImagePlus, KeyRound, Landmark, Languages, LogOut, MessageCircle, MessageSquareText, Palette, QrCode, Save, Sparkles, Stamp, Store, Trash2 } from 'lucide-react';
 import api, { errorMessage } from '../api/client';
 import { ThemeSwitch } from '../components/Layout';
-import { Field, Loader, Modal, PageHeader, Segmented } from '../components/ui';
+import { Field, Loader, MiniSpin, Modal, PageHeader, Segmented, UploadOverlay } from '../components/ui';
 import BillPreview, { useBillLogo } from '../components/bill/BillPreview';
 import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext';
@@ -287,11 +287,10 @@ export default function Settings() {
         </Link>
         <Section icon={Sparkles} tone="bg-amber-50 text-amber-700" title={t('brand.title')} hint={t('brand.hint')}>
           <div className="flex flex-wrap items-center gap-4">
-            <img
-              src={logoSrc(form.branding || {})}
-              alt=""
-              className="h-20 w-20 rounded-2xl bg-white object-contain ring-1 ring-line"
-            />
+            <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-white ring-1 ring-line">
+              <img src={logoSrc(form.branding || {})} alt="" className="h-full w-full object-contain" />
+              <UploadOverlay busy={logoBusy} />
+            </div>
             <div className="space-y-2">
               <input
                 ref={logoInput}
@@ -306,7 +305,7 @@ export default function Settings() {
               />
               <div className="flex flex-wrap gap-2">
                 <button type="button" className="btn-light" onClick={() => logoInput.current?.click()} disabled={logoBusy}>
-                  <ImagePlus size={16} /> {form.branding?.logo_url ? t('adm.changeLogo') : t('adm.uploadLogo')}
+                  {logoBusy ? <MiniSpin /> : <ImagePlus size={16} />} {logoBusy ? t('common.uploading') : form.branding?.logo_url ? t('adm.changeLogo') : t('adm.uploadLogo')}
                 </button>
                 {form.branding?.logo_url && (
                   <button type="button" className="btn-light text-red-600" onClick={() => logo(null)} disabled={logoBusy}>
@@ -353,7 +352,8 @@ export default function Settings() {
 
         <Section icon={QrCode} tone="bg-violet-50 text-violet-700" title={t('set.payQr')} hint={t('set.payQrHint')}>
           <div className="flex flex-wrap items-start gap-4">
-            <div className="grid h-32 w-32 shrink-0 place-items-center overflow-hidden rounded-2xl bg-white ring-1 ring-line">
+            <div className="relative grid h-32 w-32 shrink-0 place-items-center overflow-hidden rounded-2xl bg-white ring-1 ring-line">
+              <UploadOverlay busy={qrBusy} />
               {form.pay_qr_url ? (
                 <img src={form.pay_qr_url} alt={t('set.payQr')} className="h-full w-full object-contain" />
               ) : (
@@ -374,7 +374,7 @@ export default function Settings() {
               />
               <div className="flex flex-wrap gap-2">
                 <button type="button" className="btn-light" onClick={() => qrInput.current?.click()} disabled={qrBusy}>
-                  <ImagePlus size={16} /> {form.pay_qr_url ? t('set.payQrChange') : t('set.payQrUpload')}
+                  {qrBusy ? <MiniSpin /> : <ImagePlus size={16} />} {qrBusy ? t('common.uploading') : form.pay_qr_url ? t('set.payQrChange') : t('set.payQrUpload')}
                 </button>
                 {form.pay_qr_url && (
                   <button type="button" className="btn-light text-red-600" onClick={() => payQr(null)} disabled={qrBusy}>
@@ -397,7 +397,8 @@ export default function Settings() {
 
         <Section icon={Stamp} tone="bg-violet-50 text-violet-700" title={t('set.stamp')} hint={t('set.stampHint')}>
           <div className="flex flex-wrap items-start gap-4">
-            <div className="grid h-28 w-40 shrink-0 place-items-center overflow-hidden rounded-2xl bg-white ring-1 ring-line">
+            <div className="relative grid h-28 w-40 shrink-0 place-items-center overflow-hidden rounded-2xl bg-white ring-1 ring-line">
+              <UploadOverlay busy={stampBusy} />
               {form.has_stamp && stampPic ? (
                 <img src={stampPic} alt={t('set.stamp')} className="h-full w-full object-contain" />
               ) : (
@@ -418,7 +419,7 @@ export default function Settings() {
               />
               <div className="flex flex-wrap gap-2">
                 <button type="button" className="btn-light" onClick={() => stampInput.current?.click()} disabled={stampBusy}>
-                  <ImagePlus size={16} /> {form.has_stamp ? t('set.stampChange') : t('set.stampUpload')}
+                  {stampBusy ? <MiniSpin /> : <ImagePlus size={16} />} {stampBusy ? t('common.uploading') : form.has_stamp ? t('set.stampChange') : t('set.stampUpload')}
                 </button>
                 {form.has_stamp && (
                   <button type="button" className="btn-light text-red-600" onClick={() => stamp(null)} disabled={stampBusy}>
