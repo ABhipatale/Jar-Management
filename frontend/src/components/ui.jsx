@@ -363,3 +363,22 @@ export function DevCredit({ className = '' }) {
     </p>
   );
 }
+
+/** Covers a picture box (it must be `relative`) with a spinning ring + drop while an image uploads. */
+export function UploadOverlay({ busy, compact }) {
+  if (!busy) return null;
+  return (
+    <div className="absolute inset-0 z-10 grid animate-fade-in place-items-center bg-white/85 backdrop-blur-[1px]" role="status" aria-live="polite">
+      <div className="flex flex-col items-center gap-1.5">
+        <div className={`relative ${compact ? 'h-8 w-8' : 'h-11 w-11'}`}>
+          <span className="upload-ring" />
+          <span className={`upload-drop ${compact ? "text-xs" : "text-base"}`} aria-hidden="true">💧</span>
+        </div>
+        {!compact && <span className="text-[11px] font-semibold text-brand-700">{t('common.uploading')}</span>}
+      </div>
+    </div>
+  );
+}
+
+/** Small spinner for a button label while its action runs. */
+export const MiniSpin = () => <span className="upload-mini" aria-hidden="true" />;

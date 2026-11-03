@@ -14,6 +14,7 @@ const L = {
     inWords: 'अक्षरी', holding: 'आपल्याकडे सध्या', jars: 'जार', bottles: 'बाटल्या', depositHeld: 'डिपॉझिट जमा',
     thanks: 'धन्यवाद! आपल्या विश्वासाबद्दल आभार.', sign: 'सही / शिक्का', paidStamp: 'पूर्ण भरले',
     contact: 'संपर्क', returnNote: 'कृपया रिकामे जार वेळेवर परत करावे.', terms: 'सूचना', made: 'EasyJar द्वारे तयार',
+    jarName: 'पाण्याचा जार', bottleName: 'बाटली', scanPay: 'QR स्कॅन करून पैसे भरा', totalRow: 'एकूण', monthBill: 'या महिन्याचे बिल',
   },
   en: {
     bill: 'INVOICE', date: 'Date', period: 'Period', billTo: 'Bill To', mobile: 'Mobile', address: 'Address',
@@ -24,6 +25,7 @@ const L = {
     inWords: 'In words', holding: 'With you now', jars: 'jars', bottles: 'bottles', depositHeld: 'Deposit held',
     thanks: 'Thank you for your business!', sign: 'Signature', paidStamp: 'PAID',
     contact: 'Contact', returnNote: 'Please return empty jars on time.', terms: 'Note', made: 'Made with EasyJar',
+    jarName: 'Water jar', bottleName: 'Bottle', scanPay: 'Scan to pay (UPI)', totalRow: 'Total', monthBill: "This month's bill",
   },
 };
 
@@ -39,6 +41,56 @@ function itemText(i, l) {
     ? (i.product === 'bottle' ? l.bottleReturned : l.jarReturned)
     : (i.product === 'bottle' ? l.bottleGiven : l.jarGiven);
   return i.deposit ? `${base} (${l.deposit} ${rs(i.deposit)})` : base;
+}
+
+/** The lines inside one day's row: what was delivered (qty × rate = amount) and what came back. */
+function dayLines(d, l) {
+  return [
+    ...d.given.map((g) => ({
+      name: `${g.product === 'bottle' ? l.bottleName : l.jarName}${g.deposit ? ` (${l.deposit} ${rs(g.deposit)})` : ''}`,
+      qty: g.qty, rate: g.rate, amount: g.amount,
+    })),
+    ...d.returned.map((r) => ({ name: `↩ ${r.product === 'bottle' ? l.bottleReturned : l.jarReturned}`, qty: r.qty, ret: true })),
+  ];
+}
+
+/** One table cell holding one div per line, so a day with two products stays one row. */
+function Stack({ d, l, pick, align }) {
+  return dayLines(d, l).map((x, k) => (
+    <div key={k} style={{ textAlign: align, color: x.ret ? '#64748b' : undefined, fontSize: x.ret ? 12.5 : undefined }}>{pick(x) ?? ' '}</div>
+  ));
+}
+
+/** The shop's uploaded signature / stamp, above the signature line. Nothing when none is uploaded. */
+function StampImg({ b, h = 64 }) {
+  return b.stamp ? <img src={b.stamp} alt="" style={{ height: h, maxWidth: 170, objectFit: 'contain', display: 'block', margin: '0 auto 2px' }} /> : null;
+}
+
+/** Pay-now QR (only when the shop saved a UPI ID and something is due). */
+function PayQr({ b, l, size = 104, color = '#0f172a' }) {
+  if (!b.qr) return null;
+  return (
+    <div style={{ textAlign: 'center', flexShrink: 0, width: size + 16 }}>
+      <img src={b.qr} alt="" style={{ width: size, height: size, display: 'block', margin: '0 auto' }} />
+      <div style={{ fontSize: 11.5, fontWeight: 700, marginTop: 3, color }}>{l.scanPay}</div>
+      <div style={{ fontSize: 10.5, color: '#64748b', wordBreak: 'break-all' }}>{b.upi.id}</div>
+    </div>
+  );
+}
+
+/** "How many jars are with you now" — the line customers look for first. */
+function HoldingBox({ b, l, bg, border, color }) {
+  return (
+    <div style={{ background: bg, border: `1px solid ${border}`, borderRadius: 14, padding: '10px 14px' }}>
+      <div style={{ fontSize: 12.5, color, fontWeight: 700 }}>💧 {l.holding}</div>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, flexWrap: 'wrap', marginTop: 2 }}>
+        <span style={{ fontSize: 30, fontWeight: 800, color, lineHeight: 1.1 }}>{b.jars}</span>
+        <span style={{ fontWeight: 700, marginRight: 8 }}>{l.jars}</span>
+        {b.bottles > 0 && <span style={{ fontWeight: 700 }}>+ {b.bottles} {l.bottles}</span>}
+      </div>
+      {b.deposit > 0 && <div style={{ fontSize: 12.5, color: '#475569' }}>{l.depositHeld}: <b>{rs(b.deposit)}</b></div>}
+    </div>
+  );
 }
 
 function holdingText(b, l) {
@@ -100,25 +152,32 @@ const ModernBill = forwardRef(function ModernBill({ bill: b, lang }, ref) {
         <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, marginTop: 18, fontSize: 14 }}>
           <thead>
             <tr style={{ background: blue, color: '#fff' }}>
-              {[l.sr, l.date, l.desc, l.qty, l.rate, l.amount].map((h, i) => (
-                <th key={h} style={{ padding: '10px 12px', textAlign: i >= 3 ? 'right' : 'left', fontWeight: 600, borderTopLeftRadius: i === 0 ? 10 : 0, borderTopRightRadius: i === 5 ? 10 : 0 }}>{h}</th>
+              {[l.date, l.desc, l.qty, l.rate, l.amount].map((h, i) => (
+                <th key={h} style={{ padding: '10px 12px', textAlign: i >= 2 ? 'right' : 'left', fontWeight: 600, borderTopLeftRadius: i === 0 ? 10 : 0, borderTopRightRadius: i === 4 ? 10 : 0 }}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {b.items.length === 0 && (
-              <tr><td colSpan={6} style={{ padding: 18, textAlign: 'center', color: '#64748b', borderBottom: '1px solid #e2e8f0' }}>{l.noItems}</td></tr>
+            {b.days.length === 0 && (
+              <tr><td colSpan={5} style={{ padding: 18, textAlign: 'center', color: '#64748b', borderBottom: '1px solid #e2e8f0' }}>{l.noItems}</td></tr>
             )}
-            {b.items.map((i, n) => (
-              <tr key={i.id} style={{ background: n % 2 ? '#f8fafc' : '#fff' }}>
-                <td style={td}>{n + 1}</td>
-                <td style={td}>{dmy(i.date).slice(0, 5)}</td>
-                <td style={{ ...td, color: i.type === 'returned' ? '#64748b' : '#0f172a' }}>{itemText(i, l)}</td>
-                <td style={{ ...td, textAlign: 'right' }}>{i.qty}</td>
-                <td style={{ ...td, textAlign: 'right' }}>{i.rate === null ? '–' : rs(i.rate)}</td>
-                <td style={{ ...td, textAlign: 'right', fontWeight: 600 }}>{i.amount === null ? '–' : rs(i.amount)}</td>
+            {b.days.map((d, n) => (
+              <tr key={d.date} style={{ background: n % 2 ? '#f8fafc' : '#fff', verticalAlign: 'top' }}>
+                <td style={{ ...td, fontWeight: 700, color: blue, whiteSpace: 'nowrap' }}>{dmy(d.date).slice(0, 5)}</td>
+                <td style={td}><Stack d={d} l={l} pick={(x) => x.name} /></td>
+                <td style={td}><Stack d={d} l={l} align="right" pick={(x) => x.qty} /></td>
+                <td style={td}><Stack d={d} l={l} align="right" pick={(x) => (x.rate == null ? null : rs(x.rate))} /></td>
+                <td style={{ ...td, fontWeight: 600 }}><Stack d={d} l={l} align="right" pick={(x) => (x.amount == null ? null : rs(x.amount))} /></td>
               </tr>
             ))}
+            {b.days.length > 0 && (
+              <tr style={{ background: '#eff6ff', fontWeight: 700 }}>
+                <td style={td} colSpan={2}>{l.totalRow}</td>
+                <td style={{ ...td, textAlign: 'right' }}>{b.totalQty}</td>
+                <td style={td} />
+                <td style={{ ...td, textAlign: 'right', color: blue }}>{rs(b.sales)}</td>
+              </tr>
+            )}
           </tbody>
         </table>
 
@@ -131,10 +190,16 @@ const ModernBill = forwardRef(function ModernBill({ bill: b, lang }, ref) {
         {/* Holding + totals */}
         <div style={{ display: 'flex', gap: 16, marginTop: 18, alignItems: 'stretch' }}>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <div style={{ background: '#ecfeff', border: '1px solid #a5f3fc', borderRadius: 14, padding: '10px 14px' }}>
-              <div style={{ fontSize: 12, color: '#0e7490', fontWeight: 700 }}>💧 {l.holding}</div>
-              <div style={{ fontWeight: 600, marginTop: 2 }}>{holdingText(b, l)}</div>
-            </div>
+            <HoldingBox b={b} l={l} bg="#ecfeff" border="#a5f3fc" color="#0e7490" />
+            {b.qr && (
+              <div style={{ display: 'flex', gap: 14, alignItems: 'center', background: '#f0f7ff', border: '1px solid #dbeafe', borderRadius: 14, padding: '10px 14px' }}>
+                <PayQr b={b} l={l} color={blue} />
+                <div style={{ fontSize: 13, color: '#334155' }}>
+                  <div style={{ fontWeight: 700, color: blue, fontSize: 15 }}>{rs(due)}</div>
+                  {due < 0 ? l.advance : l.total}
+                </div>
+              </div>
+            )}
           </div>
           <div style={{ width: 320, alignSelf: 'flex-start', border: '1px solid #e2e8f0', borderRadius: 14, overflow: 'hidden' }}>
             <Row k={l.prev} v={rs(b.prev)} />
@@ -158,6 +223,7 @@ const ModernBill = forwardRef(function ModernBill({ bill: b, lang }, ref) {
           </div>
           <div style={{ textAlign: 'center', minWidth: 170 }}>
             {due <= 0 && <div style={stamp}>{l.paidStamp}</div>}
+            <StampImg b={b} />
             <div style={{ borderTop: '1px solid #94a3b8', paddingTop: 4, fontSize: 12, color: '#475569' }}>{b.shop.owner || l.sign}</div>
           </div>
         </div>
@@ -188,7 +254,7 @@ const ClassicBill = forwardRef(function ClassicBill({ bill: b, lang }, ref) {
   const gold = '#f5b301';
   const line = `1px solid ${gold}`;
   const due = b.closing;
-  const blank = Math.max(0, 8 - b.items.length);
+  const blank = Math.max(0, 6 - b.days.length);
   const cell = { padding: '7px 10px', borderRight: line };
   return (
     <div ref={ref} style={{ width: 794, background: '#fff', color: '#1f2937', fontFamily: FONT, fontSize: 14, lineHeight: 1.45, position: 'relative', overflow: 'hidden' }}>
@@ -221,41 +287,46 @@ const ClassicBill = forwardRef(function ClassicBill({ bill: b, lang }, ref) {
       <table style={{ width: 'calc(100% - 80px)', margin: '12px 40px 0', borderCollapse: 'collapse', border: line, fontSize: 14 }}>
         <thead>
           <tr style={{ borderBottom: line }}>
-            {[[l.sr, 46], [l.date, 70], [l.desc], [l.qty, 60], [l.rate, 76], [l.amount, 100]].map(([h, w], i) => (
-              <th key={h} style={{ ...cell, width: w, fontWeight: 700, textAlign: i >= 3 ? 'right' : 'left', borderRight: i === 5 ? 'none' : line }}>{h}</th>
+            {[[l.date, 70], [l.desc], [l.qty, 60], [l.rate, 76], [l.amount, 100]].map(([h, w], i) => (
+              <th key={h} style={{ ...cell, width: w, fontWeight: 700, textAlign: i >= 2 ? 'right' : 'left', borderRight: i === 4 ? 'none' : line }}>{h}</th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {b.items.map((i, n) => (
-            <tr key={i.id}>
-              <td style={cell}>{n + 1}</td>
-              <td style={cell}>{dmy(i.date).slice(0, 5)}</td>
-              <td style={cell}>{itemText(i, l)}</td>
-              <td style={{ ...cell, textAlign: 'right' }}>{i.qty}</td>
-              <td style={{ ...cell, textAlign: 'right' }}>{i.rate === null ? '' : rs(i.rate)}</td>
-              <td style={{ ...cell, textAlign: 'right', borderRight: 'none' }}>{i.amount === null ? '' : rs(i.amount)}</td>
+          {b.days.map((d) => (
+            <tr key={d.date} style={{ verticalAlign: 'top' }}>
+              <td style={{ ...cell, fontWeight: 700 }}>{dmy(d.date).slice(0, 5)}</td>
+              <td style={cell}><Stack d={d} l={l} pick={(x) => x.name} /></td>
+              <td style={cell}><Stack d={d} l={l} align="right" pick={(x) => x.qty} /></td>
+              <td style={cell}><Stack d={d} l={l} align="right" pick={(x) => (x.rate == null ? null : rs(x.rate))} /></td>
+              <td style={{ ...cell, borderRight: 'none' }}><Stack d={d} l={l} align="right" pick={(x) => (x.amount == null ? null : rs(x.amount))} /></td>
             </tr>
           ))}
           {Array.from({ length: blank }, (_, k) => (
             <tr key={`b${k}`} style={{ height: 30 }}>
-              {[0, 1, 2, 3, 4, 5].map((c) => <td key={c} style={{ ...cell, borderRight: c === 5 ? 'none' : line }} />)}
+              {[0, 1, 2, 3, 4].map((c) => <td key={c} style={{ ...cell, borderRight: c === 4 ? 'none' : line }} />)}
             </tr>
           ))}
+          <tr style={{ borderTop: line, fontWeight: 700 }}>
+            <td colSpan={2} style={{ ...cell, textAlign: 'right' }}>{l.totalRow}</td>
+            <td style={{ ...cell, textAlign: 'right' }}>{b.totalQty}</td>
+            <td style={cell} />
+            <td style={{ ...cell, textAlign: 'right', borderRight: 'none' }}>{rs(b.sales)}</td>
+          </tr>
           <tr style={{ borderTop: line }}>
-            <td colSpan={5} style={{ ...cell, textAlign: 'right', fontWeight: 700 }}>{l.thisBill}</td>
+            <td colSpan={4} style={{ ...cell, textAlign: 'right', fontWeight: 700 }}>{l.thisBill}</td>
             <td style={{ ...cell, textAlign: 'right', fontWeight: 700, borderRight: 'none' }}>{rs(b.sales)}</td>
           </tr>
           <tr style={{ borderTop: line }}>
-            <td colSpan={5} style={{ ...cell, textAlign: 'right' }}>{l.prev}</td>
+            <td colSpan={4} style={{ ...cell, textAlign: 'right' }}>{l.prev}</td>
             <td style={{ ...cell, textAlign: 'right', borderRight: 'none' }}>{rs(b.prev)}</td>
           </tr>
           <tr style={{ borderTop: line }}>
-            <td colSpan={5} style={{ ...cell, textAlign: 'right' }}>{l.paid}</td>
+            <td colSpan={4} style={{ ...cell, textAlign: 'right' }}>{l.paid}</td>
             <td style={{ ...cell, textAlign: 'right', borderRight: 'none' }}>− {rs(b.paid)}</td>
           </tr>
           <tr style={{ borderTop: line, background: '#fff8e1' }}>
-            <td colSpan={5} style={{ ...cell, textAlign: 'right', fontWeight: 800, color: red, fontSize: 16 }}>{due < 0 ? l.advance : l.total}</td>
+            <td colSpan={4} style={{ ...cell, textAlign: 'right', fontWeight: 800, color: red, fontSize: 16 }}>{due < 0 ? l.advance : l.total}</td>
             <td style={{ ...cell, textAlign: 'right', fontWeight: 800, color: red, fontSize: 16, borderRight: 'none' }}>{rs(Math.abs(due))}</td>
           </tr>
         </tbody>
@@ -267,14 +338,19 @@ const ClassicBill = forwardRef(function ClassicBill({ bill: b, lang }, ref) {
 
       <div style={{ display: 'flex', gap: 16, margin: '14px 40px 0', alignItems: 'flex-end' }}>
         <div style={{ flex: 1, fontSize: 13 }}>
+          <div style={{ border: `2px solid ${gold}`, background: '#fffbeb', borderRadius: 6, padding: '6px 12px', marginBottom: 8, fontSize: 15 }}>
+            💧 <b>{l.holding}: <span style={{ color: red, fontSize: 20 }}>{b.jars}</span> {l.jars}</b>
+            {b.bottles > 0 && <b> + {b.bottles} {l.bottles}</b>}
+            {b.deposit > 0 && <div style={{ fontSize: 12.5 }}>{l.depositHeld}: <b>{rs(b.deposit)}</b></div>}
+          </div>
           <b>{l.terms}:</b>
-          <div>• {l.holding}: {holdingText(b, l)}</div>
           <div>• {l.returnNote}</div>
           {b.payments.length > 0 && <div>• {l.payments}: {b.payments.map((p) => `${dmy(p.date).slice(0, 5)} ${rs(p.amount)}`).join(', ')}</div>}
         </div>
+        <PayQr b={b} l={l} color={red} />
         <div style={{ textAlign: 'center', minWidth: 160 }}>
           {due <= 0 && <div style={stamp}>{l.paidStamp}</div>}
-          <div style={{ height: 34 }} />
+          {b.stamp ? <StampImg b={b} h={70} /> : <div style={{ height: 34 }} />}
           <div style={{ borderTop: '1px solid #6b7280', paddingTop: 4, fontSize: 13 }}>{b.shop.owner || l.sign}</div>
         </div>
       </div>
@@ -314,16 +390,19 @@ const SimpleBill = forwardRef(function SimpleBill({ bill: b, lang }, ref) {
       {!b.oneDay && <div style={kv}><span>{l.period}</span><span>{period(b)}</span></div>}
       <div style={kv}><span>{l.billTo}</span><b style={{ textAlign: 'right' }}>{b.customer.name}</b></div>
       <div style={dash} />
-      {b.items.length === 0 && <div style={{ textAlign: 'center', color: '#6b7280' }}>{l.noItems}</div>}
-      {b.items.map((i) => (
-        <div key={i.id} style={{ marginBottom: 6 }}>
-          <div style={{ fontSize: 13 }}>{dmy(i.date).slice(0, 5)} · {itemText(i, l)}</div>
-          <div style={{ ...kv, fontSize: 13, color: '#374151' }}>
-            <span>{i.rate === null ? `${i.qty}` : `${i.qty} × ${rs(i.rate)}`}</span>
-            <b>{i.amount === null ? '' : rs(i.amount)}</b>
-          </div>
+      {b.days.length === 0 && <div style={{ textAlign: 'center', color: '#6b7280' }}>{l.noItems}</div>}
+      {b.days.map((d) => (
+        <div key={d.date} style={{ marginBottom: 7 }}>
+          <div style={{ fontWeight: 700, fontSize: 13 }}>{dmy(d.date).slice(0, 5)}</div>
+          {dayLines(d, l).map((x, k) => (
+            <div key={k} style={{ ...kv, fontSize: 13, color: x.ret ? '#6b7280' : '#374151', paddingLeft: 8 }}>
+              <span>{x.ret ? `${x.name}: ${x.qty}` : `${x.name}: ${x.qty} × ${rs(x.rate)}`}</span>
+              <b>{x.ret ? '' : rs(x.amount)}</b>
+            </div>
+          ))}
         </div>
       ))}
+      {b.days.length > 0 && <div style={{ ...kv, fontWeight: 700, borderTop: '1px solid #d1d5db', paddingTop: 4 }}><span>{l.totalRow}: {b.totalQty}</span><span>{rs(b.sales)}</span></div>}
       <div style={dash} />
       <div style={kv}><span>{l.prev}</span><span>{rs(b.prev)}</span></div>
       <div style={kv}><span>{l.thisBill}</span><span>+ {rs(b.sales)}</span></div>
@@ -332,7 +411,21 @@ const SimpleBill = forwardRef(function SimpleBill({ bill: b, lang }, ref) {
       <div style={{ ...kv, fontSize: 18, fontWeight: 800 }}><span>{due < 0 ? l.advance : l.total}</span><span>{rs(Math.abs(due))}</span></div>
       <div style={{ fontSize: 11, color: '#4b5563', marginTop: 2 }}>{amountInWords(Math.max(due, 0), lang)}</div>
       <div style={dash} />
-      <div style={{ fontSize: 12 }}>💧 {l.holding}: {holdingText(b, l)}</div>
+      <div style={{ border: '1px solid #111827', borderRadius: 6, padding: '6px 10px', textAlign: 'center' }}>
+        <div style={{ fontSize: 12 }}>💧 {l.holding}</div>
+        <div style={{ fontWeight: 800, fontSize: 20 }}>{holdingText(b, l)}</div>
+      </div>
+      {b.qr && (
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 10 }}>
+          <PayQr b={b} l={l} size={120} />
+        </div>
+      )}
+      {b.stamp && (
+        <div style={{ marginTop: 10, textAlign: 'center' }}>
+          <StampImg b={b} h={56} />
+          <div style={{ borderTop: '1px solid #9ca3af', margin: '0 auto', width: 150, paddingTop: 2, fontSize: 11, color: '#4b5563' }}>{b.shop.owner || l.sign}</div>
+        </div>
+      )}
       <div style={{ textAlign: 'center', marginTop: 10, fontWeight: 600 }}>{l.thanks}</div>
       <div style={{ textAlign: 'center', fontSize: 10, color: '#9ca3af', marginTop: 4 }}>{l.made}</div>
     </div>

@@ -126,7 +126,7 @@ export default function CustomerDetail() {
                 </div>
               )}
             </div>
-            {(feat.bottles || feat.deposit) && (c.jar_rate !== null || c.bottle_rate !== null || c.no_deposit) && (
+            {(c.jar_rate !== null || c.bottle_rate !== null || c.no_deposit) && (
               <div className="flex flex-wrap gap-1.5 text-xs">
                 {c.jar_rate !== null && c.jar_rate !== undefined && <span className="chip !cursor-default">{productName(JAR)} · {money(c.jar_rate)}</span>}
                 {feat.bottles && c.bottle_rate !== null && c.bottle_rate !== undefined && <span className="chip !cursor-default">{productName(BOTTLE)} · {money(c.bottle_rate)}</span>}

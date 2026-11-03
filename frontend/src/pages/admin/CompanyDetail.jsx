@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { CalendarPlus, Droplets, ImagePlus, KeyRound, Landmark, LogIn, Mail, Pause, Pencil, Phone, Play, Trash2, Truck, Users } from 'lucide-react';
 import api, { errorMessage } from '../../api/client';
 import defaultLogo from '../../assets/logo.png';
-import { ErrorBox, Field, Loader, Modal, PageHeader, StatCard } from '../../components/ui';
+import { ErrorBox, Field, Loader, MiniSpin, Modal, PageHeader, StatCard, UploadOverlay } from '../../components/ui';
 import { useAuth } from '../../context/AuthContext';
 import { useUi } from '../../context/UiContext';
 import { t } from '../../i18n';
@@ -25,6 +25,7 @@ export default function CompanyDetail() {
   const { data, loading, error, reload, setData } = useApi(`/admin/companies/${id}`);
   const [busy, setBusy] = useState(false);
   const [pwOpen, setPwOpen] = useState(false);
+  const [logoBusy, setLogoBusy] = useState(false); // logo upload / remove in progress
   const fileRef = useRef(null);
   const c = data?.data;
 
@@ -83,7 +84,16 @@ export default function CompanyDetail() {
     if (!file) return;
     const body = new FormData();
     body.append('logo', file);
-    run(() => api.post(`/admin/companies/${id}/logo`, body));
+    withLogoBusy(() => api.post(`/admin/companies/${id}/logo`, body));
+  };
+
+  const withLogoBusy = async (fn) => {
+    setLogoBusy(true);
+    try {
+      await run(fn);
+    } finally {
+      setLogoBusy(false);
+    }
   };
 
   const remove = async () => {
@@ -121,11 +131,10 @@ export default function CompanyDetail() {
         <div className="relative flex flex-col gap-4 lg:flex-row lg:items-center">
           <div className="flex min-w-0 flex-1 flex-col gap-4 sm:flex-row sm:items-center">
             <div className="flex min-w-0 items-center gap-3 sm:contents">
-              <img
-                src={c.branding?.logo_url || defaultLogo}
-                alt=""
-                className="h-14 w-14 shrink-0 rounded-2xl bg-white object-contain p-1 shadow-lg ring-4 ring-white/20 sm:h-16 sm:w-16"
-              />
+              <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-2xl bg-white shadow-lg ring-4 ring-white/20 sm:h-16 sm:w-16">
+                <img src={c.branding?.logo_url || defaultLogo} alt="" className="h-full w-full object-contain p-1" />
+                <UploadOverlay busy={logoBusy} compact />
+              </div>
               {/* Phone: badges next to the logo; larger screens: above the details. */}
               <div className="flex min-w-0 flex-wrap items-center gap-2 sm:hidden">
                 <StatusBadge company={c} />
@@ -234,10 +243,10 @@ export default function CompanyDetail() {
           <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={uploadLogo} />
           <div className="flex flex-wrap gap-2">
             <button className="btn-light" onClick={() => fileRef.current?.click()} disabled={busy}>
-              <ImagePlus size={16} /> {c.branding?.logo_url ? t('adm.changeLogo') : t('adm.uploadLogo')}
+              {logoBusy ? <MiniSpin /> : <ImagePlus size={16} />} {logoBusy ? t('common.uploading') : c.branding?.logo_url ? t('adm.changeLogo') : t('adm.uploadLogo')}
             </button>
             {c.branding?.logo_url && (
-              <button className="btn-light text-red-600" onClick={() => run(() => api.delete(`/admin/companies/${id}/logo`))} disabled={busy}>
+              <button className="btn-light text-red-600" onClick={() => withLogoBusy(() => api.delete(`/admin/companies/${id}/logo`))} disabled={busy}>
                 <Trash2 size={16} /> {t('adm.removeLogo')}
               </button>
             )}
