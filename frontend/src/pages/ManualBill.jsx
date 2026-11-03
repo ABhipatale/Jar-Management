@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Download, MessageCircle, Plus, Printer, Trash2 } from 'lucide-react';
+import BillOptions from '../components/bill/BillOptions';
 import BillPreview, { useBillLogo } from '../components/bill/BillPreview';
 import { Field, PageHeader } from '../components/ui';
 import { useSettings } from '../context/SettingsContext';
@@ -134,7 +135,7 @@ export default function ManualBill() {
         <Field label={t('mb.name')}>
           <input className="input" value={form.name} onChange={set('name')} maxLength={120} autoComplete="off" />
         </Field>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-2 [&>*]:min-w-0">
           <Field label={t('mb.mobile')}>
             <input className="input tabular-nums" type="tel" inputMode="numeric" value={form.mobile} onChange={(e) => setForm({ ...form, mobile: e.target.value.replace(/[^\d+ ]/g, '') })} maxLength={16} />
           </Field>
@@ -149,7 +150,7 @@ export default function ManualBill() {
           <button type="button" className="chip" onClick={() => pickMonth(false)}>{t('bill.p.thisMonth')}</button>
           <button type="button" className="chip" onClick={() => pickMonth(true)}>{t('bill.p.lastMonth')}</button>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 [&>*]:min-w-0">
           <Field label={t('mb.from')}>
             <input type="date" className="input" value={form.from} max={form.to} onChange={(e) => e.target.value && setForm({ ...form, from: e.target.value })} />
           </Field>
@@ -175,12 +176,15 @@ export default function ManualBill() {
                   </button>
                 )}
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <Field label={t('mb.date')}>
-                  <input type="date" className="input" value={r.date} onChange={(e) => e.target.value && setRow(r.id, { date: e.target.value })} />
-                </Field>
+              <Field label={t('mb.date')}>
+                <input type="date" className="input" value={r.date} onChange={(e) => e.target.value && setRow(r.id, { date: e.target.value })} />
+              </Field>
+              <div className="grid grid-cols-2 gap-3 [&>*]:min-w-0">
                 <Field label={t('mb.qty')}>
                   <input className="input tabular-nums" inputMode="numeric" value={r.qty} placeholder="0" onChange={(e) => setRow(r.id, { qty: e.target.value.replace(/\D/g, '') })} />
+                </Field>
+                <Field label={t('mb.ret')}>
+                  <input className="input tabular-nums" inputMode="numeric" value={r.ret ?? ''} placeholder="0" onChange={(e) => setRow(r.id, { ret: e.target.value.replace(/\D/g, '') })} />
                 </Field>
               </div>
               <Field label={t('mb.detail')}>
@@ -191,14 +195,11 @@ export default function ManualBill() {
                   <button key={c} type="button" className={`chip ${r.text === c ? 'chip-active' : ''}`} onClick={() => setRow(r.id, { text: c })}>{c}</button>
                 ))}
               </div>
-              <Field label={t('mb.ret')}>
-                <input className="input tabular-nums" inputMode="numeric" value={r.ret ?? ''} placeholder="0" onChange={(e) => setRow(r.id, { ret: e.target.value.replace(/\D/g, '') })} />
-              </Field>
-              <div className="grid grid-cols-2 items-end gap-3">
+              <div className="grid grid-cols-2 items-end gap-3 [&>*]:min-w-0">
                 <Field label={t('mb.rate')}>
                   <input className="input tabular-nums" inputMode="decimal" value={r.rate} placeholder="0" onChange={(e) => setRow(r.id, { rate: e.target.value.replace(/[^\d.]/g, '') })} />
                 </Field>
-                <div className="rounded-lg bg-white px-3 py-2.5 text-right ring-1 ring-line">
+                <div className="rounded-lg bg-surface px-3 py-2 text-right ring-1 ring-line">
                   <div className="text-xs text-muted">{t('mb.amount')}</div>
                   <div className="text-lg font-bold tabular-nums text-ink">{rupees(amount)}</div>
                 </div>
@@ -212,7 +213,7 @@ export default function ManualBill() {
       </Card>
 
       <Card title={t('mb.extra')}>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 [&>*]:min-w-0">
           <Field label={t('mb.prev')}>
             <input className="input tabular-nums" inputMode="decimal" value={form.prev} placeholder="0" onChange={money('prev')} />
           </Field>
@@ -240,24 +241,7 @@ export default function ManualBill() {
       </section>
 
       <Card title={t('mb.look')}>
-        <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
-          <div>
-            <span className="label">{t('bill.design')}</span>
-            <div className="flex flex-wrap gap-2">
-              {BILL_DESIGNS.map((d) => (
-                <button key={d} type="button" className={`chip ${design === d ? 'chip-active' : ''}`} onClick={() => setDesign(d)}>{t(`bill.d.${d}`)}</button>
-              ))}
-            </div>
-          </div>
-          <div>
-            <span className="label">{t('bill.language')}</span>
-            <div className="flex gap-2">
-              {[['mr', 'मराठी'], ['en', 'English']].map(([k, n]) => (
-                <button key={k} type="button" className={`chip ${lang === k ? 'chip-active' : ''}`} onClick={() => setLang(k)}>{n}</button>
-              ))}
-            </div>
-          </div>
-        </div>
+        <BillOptions design={design} setDesign={setDesign} lang={lang} setLang={setLang} />
       </Card>
 
       <div className="no-print grid grid-cols-2 gap-2 sm:grid-cols-3">
