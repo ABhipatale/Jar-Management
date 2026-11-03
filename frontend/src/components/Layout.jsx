@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   AlertTriangle, BarChart3, Bell, CalendarClock, CreditCard, ChevronsLeft, ChevronsRight, CloudOff, Droplets, Home, LayoutDashboard, ListChecks,
-  LogOut, Megaphone, Menu, Truck, MessageCircle, Monitor, Moon, Plus, PlusCircle, Receipt, Search, Settings as SettingsIcon, Sun, Users, Wallet, X,
+  FilePlus2, LogOut, Megaphone, Menu, Truck, MessageCircle, Monitor, Moon, Plus, PlusCircle, Receipt, Search, Settings as SettingsIcon, Sun, Users, Wallet, X,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext';
@@ -39,6 +39,7 @@ const GROUPS = [
       { to: '/delivery', label: t('route.nav'), icon: Truck, feature: 'routes' },
       { to: '/customers', label: t('nav.customers'), icon: Users },
       { to: '/payments', label: t('nav.payments'), icon: Wallet },
+      { to: '/manual-bill', label: t('mb.nav'), icon: FilePlus2 },
     ],
   },
   {

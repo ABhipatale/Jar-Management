@@ -26,6 +26,7 @@ import JarStatusReport from './pages/reports/JarStatusReport';
 import ProfitReport from './pages/reports/ProfitReport';
 import Broadcast from './pages/Broadcast';
 import CustomerBill from './pages/CustomerBill';
+import ManualBill from './pages/ManualBill';
 import Delivery from './pages/Delivery';
 import DeliveryRoute from './pages/DeliveryRoute';
 import AdminLayout from './pages/admin/AdminLayout';
@@ -81,6 +82,7 @@ export default function App() {
           <Route path="customers/:id/edit" element={<CustomerForm />} />
           <Route path="customers/:id/ledger" element={<Ledger />} />
           <Route path="customers/:id/bill" element={<CustomerBill />} />
+          <Route path="manual-bill" element={<ManualBill />} />
           <Route path="jars" element={<Jars />} />
           <Route path="entry" element={<DailyEntry />} />
           <Route path="payments" element={<Payments />} />
