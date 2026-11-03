@@ -91,8 +91,6 @@ export function buildBill(ledger, settings, { from, to }) {
     days,
     totalQty,
     // Only when a UPI ID is saved in Settings: the bill then shows a pay-now QR.
-    // The shop's own uploaded payment QR picture (Settings). Preferred over the generated one.
-    payQrUrl: settings?.pay_qr_url ? (import.meta.env.VITE_API_URL || '') + settings.pay_qr_url : null,
     upi: settings?.upi_id ? { id: settings.upi_id, name: settings?.business_name || b.name || '' } : null,
     payments,
     prev,

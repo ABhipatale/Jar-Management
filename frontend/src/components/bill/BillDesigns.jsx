@@ -71,9 +71,9 @@ function PayQr({ b, l, size = 104, color = '#0f172a' }) {
   if (!b.qr) return null;
   return (
     <div style={{ textAlign: 'center', flexShrink: 0, width: size + 16 }}>
-      <img src={b.qr} alt="" style={{ width: size, height: size, objectFit: 'contain', display: 'block', margin: '0 auto' }} />
+      <img src={b.qr} alt="" style={{ width: size, height: size, display: 'block', margin: '0 auto' }} />
       <div style={{ fontSize: 11.5, fontWeight: 700, marginTop: 3, color }}>{l.scanPay}</div>
-      {b.upi && <div style={{ fontSize: 10.5, color: '#64748b', wordBreak: 'break-all' }}>{b.upi.id}</div>}
+      <div style={{ fontSize: 10.5, color: '#64748b', wordBreak: 'break-all' }}>{b.upi.id}</div>
     </div>
   );
 }

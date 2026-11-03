@@ -39,21 +39,14 @@ export default function BillPreview({ design, bill, lang, sheetRef }) {
     return () => ro.disconnect();
   }, [design, sheet]);
 
-  // Pay-now QR: the shop's uploaded QR picture if there is one, else one made from the UPI ID.
-  // Only while something is due; nothing at all when neither exists (the bill stays as it was).
   const [qr, setQr] = useState(null);
-  const qrKey = `${bill.payQrUrl || ''}|${bill.upi ? bill.upi.id : ''}|${bill.closing > 0}`;
+  const upiKey = bill.upi ? `${bill.upi.id}|${bill.closing}` : '';
   useEffect(() => {
     let live = true;
-    (async () => {
-      let v = null;
-      if (bill.payQrUrl && bill.closing > 0) v = (await inlineImage(bill.payQrUrl)) || bill.payQrUrl;
-      else v = await upiQr(bill);
-      if (live) setQr(v);
-    })();
+    upiQr(bill).then((v) => live && setQr(v));
     return () => { live = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [qrKey]);
+  }, [upiKey]);
 
   // The shop's signature & stamp (only when uploaded in Settings): without it the bill is unchanged.
   const [stamp, setStamp] = useState(null);
