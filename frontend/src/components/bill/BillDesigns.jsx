@@ -50,7 +50,6 @@ function dayLines(d, l) {
       name: `${g.label || (g.product === 'bottle' ? l.bottleName : l.jarName)}${g.deposit ? ` (${l.deposit} ${rs(g.deposit)})` : ''}`,
       qty: g.qty, rate: g.rate, amount: g.amount,
     })),
-    ...d.returned.map((r) => ({ name: `↩ ${r.product === 'bottle' ? l.bottleReturned : l.jarReturned}`, qty: r.qty, ret: true })),
   ];
 }
 
@@ -172,7 +171,7 @@ const ModernBill = forwardRef(function ModernBill({ bill: b, lang }, ref) {
             ))}
             {b.days.length > 0 && (
               <tr style={{ background: '#eff6ff', fontWeight: 700 }}>
-                <td style={td} colSpan={2}>{l.totalRow}{b.totalReturned > 0 && <span style={{ fontWeight: 500, color: '#475569' }}> · ↩ {l.returnedTotal}: {b.totalReturned}</span>}</td>
+                <td style={td} colSpan={2}>{l.totalRow}</td>
                 <td style={{ ...td, textAlign: 'right' }}>{b.totalQty}</td>
                 <td style={td} />
                 <td style={{ ...td, textAlign: 'right', color: blue }}>{rs(b.sales)}</td>
@@ -308,7 +307,7 @@ const ClassicBill = forwardRef(function ClassicBill({ bill: b, lang }, ref) {
             </tr>
           ))}
           <tr style={{ borderTop: line, fontWeight: 700 }}>
-            <td colSpan={2} style={{ ...cell, textAlign: 'right' }}>{b.totalReturned > 0 && <span style={{ fontWeight: 500, color: '#4b5563' }}>↩ {l.returnedTotal}: {b.totalReturned} · </span>}{l.totalRow}</td>
+            <td colSpan={2} style={{ ...cell, textAlign: 'right' }}>{l.totalRow}</td>
             <td style={{ ...cell, textAlign: 'right' }}>{b.totalQty}</td>
             <td style={cell} />
             <td style={{ ...cell, textAlign: 'right', borderRight: 'none' }}>{rs(b.sales)}</td>
@@ -403,7 +402,6 @@ const SimpleBill = forwardRef(function SimpleBill({ bill: b, lang }, ref) {
         </div>
       ))}
       {b.days.length > 0 && <div style={{ ...kv, fontWeight: 700, borderTop: '1px solid #d1d5db', paddingTop: 4 }}><span>{l.totalRow}: {b.totalQty}</span><span>{rs(b.sales)}</span></div>}
-      {b.totalReturned > 0 && <div style={{ fontSize: 12.5, color: '#4b5563' }}>↩ {l.returnedTotal}: {b.totalReturned}</div>}
       <div style={dash} />
       <div style={kv}><span>{l.prev}</span><span>{rs(b.prev)}</span></div>
       <div style={kv}><span>{l.thisBill}</span><span>+ {rs(b.sales)}</span></div>

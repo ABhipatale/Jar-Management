@@ -37,21 +37,18 @@ function shopAndUpi(settings) {
  */
 export function buildManualBill(f, settings) {
   const rows = (f.rows || [])
-    .map((r) => ({ date: r.date || f.billDate, label: String(r.text || '').trim(), qty: Math.max(0, parseInt(r.qty, 10) || 0), ret: Math.max(0, parseInt(r.ret, 10) || 0), rate: Math.max(0, Number(r.rate) || 0) }))
-    .filter((r) => r.qty > 0 || r.ret > 0)
+    .map((r) => ({ date: r.date || f.billDate, label: String(r.text || '').trim(), qty: Math.max(0, parseInt(r.qty, 10) || 0), rate: Math.max(0, Number(r.rate) || 0) }))
+    .filter((r) => r.qty > 0)
     .sort((a, b) => a.date.localeCompare(b.date));
 
   const dayMap = new Map();
   rows.forEach((r) => {
     if (!dayMap.has(r.date)) dayMap.set(r.date, { date: r.date, given: [], returned: [], qty: 0, amount: 0 });
     const d = dayMap.get(r.date);
-    if (r.qty > 0) {
-      const amount = r2(r.qty * r.rate);
-      d.given.push({ product: 'jar', label: r.label, qty: r.qty, rate: r.rate, amount, deposit: 0 });
-      d.qty += r.qty;
-      d.amount = r2(d.amount + amount);
-    }
-    if (r.ret > 0) d.returned.push({ product: 'jar', qty: r.ret });
+    const amount = r2(r.qty * r.rate);
+    d.given.push({ product: 'jar', label: r.label, qty: r.qty, rate: r.rate, amount, deposit: 0 });
+    d.qty += r.qty;
+    d.amount = r2(d.amount + amount);
   });
   const days = [...dayMap.values()];
   const sales = r2(days.reduce((s, d) => s + d.amount, 0));
@@ -68,7 +65,6 @@ export function buildManualBill(f, settings) {
     items: [],
     days,
     totalQty: days.reduce((s, d) => s + d.qty, 0),
-    totalReturned: days.reduce((s, d) => s + d.returned.reduce((x, r) => x + r.qty, 0), 0),
     upi,
     payments: [],
     prev,
@@ -133,9 +129,8 @@ export function buildBill(ledger, settings, { from, to }) {
   const days = [...dayMap.values()].map((d) => ({
     ...d,
     given: d.given.map((g) => ({ ...g, amount: r2(g.amount), rate: g.qty ? r2(g.amount / g.qty) : null })),
-  }));
+  })).filter((d) => d.given.length > 0); // bills list deliveries only; returned empties are not printed
   const totalQty = days.reduce((s, d) => s + d.qty, 0);
-  const totalReturned = days.reduce((s, d) => s + d.returned.reduce((x, r) => x + r.qty, 0), 0);
 
   const sales = r2(items.reduce((s, i) => s + (i.amount || 0), 0));
   const paid = r2(rows.reduce((s, r) => s + (Number(r.paid) || 0), 0));
@@ -153,7 +148,6 @@ export function buildBill(ledger, settings, { from, to }) {
     items,
     days,
     totalQty,
-    totalReturned,
     upi,
     payments,
     prev,

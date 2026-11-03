@@ -13,7 +13,7 @@ import { openWhatsApp } from '../lib/whatsapp';
 const DRAFT_KEY = 'rws_manual_bill';
 
 let seq = 0;
-const newRow = (rate) => ({ id: ++seq, date: today(), text: '', qty: '', ret: '', rate });
+const newRow = (rate) => ({ id: ++seq, date: today(), text: '', qty: '', rate });
 const rupees = (v) => `₹${(Math.round((Number(v) || 0) * 100) / 100).toLocaleString('en-IN')}`;
 
 const emptyForm = () => ({ name: '', mobile: '', address: '', billDate: today(), from: monthStart(today()), to: today(), prev: '', paid: '', jars: '' });
@@ -179,14 +179,9 @@ export default function ManualBill() {
               <Field label={t('mb.date')}>
                 <input type="date" className="input" value={r.date} onChange={(e) => e.target.value && setRow(r.id, { date: e.target.value })} />
               </Field>
-              <div className="grid grid-cols-2 gap-3 [&>*]:min-w-0">
-                <Field label={t('mb.qty')}>
-                  <input className="input tabular-nums" inputMode="numeric" value={r.qty} placeholder="0" onChange={(e) => setRow(r.id, { qty: e.target.value.replace(/\D/g, '') })} />
-                </Field>
-                <Field label={t('mb.ret')}>
-                  <input className="input tabular-nums" inputMode="numeric" value={r.ret ?? ''} placeholder="0" onChange={(e) => setRow(r.id, { ret: e.target.value.replace(/\D/g, '') })} />
-                </Field>
-              </div>
+              <Field label={t('mb.qty')}>
+                <input className="input tabular-nums" inputMode="numeric" value={r.qty} placeholder="0" onChange={(e) => setRow(r.id, { qty: e.target.value.replace(/\D/g, '') })} />
+              </Field>
               <Field label={t('mb.detail')}>
                 <input className="input" value={r.text} placeholder={t('mb.detailPh')} onChange={(e) => setRow(r.id, { text: e.target.value })} maxLength={80} />
               </Field>
@@ -229,7 +224,6 @@ export default function ManualBill() {
       <section className="no-print card !p-0 overflow-hidden">
         <div className="space-y-1.5 p-4 text-[15px]">
           <div className="flex justify-between"><span className="text-muted">{t('mb.totalQty')}</span><b className="tabular-nums">{bill.totalQty}</b></div>
-          {bill.totalReturned > 0 && <div className="flex justify-between"><span className="text-muted">{t('mb.totalRet')}</span><b className="tabular-nums">{bill.totalReturned}</b></div>}
           <div className="flex justify-between"><span className="text-muted">{t('mb.thisBill')}</span><b className="tabular-nums">{rupees(bill.sales)}</b></div>
           <div className="flex justify-between"><span className="text-muted">{t('mb.prev')}</span><b className="tabular-nums">{rupees(bill.prev)}</b></div>
           <div className="flex justify-between"><span className="text-muted">{t('mb.paid')}</span><b className="tabular-nums text-emerald-700">− {rupees(bill.paid)}</b></div>
