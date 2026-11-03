@@ -87,7 +87,7 @@ export default function CustomerBill() {
     }
   };
 
-  const shown = bill && { ...bill, shop: { ...bill.shop, logo } };
+  const shown = bill && { ...bill, shop: { ...bill.shop, logo: logo || bill.shop.logo } }; // inlined copy once ready, else the plain URL
 
   return (
     <div className="mx-auto max-w-4xl space-y-4">

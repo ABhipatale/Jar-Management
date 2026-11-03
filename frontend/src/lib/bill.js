@@ -230,7 +230,11 @@ export function downloadBlob(blob, filename) {
  */
 export async function billPdf(node) {
   const { toCanvas } = await import('html-to-image');
-  const canvas = await toCanvas(node, { pixelRatio: 2, backgroundColor: '#ffffff', cacheBust: true, skipFonts: true });
+  // Logo / stamp / QR must be fully decoded before the picture is taken, or they come out blank.
+  await Promise.all([...node.querySelectorAll('img')].map((img) => (img.decode ? img.decode().catch(() => {}) : null)));
+  const opts = { pixelRatio: 2, backgroundColor: '#ffffff', skipFonts: true };
+  await toCanvas(node, opts); // warm-up pass: browsers often drop images on the very first capture
+  const canvas = await toCanvas(node, opts);
   const jpeg = new Uint8Array(await (await new Promise((res) => canvas.toBlob(res, 'image/jpeg', 0.92))).arrayBuffer());
 
   const W = 595.28; // A4 width in points
