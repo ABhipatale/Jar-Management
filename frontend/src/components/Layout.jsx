@@ -15,6 +15,7 @@ import { businessName, businessPlace, daysUntil, fmtDate, today } from '../lib/f
 import { messages, openWhatsAppLater } from '../lib/whatsapp';
 import { getTheme, setTheme } from '../lib/theme';
 import { useDebounced } from '../lib/useApi';
+import InstallButton from './InstallButton';
 import { DevCredit, PendingText } from './ui';
 import { features } from '../lib/products';
 import { autoPush, enablePush, pushLater } from '../lib/push';
@@ -201,7 +202,10 @@ export default function Layout() {
               </div>
             </div>
           ))}
-          <SummaryButton collapsed={collapsed} />
+          <div className="space-y-2">
+            <SummaryButton collapsed={collapsed} />
+            <InstallButton collapsed={collapsed} />
+          </div>
         </nav>
         <div className="space-y-1 border-t border-line p-3">
           {!collapsed && <ThemeSwitch />}
@@ -370,7 +374,10 @@ export default function Layout() {
                   ))}
                 </div>
               ))}
-              <SummaryButton onDone={() => setDrawer(false)} />
+              <div className="space-y-2">
+                <SummaryButton onDone={() => setDrawer(false)} />
+                <InstallButton onDone={() => setDrawer(false)} />
+              </div>
             </nav>
             <div className="space-y-2 border-t border-line p-3 pb-6">
               <ThemeSwitch />
