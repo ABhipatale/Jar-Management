@@ -5,6 +5,7 @@ import './index.css';
 import App from './App.jsx';
 import { AuthProvider } from './context/AuthContext.jsx';
 import { UiProvider } from './context/UiContext.jsx';
+import './lib/install'; // starts listening for the browser's install prompt right away
 import { initTheme } from './lib/theme';
 
 initTheme();
