@@ -11,7 +11,7 @@ class BillingPayment extends Model
 {
     use BelongsToCompany;
 
-    protected $fillable = ['company_id', 'billing_order_id', 'plan_id', 'razorpay_payment_id', 'amount', 'currency', 'period_end'];
+    protected $fillable = ['company_id', 'billing_order_id', 'plan_id', 'razorpay_payment_id', 'amount', 'currency', 'mode', 'method', 'note', 'period_end'];
 
     protected function casts(): array
     {

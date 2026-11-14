@@ -149,7 +149,7 @@ export default function Dashboard() {
                     ) : (
                       <span className="text-sm text-muted">—</span>
                     )}
-                    <div className="text-xs text-muted">{[p.plan, fmtDate(p.date)].filter(Boolean).join(' · ')}</div>
+                    <div className="text-xs text-muted">{[p.plan, p.mode === 'offline' ? t('adm.off.badge') : t('adm.on.badge'), fmtDate(p.date)].filter(Boolean).join(' · ')}</div>
                   </div>
                   <span className="text-sm font-semibold tabular-nums text-emerald-700">+{money(p.amount)}</span>
                 </li>

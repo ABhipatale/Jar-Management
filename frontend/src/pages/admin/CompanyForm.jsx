@@ -12,6 +12,7 @@ const EMPTY = {
   owner_name: '', owner_email: '', owner_mobile: '', owner_password: '',
   payment: 'pending', // new companies: choose and pay a plan on first login
 };
+const METHODS = ['cash', 'upi', 'bank', 'cheque', 'other'];
 
 /** Register a company (with its owner login) or edit an existing one. */
 export default function CompanyForm() {
@@ -23,6 +24,7 @@ export default function CompanyForm() {
   const [loading, setLoading] = useState(editing);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [offline, setOffline] = useState(null); // { amount, method, note } when money was received offline
   const plans = useApi('/admin/plans').data?.data || [];
 
   useEffect(() => {
@@ -53,6 +55,7 @@ export default function CompanyForm() {
     const company = {
       name: form.name, name_mr: form.name_mr || null, short_name: form.short_name || null, slug: form.slug || null,
       locale: form.locale, plan_id: form.plan_id ? Number(form.plan_id) : null, expires_at: form.expires_at || null,
+      offline_payment: offline && form.plan_id && (editing || form.payment === 'paid') ? { ...offline, amount: Number(offline.amount) } : undefined,
     };
     try {
       const owner = { owner_name: form.owner_name, owner_email: form.owner_email, owner_mobile: form.owner_mobile || null };
@@ -172,6 +175,37 @@ export default function CompanyForm() {
             <input className="input" type="date" value={form.expires_at} onChange={set('expires_at')} />
           </Field>
         </div>
+        )}
+        {(editing || form.payment === 'paid') && (
+          <div className="space-y-3 rounded-xl bg-surface p-3.5 ring-1 ring-line">
+            <label className="flex items-center gap-2.5 text-sm font-semibold text-ink">
+              <input
+                type="checkbox"
+                checked={!!offline}
+                disabled={!form.plan_id}
+                onChange={(e) => setOffline(e.target.checked ? { amount: plans.find((p) => String(p.id) === String(form.plan_id))?.price ?? '', method: 'cash', note: '' } : null)}
+              />
+              {t('adm.off.title')}
+            </label>
+            <p className="text-xs text-muted">{form.plan_id ? t('adm.off.hint') : t('adm.off.pickPlan')}</p>
+            {offline && form.plan_id && (
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field label={t('adm.off.amount')}>
+                  <input className="input" type="number" min="0" step="0.01" inputMode="decimal" required value={offline.amount} onChange={(e) => setOffline({ ...offline, amount: e.target.value })} />
+                </Field>
+                <Field label={t('adm.off.method')}>
+                  <select className="input" value={offline.method} onChange={(e) => setOffline({ ...offline, method: e.target.value })}>
+                    {METHODS.map((m) => <option key={m} value={m}>{t(`adm.off.m.${m}`)}</option>)}
+                  </select>
+                </Field>
+                <div className="sm:col-span-2">
+                  <Field label={t('adm.off.note')}>
+                    <input className="input" value={offline.note} maxLength={255} onChange={(e) => setOffline({ ...offline, note: e.target.value })} />
+                  </Field>
+                </div>
+              </div>
+            )}
+          </div>
         )}
       </section>
 

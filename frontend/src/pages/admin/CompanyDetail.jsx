@@ -269,9 +269,14 @@ export default function CompanyDetail() {
             {c.payments.map((p) => (
               <li key={p.id} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
                 <div className="min-w-0">
-                  <div className="font-medium text-ink">{p.plan}</div>
+                  <div className="font-medium text-ink">
+                    {p.plan}{' '}
+                    <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${p.mode === 'offline' ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'}`}>
+                      {p.mode === 'offline' ? t('adm.off.badge') : t('adm.on.badge')}
+                    </span>
+                  </div>
                   <div className="truncate text-xs text-muted">
-                    {fmtDate(p.date)} · {t('bill.validTill', { date: fmtDate(p.period_end) })} · {p.razorpay_payment_id}
+                    {fmtDate(p.date)} · {t('bill.validTill', { date: fmtDate(p.period_end) })} · {p.mode === 'offline' ? [t(`adm.off.m.${p.method}`), p.note].filter(Boolean).join(' · ') : p.razorpay_payment_id}
                   </div>
                 </div>
                 <div className="font-semibold tabular-nums text-ink">₹{p.amount}</div>
