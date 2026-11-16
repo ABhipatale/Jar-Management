@@ -1,0 +1,492 @@
+-- EasyJar: FULL DATABASE STRUCTURE of the local database (tables, columns, indexes, foreign keys). NO DATA.
+-- Exported 2026-11-17 from local database "JarManagement".
+--
+-- SAFE: every statement is CREATE TABLE IF NOT EXISTS, so running this on a database that already has
+-- the tables changes NOTHING (it never alters, drops or deletes). Use it to:
+--   1. build a brand-new EMPTY database with the complete current structure, or
+--   2. COMPARE against pre-prod / live (import into a separate scratch database, then compare), or
+--   3. read it to see which columns the live database is missing.
+-- It is NOT an update script: to bring an existing database up to date, run the dated update files in
+-- this folder, in order. Never run this file against live to "fix" it.
+SET FOREIGN_KEY_CHECKS=0;
+
+CREATE TABLE IF NOT EXISTS `admin_audit_logs` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` bigint(20) unsigned DEFAULT NULL,
+  `company_id` bigint(20) unsigned DEFAULT NULL,
+  `action` varchar(40) NOT NULL,
+  `meta` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`meta`)),
+  `created_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `admin_audit_logs_user_id_foreign` (`user_id`),
+  KEY `admin_audit_logs_company_id_foreign` (`company_id`),
+  KEY `admin_audit_logs_created_at_index` (`created_at`),
+  CONSTRAINT `admin_audit_logs_company_id_foreign` FOREIGN KEY (`company_id`) REFERENCES `companies` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `admin_audit_logs_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=33 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `billing_orders` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `company_id` bigint(20) unsigned NOT NULL,
+  `plan_id` bigint(20) unsigned NOT NULL,
+  `user_id` bigint(20) unsigned DEFAULT NULL,
+  `razorpay_order_id` varchar(40) NOT NULL,
+  `amount` decimal(10,2) NOT NULL,
+  `status` varchar(20) NOT NULL DEFAULT 'created',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `billing_orders_razorpay_order_id_unique` (`razorpay_order_id`),
+  KEY `billing_orders_company_id_foreign` (`company_id`),
+  KEY `billing_orders_plan_id_foreign` (`plan_id`),
+  KEY `billing_orders_user_id_foreign` (`user_id`),
+  KEY `billing_orders_status_index` (`status`),
+  CONSTRAINT `billing_orders_company_id_foreign` FOREIGN KEY (`company_id`) REFERENCES `companies` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `billing_orders_plan_id_foreign` FOREIGN KEY (`plan_id`) REFERENCES `plans` (`id`),
+  CONSTRAINT `billing_orders_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `billing_payments` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `company_id` bigint(20) unsigned NOT NULL,
+  `billing_order_id` bigint(20) unsigned DEFAULT NULL,
+  `plan_id` bigint(20) unsigned DEFAULT NULL,
+  `razorpay_payment_id` varchar(40) DEFAULT NULL,
+  `amount` decimal(10,2) NOT NULL,
+  `currency` varchar(3) NOT NULL DEFAULT 'INR',
+  `mode` varchar(10) NOT NULL DEFAULT 'online',
+  `method` varchar(20) DEFAULT NULL,
+  `note` varchar(255) DEFAULT NULL,
+  `period_end` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `billing_payments_razorpay_payment_id_unique` (`razorpay_payment_id`),
+  KEY `billing_payments_company_id_foreign` (`company_id`),
+  KEY `billing_payments_plan_id_foreign` (`plan_id`),
+  KEY `billing_payments_billing_order_id_foreign` (`billing_order_id`),
+  CONSTRAINT `billing_payments_billing_order_id_foreign` FOREIGN KEY (`billing_order_id`) REFERENCES `billing_orders` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `billing_payments_company_id_foreign` FOREIGN KEY (`company_id`) REFERENCES `companies` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `billing_payments_plan_id_foreign` FOREIGN KEY (`plan_id`) REFERENCES `plans` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `bookings` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `company_id` bigint(20) unsigned NOT NULL,
+  `customer_id` bigint(20) unsigned NOT NULL,
+  `delivery_date` date NOT NULL,
+  `jar_quantity` int(10) unsigned NOT NULL,
+  `bottle_quantity` int(10) unsigned NOT NULL DEFAULT 0,
+  `notes` text DEFAULT NULL,
+  `status` enum('booked','delivered','cancelled') NOT NULL DEFAULT 'booked',
+  `jar_transaction_id` bigint(20) unsigned DEFAULT NULL,
+  `eve_notified_at` timestamp NULL DEFAULT NULL,
+  `morning_notified_at` timestamp NULL DEFAULT NULL,
+  `delivered_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `bookings_customer_id_foreign` (`customer_id`),
+  KEY `bookings_jar_transaction_id_foreign` (`jar_transaction_id`),
+  KEY `bookings_delivery_date_index` (`delivery_date`),
+  KEY `bookings_status_index` (`status`),
+  KEY `bookings_company_id_status_delivery_date_index` (`company_id`,`status`,`delivery_date`),
+  CONSTRAINT `bookings_company_id_foreign` FOREIGN KEY (`company_id`) REFERENCES `companies` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `bookings_customer_id_foreign` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `bookings_jar_transaction_id_foreign` FOREIGN KEY (`jar_transaction_id`) REFERENCES `jar_transactions` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `cache` (
+  `key` varchar(255) NOT NULL,
+  `value` mediumtext NOT NULL,
+  `expiration` int(11) NOT NULL,
+  PRIMARY KEY (`key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `cache_locks` (
+  `key` varchar(255) NOT NULL,
+  `owner` varchar(255) NOT NULL,
+  `expiration` int(11) NOT NULL,
+  PRIMARY KEY (`key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `companies` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(120) NOT NULL,
+  `name_mr` varchar(120) DEFAULT NULL,
+  `short_name` varchar(40) DEFAULT NULL,
+  `slug` varchar(60) NOT NULL,
+  `locale` varchar(5) NOT NULL DEFAULT 'mr',
+  `status` enum('active','suspended') NOT NULL DEFAULT 'active',
+  `bottles_enabled` tinyint(1) NOT NULL DEFAULT 0,
+  `deposit_enabled` tinyint(1) NOT NULL DEFAULT 0,
+  `routes_enabled` tinyint(1) NOT NULL DEFAULT 0,
+  `plan` varchar(40) DEFAULT NULL,
+  `plan_id` bigint(20) unsigned DEFAULT NULL,
+  `expires_at` timestamp NULL DEFAULT NULL,
+  `assets_version` int(10) unsigned NOT NULL DEFAULT 0,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `companies_slug_unique` (`slug`),
+  KEY `companies_status_index` (`status`),
+  KEY `companies_plan_id_foreign` (`plan_id`),
+  CONSTRAINT `companies_plan_id_foreign` FOREIGN KEY (`plan_id`) REFERENCES `plans` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `company_assets` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `company_id` bigint(20) unsigned NOT NULL,
+  `kind` varchar(20) NOT NULL,
+  `mime` varchar(40) NOT NULL,
+  `data` longtext NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `company_assets_company_id_kind_unique` (`company_id`,`kind`),
+  CONSTRAINT `company_assets_company_id_foreign` FOREIGN KEY (`company_id`) REFERENCES `companies` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `customer_ledger` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `company_id` bigint(20) unsigned NOT NULL,
+  `customer_id` bigint(20) unsigned NOT NULL,
+  `entry_date` date NOT NULL,
+  `entry_type` enum('given','returned','payment') NOT NULL,
+  `product` varchar(10) NOT NULL DEFAULT 'jar',
+  `jar_transaction_id` bigint(20) unsigned DEFAULT NULL,
+  `payment_id` bigint(20) unsigned DEFAULT NULL,
+  `jars_given` int(10) unsigned NOT NULL DEFAULT 0,
+  `jars_returned` int(10) unsigned NOT NULL DEFAULT 0,
+  `amount` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `paid` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `udhari` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `deposit` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `balance` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `jar_balance` int(11) NOT NULL DEFAULT 0,
+  `bottle_balance` int(11) NOT NULL DEFAULT 0,
+  `deposit_balance` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `description` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `customer_ledger_jar_transaction_id_foreign` (`jar_transaction_id`),
+  KEY `customer_ledger_payment_id_foreign` (`payment_id`),
+  KEY `customer_ledger_customer_id_entry_date_index` (`customer_id`,`entry_date`),
+  KEY `customer_ledger_company_id_foreign` (`company_id`),
+  CONSTRAINT `customer_ledger_company_id_foreign` FOREIGN KEY (`company_id`) REFERENCES `companies` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `customer_ledger_customer_id_foreign` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `customer_ledger_jar_transaction_id_foreign` FOREIGN KEY (`jar_transaction_id`) REFERENCES `jar_transactions` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `customer_ledger_payment_id_foreign` FOREIGN KEY (`payment_id`) REFERENCES `payments` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=1186 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `customers` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `company_id` bigint(20) unsigned NOT NULL,
+  `name` varchar(120) NOT NULL,
+  `mobile` varchar(15) NOT NULL,
+  `address` text DEFAULT NULL,
+  `status` enum('active','inactive') NOT NULL DEFAULT 'active',
+  `takes_jar` tinyint(1) NOT NULL DEFAULT 1,
+  `takes_bottle` tinyint(1) NOT NULL DEFAULT 0,
+  `jar_rate` decimal(10,2) DEFAULT NULL,
+  `bottle_rate` decimal(10,2) DEFAULT NULL,
+  `no_deposit` tinyint(1) NOT NULL DEFAULT 0,
+  `opening_balance` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `opening_jars` int(10) unsigned NOT NULL DEFAULT 0,
+  `opening_bottles` int(10) unsigned NOT NULL DEFAULT 0,
+  `route_morning` tinyint(1) NOT NULL DEFAULT 0,
+  `route_evening` tinyint(1) NOT NULL DEFAULT 0,
+  `morning_qty` smallint(5) unsigned NOT NULL DEFAULT 1,
+  `evening_qty` smallint(5) unsigned NOT NULL DEFAULT 1,
+  `schedule_type` varchar(10) NOT NULL DEFAULT 'daily',
+  `schedule_every` tinyint(3) unsigned NOT NULL DEFAULT 2,
+  `schedule_days` varchar(20) DEFAULT NULL,
+  `morning_order` int(10) unsigned DEFAULT NULL,
+  `evening_order` int(10) unsigned DEFAULT NULL,
+  `delivery_note` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `customers_mobile_index` (`mobile`),
+  KEY `customers_status_index` (`status`),
+  KEY `customers_company_id_mobile_index` (`company_id`,`mobile`),
+  CONSTRAINT `customers_company_id_foreign` FOREIGN KEY (`company_id`) REFERENCES `companies` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `expenses` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `company_id` bigint(20) unsigned NOT NULL,
+  `expense_date` date NOT NULL,
+  `expense_type` varchar(60) NOT NULL,
+  `amount` decimal(12,2) NOT NULL,
+  `payment_mode` enum('cash','upi','bank') NOT NULL DEFAULT 'cash',
+  `notes` text DEFAULT NULL,
+  `client_uuid` char(36) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `expenses_client_uuid_unique` (`client_uuid`),
+  KEY `expenses_expense_date_index` (`expense_date`),
+  KEY `expenses_company_id_expense_date_index` (`company_id`,`expense_date`),
+  CONSTRAINT `expenses_company_id_foreign` FOREIGN KEY (`company_id`) REFERENCES `companies` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `failed_jobs` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `uuid` varchar(255) NOT NULL,
+  `connection` text NOT NULL,
+  `queue` text NOT NULL,
+  `payload` longtext NOT NULL,
+  `exception` longtext NOT NULL,
+  `failed_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `failed_jobs_uuid_unique` (`uuid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `jar_transactions` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `company_id` bigint(20) unsigned NOT NULL,
+  `customer_id` bigint(20) unsigned NOT NULL,
+  `transaction_date` date NOT NULL,
+  `transaction_type` enum('given','returned') NOT NULL,
+  `product` varchar(10) NOT NULL DEFAULT 'jar',
+  `jar_quantity` int(10) unsigned NOT NULL,
+  `payment_type` enum('cash','udhari') NOT NULL DEFAULT 'cash',
+  `rate` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `amount` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `paid_amount` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `udhari_amount` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `advance_amount` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `deposit_amount` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `notes` text DEFAULT NULL,
+  `client_uuid` char(36) DEFAULT NULL,
+  `created_by` bigint(20) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `jar_transactions_client_uuid_unique` (`client_uuid`),
+  KEY `jar_transactions_created_by_foreign` (`created_by`),
+  KEY `jar_transactions_customer_id_transaction_date_index` (`customer_id`,`transaction_date`),
+  KEY `jar_transactions_transaction_date_index` (`transaction_date`),
+  KEY `jar_transactions_transaction_type_index` (`transaction_type`),
+  KEY `jar_transactions_company_id_transaction_date_index` (`company_id`,`transaction_date`),
+  KEY `jar_transactions_customer_id_product_index` (`customer_id`,`product`),
+  CONSTRAINT `jar_transactions_company_id_foreign` FOREIGN KEY (`company_id`) REFERENCES `companies` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `jar_transactions_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `jar_transactions_customer_id_foreign` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=159 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `jars` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `company_id` bigint(20) unsigned NOT NULL,
+  `jar_number` varchar(20) NOT NULL,
+  `product` varchar(10) NOT NULL DEFAULT 'jar',
+  `status` enum('available','with_customer','returned','damaged','lost') NOT NULL DEFAULT 'available',
+  `customer_id` bigint(20) unsigned DEFAULT NULL,
+  `status_date` date DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `jars_company_id_jar_number_unique` (`company_id`,`jar_number`),
+  KEY `jars_customer_id_foreign` (`customer_id`),
+  KEY `jars_status_index` (`status`),
+  KEY `jars_status_date_index` (`status_date`),
+  KEY `jars_company_id_product_status_index` (`company_id`,`product`,`status`),
+  CONSTRAINT `jars_company_id_foreign` FOREIGN KEY (`company_id`) REFERENCES `companies` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `jars_customer_id_foreign` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=353 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `job_batches` (
+  `id` varchar(255) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `total_jobs` int(11) NOT NULL,
+  `pending_jobs` int(11) NOT NULL,
+  `failed_jobs` int(11) NOT NULL,
+  `failed_job_ids` longtext NOT NULL,
+  `options` mediumtext DEFAULT NULL,
+  `cancelled_at` int(11) DEFAULT NULL,
+  `created_at` int(11) NOT NULL,
+  `finished_at` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `jobs` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `queue` varchar(255) NOT NULL,
+  `payload` longtext NOT NULL,
+  `attempts` tinyint(3) unsigned NOT NULL,
+  `reserved_at` int(10) unsigned DEFAULT NULL,
+  `available_at` int(10) unsigned NOT NULL,
+  `created_at` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `jobs_queue_index` (`queue`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `migrations` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `migration` varchar(255) NOT NULL,
+  `batch` int(11) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `password_reset_tokens` (
+  `email` varchar(255) NOT NULL,
+  `token` varchar(255) NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `payments` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `company_id` bigint(20) unsigned NOT NULL,
+  `customer_id` bigint(20) unsigned NOT NULL,
+  `payment_date` date NOT NULL,
+  `amount` decimal(12,2) NOT NULL,
+  `payment_mode` enum('cash','upi','bank') NOT NULL DEFAULT 'cash',
+  `previous_pending` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `remaining_pending` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `is_advance` tinyint(1) NOT NULL DEFAULT 0,
+  `notes` text DEFAULT NULL,
+  `client_uuid` char(36) DEFAULT NULL,
+  `created_by` bigint(20) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `payments_client_uuid_unique` (`client_uuid`),
+  KEY `payments_created_by_foreign` (`created_by`),
+  KEY `payments_customer_id_payment_date_index` (`customer_id`,`payment_date`),
+  KEY `payments_payment_date_index` (`payment_date`),
+  KEY `payments_company_id_payment_date_index` (`company_id`,`payment_date`),
+  CONSTRAINT `payments_company_id_foreign` FOREIGN KEY (`company_id`) REFERENCES `companies` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `payments_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `payments_customer_id_foreign` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `personal_access_tokens` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `tokenable_type` varchar(255) NOT NULL,
+  `tokenable_id` bigint(20) unsigned NOT NULL,
+  `name` text NOT NULL,
+  `token` varchar(64) NOT NULL,
+  `abilities` text DEFAULT NULL,
+  `last_used_at` timestamp NULL DEFAULT NULL,
+  `expires_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `personal_access_tokens_token_unique` (`token`),
+  KEY `personal_access_tokens_tokenable_type_tokenable_id_index` (`tokenable_type`,`tokenable_id`),
+  KEY `personal_access_tokens_expires_at_index` (`expires_at`)
+) ENGINE=InnoDB AUTO_INCREMENT=101 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `plans` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(60) NOT NULL,
+  `name_mr` varchar(60) DEFAULT NULL,
+  `price` decimal(10,2) NOT NULL,
+  `interval` enum('month','year') NOT NULL,
+  `description` varchar(500) DEFAULT NULL,
+  `description_mr` varchar(500) DEFAULT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `sort_order` int(10) unsigned NOT NULL DEFAULT 0,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `push_subscriptions` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `company_id` bigint(20) unsigned NOT NULL,
+  `user_id` bigint(20) unsigned NOT NULL,
+  `endpoint` varchar(500) NOT NULL,
+  `p256dh` varchar(200) NOT NULL,
+  `auth` varchar(100) NOT NULL,
+  `locale` varchar(5) NOT NULL DEFAULT 'mr',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `push_subscriptions_endpoint_unique` (`endpoint`),
+  KEY `push_subscriptions_user_id_foreign` (`user_id`),
+  KEY `push_subscriptions_company_id_foreign` (`company_id`),
+  CONSTRAINT `push_subscriptions_company_id_foreign` FOREIGN KEY (`company_id`) REFERENCES `companies` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `push_subscriptions_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `reminders` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `company_id` bigint(20) unsigned NOT NULL,
+  `customer_id` bigint(20) unsigned NOT NULL,
+  `jar_transaction_id` bigint(20) unsigned DEFAULT NULL,
+  `days` smallint(5) unsigned NOT NULL,
+  `remind_on` date NOT NULL,
+  `status` enum('pending','done') NOT NULL DEFAULT 'pending',
+  `auto_done` tinyint(1) NOT NULL DEFAULT 0,
+  `pushed_at` timestamp NULL DEFAULT NULL,
+  `read_at` timestamp NULL DEFAULT NULL,
+  `done_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `reminders_customer_id_foreign` (`customer_id`),
+  KEY `reminders_jar_transaction_id_foreign` (`jar_transaction_id`),
+  KEY `reminders_remind_on_index` (`remind_on`),
+  KEY `reminders_status_index` (`status`),
+  KEY `reminders_company_id_status_remind_on_index` (`company_id`,`status`,`remind_on`),
+  CONSTRAINT `reminders_company_id_foreign` FOREIGN KEY (`company_id`) REFERENCES `companies` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `reminders_customer_id_foreign` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `reminders_jar_transaction_id_foreign` FOREIGN KEY (`jar_transaction_id`) REFERENCES `jar_transactions` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=34 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `route_stops` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `company_id` bigint(20) unsigned NOT NULL,
+  `route_date` date NOT NULL,
+  `session` varchar(10) NOT NULL,
+  `customer_id` bigint(20) unsigned NOT NULL,
+  `position` int(10) unsigned NOT NULL,
+  `quantity` smallint(5) unsigned NOT NULL DEFAULT 1,
+  `status` varchar(10) NOT NULL DEFAULT 'pending',
+  `skip_reason` varchar(40) DEFAULT NULL,
+  `jar_transaction_id` bigint(20) unsigned DEFAULT NULL,
+  `added_manually` tinyint(1) NOT NULL DEFAULT 0,
+  `done_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `route_stops_company_id_route_date_session_customer_id_unique` (`company_id`,`route_date`,`session`,`customer_id`),
+  KEY `route_stops_customer_id_foreign` (`customer_id`),
+  KEY `route_stops_jar_transaction_id_foreign` (`jar_transaction_id`),
+  KEY `route_stops_company_id_route_date_session_position_index` (`company_id`,`route_date`,`session`,`position`),
+  CONSTRAINT `route_stops_company_id_foreign` FOREIGN KEY (`company_id`) REFERENCES `companies` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `route_stops_customer_id_foreign` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `route_stops_jar_transaction_id_foreign` FOREIGN KEY (`jar_transaction_id`) REFERENCES `jar_transactions` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `sessions` (
+  `id` varchar(255) NOT NULL,
+  `user_id` bigint(20) unsigned DEFAULT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `user_agent` text DEFAULT NULL,
+  `payload` longtext NOT NULL,
+  `last_activity` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `sessions_user_id_index` (`user_id`),
+  KEY `sessions_last_activity_index` (`last_activity`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `settings` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `company_id` bigint(20) unsigned NOT NULL,
+  `key` varchar(60) NOT NULL,
+  `value` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `settings_company_id_key_unique` (`company_id`,`key`),
+  CONSTRAINT `settings_company_id_foreign` FOREIGN KEY (`company_id`) REFERENCES `companies` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=93 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `users` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `company_id` bigint(20) unsigned DEFAULT NULL,
+  `role` varchar(20) NOT NULL DEFAULT 'owner',
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `name` varchar(255) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `mobile` varchar(15) DEFAULT NULL,
+  `email_verified_at` timestamp NULL DEFAULT NULL,
+  `password` varchar(255) NOT NULL,
+  `remember_token` varchar(100) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `users_email_unique` (`email`),
+  UNIQUE KEY `users_mobile_unique` (`mobile`),
+  KEY `users_company_id_foreign` (`company_id`),
+  CONSTRAINT `users_company_id_foreign` FOREIGN KEY (`company_id`) REFERENCES `companies` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+
+SET FOREIGN_KEY_CHECKS=1;
