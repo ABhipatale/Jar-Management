@@ -12,12 +12,21 @@ import { useAuth } from '../context/AuthContext';
 import { t } from '../i18n';
 import { fmtDate, fmtLongDate, money, today } from '../lib/format';
 import { useApi } from '../lib/useApi';
-import { features } from '../lib/products';
+import { bottleFirst, features } from '../lib/products';
 import { DeliveryToday } from './Delivery';
 
-const QUICK = [
+const QUICK_JAR = [
   { to: '/entry?type=given', label: t('common.giveJar'), icon: Plus, primary: true },
   { to: '/entry?type=returned', label: t('common.returnJar'), icon: RotateCcw, tone: 'bg-sky-50 text-sky-700' },
+];
+// Bottle priority: bottle give / return on top, the jar ones after them.
+const QUICK_BOTTLE = [
+  { to: '/entry?type=given&p=bottle', label: t('common.giveBottle'), icon: Plus, primary: true },
+  { to: '/entry?type=returned&p=bottle', label: t('common.returnBottle'), icon: RotateCcw, tone: 'bg-sky-50 text-sky-700' },
+  { to: '/entry?type=given&p=jar', label: t('common.giveJar'), icon: Plus, tone: 'bg-brand-50 text-brand-700' },
+  { to: '/entry?type=returned&p=jar', label: t('common.returnJar'), icon: RotateCcw, tone: 'bg-sky-50 text-sky-700' },
+];
+const QUICK_REST = [
   { to: '/payments/new', label: t('common.receivePayment'), icon: Wallet, tone: 'bg-emerald-50 text-emerald-700' },
   { to: '/bookings', label: t('book.quick'), icon: CalendarClock, tone: 'bg-violet-50 text-violet-700' },
   { to: '/customers/new', label: t('cust.add'), icon: UserPlus, tone: 'bg-slate-100 text-slate-700' },
@@ -84,7 +93,7 @@ export default function Dashboard() {
 
       {/* Quick actions — one tap each */}
       <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-5">
-        {QUICK.map((q) => (
+        {[...(bottleFirst(settings) ? QUICK_BOTTLE : QUICK_JAR), ...QUICK_REST].map((q) => (
           <Link
             key={q.to}
             to={q.to}

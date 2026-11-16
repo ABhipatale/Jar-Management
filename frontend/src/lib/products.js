@@ -17,6 +17,9 @@ export function features(settings) {
   };
 }
 
+/** Bottle priority (Settings): bottles come first on entry screens and quick actions. Only when bottles are on. */
+export const bottleFirst = (settings) => features(settings).bottles && String(settings?.bottle_priority) === '1';
+
 /** Products the company sells. */
 export function companyProducts(settings) {
   return features(settings).bottles ? [JAR, BOTTLE] : [JAR];
