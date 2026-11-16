@@ -59,5 +59,11 @@
   "prod.on": "चालू",
   "prod.off": "बंद",
   "prod.bottlePriority": "बोतल प्राथमिकता (बोतल पहले)",
-  "prod.bottlePriorityHint": "जार दें/लें स्क्रीन पर बोतल ऊपर दिखेगी और शुरुआत में 1 बोतल, 0 जार होगा."
+  "prod.bottlePriorityHint": "जार दें/लें स्क्रीन पर बोतल ऊपर दिखेगी और शुरुआत में 1 बोतल, 0 जार होगा.",
+  "prod.repBottlesGiven": "दी गई बोतलें",
+  "prod.repBottlesReturned": "वापस आई बोतलें",
+  "prod.repDamagedBottles": "खराब बोतलें",
+  "prod.repLostBottles": "खोई हुई बोतलें",
+  "prod.repJarSales": "जार बिक्री",
+  "prod.repBottleSales": "बोतल बिक्री"
 }

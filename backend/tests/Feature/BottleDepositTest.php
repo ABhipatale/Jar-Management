@@ -237,4 +237,25 @@ class BottleDepositTest extends TestCase
         $this->putJson('/api/settings', ['bottle_priority' => true])->assertOk()->assertJsonPath('bottle_priority', '1');
         $this->putJson('/api/settings', ['bottle_priority' => false])->assertOk()->assertJsonPath('bottle_priority', '0');
     }
+
+    public function test_reports_carry_bottle_figures(): void
+    {
+        $this->features(true, false);
+        $this->postJson('/api/jars', ['quantity' => 10, 'product' => 'bottle'])->assertCreated();
+        $this->entry(['transaction_type' => 'given', 'product' => 'jar', 'jar_quantity' => 2, 'rate' => 30, 'payment_type' => 'cash', 'paid_amount' => 60])->assertCreated();
+        $this->entry(['transaction_type' => 'given', 'product' => 'bottle', 'jar_quantity' => 3, 'rate' => 20, 'payment_type' => 'cash', 'paid_amount' => 60])->assertCreated();
+
+        $profit = $this->getJson('/api/reports/profit?year='.now()->year)->assertOk()->json();
+        $this->assertEquals(120, $profit['total']['sales']);
+        $this->assertEquals(60, $profit['total']['jar_sales']);
+        $this->assertEquals(60, $profit['total']['bottle_sales']);
+
+        $today = now()->toDateString();
+        $day = $this->getJson("/api/reports/daily?date={$today}")->assertOk()->json();
+        $this->assertSame(3, $day['summary']['bottles_given']);
+        $this->assertSame(3, $day['customers'][0]['bottles_given']);
+        $this->assertSame(3, $day['customers'][0]['current_bottles']);
+        $dash = $this->getJson("/api/dashboard?from={$today}&to={$today}")->assertOk()->json();
+        $this->assertSame(3, end($dash['series'])['bottles_given']);
+    }
 }

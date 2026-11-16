@@ -8,6 +8,7 @@ import { LOCALE, t } from '../../i18n';
 import { exportExcel } from '../../lib/export';
 import { businessName, money } from '../../lib/format';
 import { useApi } from '../../lib/useApi';
+import { features } from '../../lib/products';
 
 const short = (v) => (Math.abs(v) >= 1000 ? `₹${(v / 1000).toFixed(Math.abs(v) >= 10000 ? 0 : 1)}k` : `₹${Math.round(v)}`);
 const monthName = (ym, style = 'long') =>
@@ -15,6 +16,7 @@ const monthName = (ym, style = 'long') =>
 
 export default function ProfitReport() {
   const { settings } = useSettings();
+  const bottles = features(settings).bottles;
   const thisYear = new Date().getFullYear();
   const [year, setYear] = useState(thisYear);
   const { data, loading, error, reload } = useApi('/reports/profit', { year });
@@ -27,6 +29,7 @@ export default function ProfitReport() {
   const cols = [
     { label: t('rep.profit.col.month'), value: (r) => monthName(r.month) },
     { label: t('rep.profit.sales'), key: 'sales' },
+    ...(bottles ? [{ label: t('prod.repJarSales'), key: 'jar_sales' }, { label: t('prod.repBottleSales'), key: 'bottle_sales' }] : []),
     { label: t('rep.profit.expenses'), key: 'expenses' },
     { label: t('rep.profit.profit'), key: 'profit' },
     { label: t('rep.profit.collected'), key: 'collected' },
@@ -109,6 +112,8 @@ export default function ProfitReport() {
                       <tr>
                         <th>{t('rep.profit.col.month')}</th>
                         <th className="num">{t('rep.profit.sales')}</th>
+                        {bottles && <th className="num">{t('prod.repJarSales')}</th>}
+                        {bottles && <th className="num">{t('prod.repBottleSales')}</th>}
                         <th className="num">{t('rep.profit.expenses')}</th>
                         <th className="num">{t('rep.profit.profit')}</th>
                         <th className="num">{t('rep.profit.collected')}</th>
@@ -119,6 +124,8 @@ export default function ProfitReport() {
                         <tr key={m.month}>
                           <td>{monthName(m.month)}</td>
                           <td className="num">{money(m.sales)}</td>
+                          {bottles && <td className="num">{money(m.jar_sales)}</td>}
+                          {bottles && <td className="num">{money(m.bottle_sales)}</td>}
                           <td className="num text-red-600">{money(m.expenses)}</td>
                           <td className={`num font-semibold ${m.profit < 0 ? 'text-red-600' : 'text-emerald-700'}`}>{money(m.profit)}</td>
                           <td className="num">{money(m.collected)}</td>
@@ -129,6 +136,8 @@ export default function ProfitReport() {
                       <tr className="font-semibold">
                         <td>{t('rep.profit.total')}</td>
                         <td className="num">{money(tot.sales)}</td>
+                        {bottles && <td className="num">{money(tot.jar_sales)}</td>}
+                        {bottles && <td className="num">{money(tot.bottle_sales)}</td>}
                         <td className="num text-red-600">{money(tot.expenses)}</td>
                         <td className={`num ${tot.profit < 0 ? 'text-red-600' : 'text-emerald-700'}`}>{money(tot.profit)}</td>
                         <td className="num">{money(tot.collected)}</td>

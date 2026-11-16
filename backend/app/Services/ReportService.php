@@ -181,6 +181,8 @@ class ReportService
             ->selectRaw('transaction_date AS d')
             ->selectRaw("SUM(CASE WHEN transaction_type = 'given' AND product = 'jar' THEN jar_quantity ELSE 0 END) AS given")
             ->selectRaw("SUM(CASE WHEN transaction_type = 'returned' AND product = 'jar' THEN jar_quantity ELSE 0 END) AS returned")
+            ->selectRaw("SUM(CASE WHEN transaction_type = 'given' AND product = 'bottle' THEN jar_quantity ELSE 0 END) AS bottles_given")
+            ->selectRaw("SUM(CASE WHEN transaction_type = 'returned' AND product = 'bottle' THEN jar_quantity ELSE 0 END) AS bottles_returned")
             ->selectRaw('SUM(paid_amount + advance_amount) AS entry_cash')
             ->selectRaw('SUM(udhari_amount) AS udhari')
             ->get()->keyBy(fn ($r) => substr((string) $r->d, 0, 10));
@@ -202,6 +204,8 @@ class ReportService
                 'date' => $d,
                 'given' => (int) ($t->given ?? 0),
                 'returned' => (int) ($t->returned ?? 0),
+                'bottles_given' => (int) ($t->bottles_given ?? 0),
+                'bottles_returned' => (int) ($t->bottles_returned ?? 0),
                 'cash' => round((float) ($t->entry_cash ?? 0) + (float) ($p->cash ?? 0), 2),
                 'udhari' => round((float) ($t->udhari ?? 0), 2),
                 'payments' => round((float) ($p->total ?? 0), 2),
@@ -279,6 +283,7 @@ class ReportService
             ->whereBetween('transaction_date', [$from, $to])
             ->groupBy('transaction_date')
             ->selectRaw('transaction_date AS d, SUM(amount) AS sales, SUM(paid_amount + advance_amount) AS cash')
+            ->selectRaw("SUM(CASE WHEN product = 'bottle' THEN amount ELSE 0 END) AS bottle_sales")
             ->get();
 
         $pays = CurrentCompany::table('payments')->whereNull('deleted_at')
@@ -296,10 +301,11 @@ class ReportService
         $month = fn ($d) => (int) substr((string) $d, 5, 2);
         $months = [];
         for ($m = 1; $m <= 12; $m++) {
-            $months[$m] = ['month' => sprintf('%04d-%02d', $year, $m), 'sales' => 0.0, 'collected' => 0.0, 'expenses' => 0.0];
+            $months[$m] = ['month' => sprintf('%04d-%02d', $year, $m), 'sales' => 0.0, 'bottle_sales' => 0.0, 'collected' => 0.0, 'expenses' => 0.0];
         }
         foreach ($sales as $r) {
             $months[$month($r->d)]['sales'] += (float) $r->sales;
+            $months[$month($r->d)]['bottle_sales'] += (float) $r->bottle_sales;
             $months[$month($r->d)]['collected'] += (float) $r->cash;
         }
         foreach ($pays as $r) {
@@ -314,6 +320,9 @@ class ReportService
         $rows = array_map(fn ($r) => [
             'month' => $r['month'],
             'sales' => round($r['sales'], 2),
+            // Of the sales: bottles (the rest is jars). Deposits are never in sales.
+            'bottle_sales' => round($r['bottle_sales'], 2),
+            'jar_sales' => round($r['sales'] - $r['bottle_sales'], 2),
             'collected' => round($r['collected'], 2),
             'expenses' => round($r['expenses'], 2),
             'profit' => round($r['sales'] - $r['expenses'], 2),
@@ -327,6 +336,8 @@ class ReportService
             'months' => $rows,
             'total' => [
                 'sales' => $sum('sales'),
+                'bottle_sales' => $sum('bottle_sales'),
+                'jar_sales' => $sum('jar_sales'),
                 'collected' => $sum('collected'),
                 'expenses' => $sum('expenses'),
                 'profit' => $sum('profit'),

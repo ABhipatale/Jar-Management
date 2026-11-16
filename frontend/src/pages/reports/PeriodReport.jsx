@@ -25,6 +25,7 @@ import { t, tx } from '../../i18n';
 import { exportExcel } from '../../lib/export';
 import { addDays, businessName, fmtDate, money, today } from '../../lib/format';
 import { useApi, useDebounced } from '../../lib/useApi';
+import { features } from '../../lib/products';
 import { messages, openWhatsApp } from '../../lib/whatsapp';
 import ReportFilters from './ReportFilters';
 
@@ -33,6 +34,7 @@ const TITLES = { daily: t('rep.daily.title'), weekly: t('rep.weekly.title'), mon
 /** Daily / Weekly / Monthly report: totals + customer-wise table. */
 export default function PeriodReport({ kind }) {
   const { settings } = useSettings();
+  const bottles = features(settings).bottles; // bottle figures only when the company sells bottles
   const [date, setDate] = useState(today());
   const [month, setMonth] = useState(today().slice(0, 7));
   const [customerId, setCustomerId] = useState('');
@@ -59,6 +61,7 @@ export default function PeriodReport({ kind }) {
         { label: t('rep.col.given'), key: 'given' },
         { label: t('rep.col.returned'), key: 'returned' },
         { label: t('rep.col.currentJars'), key: 'current_jars' },
+        ...(bottles ? [{ label: t('prod.repBottlesGiven'), key: 'bottles_given' }, { label: t('prod.repBottlesReturned'), key: 'bottles_returned' }, { label: t('prod.currentBottlesRow'), key: 'current_bottles' }] : []),
         { label: t('rep.col.amount'), key: 'amount' },
         { label: t('rep.col.paid'), key: 'paid' },
         { label: t('rep.col.udhari'), key: 'udhari' },
@@ -70,6 +73,7 @@ export default function PeriodReport({ kind }) {
         businessName(settings),
         `${TITLES[kind]}: ${period}`,
         t('rep.period.excelSummary', { given: s.given, returned: s.returned, sales: s.sales, cash: s.cash, udhari: s.udhari, payments: s.payments, pending: s.pending }),
+        ...(bottles ? [`${t('prod.repBottlesGiven')}: ${s.bottles_given} | ${t('prod.repBottlesReturned')}: ${s.bottles_returned} | ${t('prod.repJarSales')}: ${s.jar_sales} | ${t('prod.repBottleSales')}: ${s.bottle_sales}`] : []),
       ]
     );
 
@@ -132,12 +136,22 @@ export default function PeriodReport({ kind }) {
             <StatCard icon={HandCoins} label={t('rep.period.udhari')} value={money(s.udhari)} tone="amber" />
             <StatCard icon={Wallet} label={t('rep.period.paymentsReceived')} value={money(s.payments)} tone="green" sub={t('rep.period.paymentsSub', { upi: money(s.payments_upi), bank: money(s.payments_bank) })} />
             <StatCard icon={Clock} label={kind === 'monthly' ? t('rep.period.pendingPayments') : t('rep.period.pendingAmount')} value={money(s.pending)} tone="red" sub={t('rep.period.pendingSub')} />
+            {bottles && (
+              <>
+                <StatCard icon={ArrowUpRight} label={t('prod.repBottlesGiven')} value={s.bottles_given} tone="blue" />
+                <StatCard icon={ArrowDownLeft} label={t('prod.repBottlesReturned')} value={s.bottles_returned} tone="purple" />
+                <StatCard icon={ShoppingCart} label={t('prod.repJarSales')} value={money(s.jar_sales)} tone="slate" />
+                <StatCard icon={ShoppingCart} label={t('prod.repBottleSales')} value={money(s.bottle_sales)} tone="slate" />
+              </>
+            )}
             {kind === 'daily' && <StatCard icon={ShoppingCart} label={t('rep.period.totalSales')} value={money(s.sales)} tone="slate" />}
             {kind === 'weekly' && <StatCard icon={Receipt} label={t('rep.period.expenses')} value={money(s.expenses)} tone="slate" />}
             {kind === 'monthly' && (
               <>
                 <StatCard icon={AlertTriangle} label={t('rep.period.damagedJars')} value={s.damaged} tone="red" />
                 <StatCard icon={PackageX} label={t('rep.period.lostJars')} value={s.lost} tone="amber" />
+                {bottles && <StatCard icon={AlertTriangle} label={t('prod.repDamagedBottles')} value={s.bottles_damaged} tone="red" />}
+                {bottles && <StatCard icon={PackageX} label={t('prod.repLostBottles')} value={s.bottles_lost} tone="amber" />}
                 <StatCard icon={Receipt} label={t('rep.period.expenses')} value={money(s.expenses)} tone="slate" />
                 <StatCard icon={PiggyBank} label={t('rep.period.netCash')} value={money(s.net_cash)} tone="green" />
               </>
@@ -162,6 +176,9 @@ export default function PeriodReport({ kind }) {
                       <SortTh k="given" sort={sort} num>{t('rep.col.given')}</SortTh>
                       <SortTh k="returned" sort={sort} num>{t('rep.col.returned')}</SortTh>
                       <SortTh k="current_jars" sort={sort} num>{t('rep.col.currentJars')}</SortTh>
+                      {bottles && <SortTh k="bottles_given" sort={sort} num>{t('prod.repBottlesGiven')}</SortTh>}
+                      {bottles && <SortTh k="bottles_returned" sort={sort} num>{t('prod.repBottlesReturned')}</SortTh>}
+                      {bottles && <SortTh k="current_bottles" sort={sort} num>{t('prod.currentBottlesRow')}</SortTh>}
                       <SortTh k="amount" sort={sort} num>{t('rep.col.amount')}</SortTh>
                       <SortTh k="paid_total" sort={sort} num>{t('rep.col.paid')}</SortTh>
                       <SortTh k="udhari" sort={sort} num>{t('rep.col.udhari')}</SortTh>
@@ -175,6 +192,9 @@ export default function PeriodReport({ kind }) {
                         <td className="num">{r.given}</td>
                         <td className="num">{r.returned}</td>
                         <td className="num font-semibold">{r.current_jars}</td>
+                        {bottles && <td className="num">{r.bottles_given}</td>}
+                        {bottles && <td className="num">{r.bottles_returned}</td>}
+                        {bottles && <td className="num font-semibold">{r.current_bottles}</td>}
                         <td className="num">{money(r.amount)}</td>
                         <td className="num text-emerald-700">{money(r.paid_total)}</td>
                         <td className="num text-amber-700">{money(r.udhari)}</td>
@@ -188,6 +208,9 @@ export default function PeriodReport({ kind }) {
                       <td className="num !border-b-0">{rows.reduce((a, r) => a + r.given, 0)}</td>
                       <td className="num !border-b-0">{rows.reduce((a, r) => a + r.returned, 0)}</td>
                       <td className="num !border-b-0">{rows.reduce((a, r) => a + r.current_jars, 0)}</td>
+                      {bottles && <td className="num !border-b-0">{rows.reduce((a, r) => a + r.bottles_given, 0)}</td>}
+                      {bottles && <td className="num !border-b-0">{rows.reduce((a, r) => a + r.bottles_returned, 0)}</td>}
+                      {bottles && <td className="num !border-b-0">{rows.reduce((a, r) => a + r.current_bottles, 0)}</td>}
                       <td className="num !border-b-0">{money(rows.reduce((a, r) => a + r.amount, 0))}</td>
                       <td className="num !border-b-0">{money(rows.reduce((a, r) => a + r.paid + r.payments, 0))}</td>
                       <td className="num !border-b-0">{money(rows.reduce((a, r) => a + r.udhari, 0))}</td>

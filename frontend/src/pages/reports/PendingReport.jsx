@@ -8,12 +8,14 @@ import { t } from '../../i18n';
 import { exportExcel } from '../../lib/export';
 import { businessName, fmtDate, money, today } from '../../lib/format';
 import { useApi, useDebounced } from '../../lib/useApi';
+import { features } from '../../lib/products';
 import { messages, openWhatsApp } from '../../lib/whatsapp';
 import ReportFilters from './ReportFilters';
 
 /** कोणाकडून पैसे घ्यायचे आहेत? — customers with pending, biggest first. */
 export default function PendingReport() {
   const { settings } = useSettings();
+  const bottles = features(settings).bottles;
   const [customerId, setCustomerId] = useState('');
   const [search, setSearch] = useState('');
   const q = useDebounced(search);
@@ -24,6 +26,7 @@ export default function PendingReport() {
     { label: t('rep.col.customer'), key: 'name' },
     { label: t('rep.col.mobile'), key: 'mobile' },
     { label: t('rep.col.currentJars'), key: 'current_jars' },
+    ...(bottles ? [{ label: t('prod.currentBottlesRow'), key: 'current_bottles' }] : []),
     { label: t('rep.col.pending'), key: 'pending_amount' },
     { label: t('rep.pending.lastPayment'), value: (r) => (r.last_payment_date ? fmtDate(r.last_payment_date) : '') },
   ];
@@ -64,6 +67,7 @@ export default function PendingReport() {
                       <span aria-hidden="true">·</span>
                       <span className="inline-flex items-center gap-1">
                         <Droplets size={13} /> {t('rep.pending.jars', { n: r.current_jars })}
+                        {bottles && <> · {t('prod.bottlesN', { n: r.current_bottles })}</>}
                       </span>
                     </div>
                     <div className="mt-0.5 text-xs text-slate-400">{t('rep.pending.lastPaymentLine', { date: r.last_payment_date ? fmtDate(r.last_payment_date) : t('rep.pending.never') })}</div>

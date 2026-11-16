@@ -53,7 +53,7 @@ export default function Dashboard() {
   const spark = useMemo(() => {
     const rows = data?.series || [];
     const pick = (k) => rows.map((r) => r[k]);
-    return { given: pick('given'), returned: pick('returned'), cash: pick('cash'), udhari: pick('udhari'), payments: pick('payments') };
+    return { given: pick('given'), returned: pick('returned'), bottlesGiven: pick('bottles_given'), bottlesReturned: pick('bottles_returned'), cash: pick('cash'), udhari: pick('udhari'), payments: pick('payments') };
   }, [data]);
 
   const attention = a
@@ -207,6 +207,12 @@ export default function Dashboard() {
                   series={[
                     { name: t('dash.seriesGiven'), color: '#3b6ff6', values: spark.given },
                     { name: t('dash.seriesReturned'), color: '#a78bfa', values: spark.returned },
+                    ...(data.bottle_stock
+                      ? [
+                          { name: t('prod.repBottlesGiven'), color: '#0ea5e9', values: spark.bottlesGiven },
+                          { name: t('prod.repBottlesReturned'), color: '#f472b6', values: spark.bottlesReturned },
+                        ]
+                      : []),
                   ]}
                 />
               ) : (
@@ -222,7 +228,7 @@ export default function Dashboard() {
               )}
               <div className="mt-3 flex flex-wrap gap-4 text-xs text-muted">
                 {(chart === 'jars'
-                  ? [[t('dash.seriesGiven'), '#3b6ff6'], [t('dash.seriesReturned'), '#a78bfa']]
+                  ? [[t('dash.seriesGiven'), '#3b6ff6'], [t('dash.seriesReturned'), '#a78bfa'], ...(data.bottle_stock ? [[t('prod.repBottlesGiven'), '#0ea5e9'], [t('prod.repBottlesReturned'), '#f472b6']] : [])]
                   : [[t('dash.seriesCash'), '#10b981'], [t('dash.seriesUdhari'), '#f59e0b']]
                 ).map(([n, c]) => (
                   <span key={n} className="inline-flex items-center gap-1.5">

@@ -9,10 +9,12 @@ import { t } from '../../i18n';
 import { exportExcel } from '../../lib/export';
 import { businessName, fmtDate, money } from '../../lib/format';
 import { useApi, useDebounced } from '../../lib/useApi';
+import { features } from '../../lib/products';
 import ReportFilters from './ReportFilters';
 
 export default function UdhariReport() {
   const { settings } = useSettings();
+  const bottles = features(settings).bottles;
   const [range, setRange] = useState(initialRange('month'));
   const [customerId, setCustomerId] = useState('');
   const [search, setSearch] = useState('');
@@ -29,6 +31,7 @@ export default function UdhariReport() {
     { label: t('rep.udhari.given'), key: 'udhari' },
     { label: t('rep.udhari.col.recovered'), key: 'payments' },
     { label: t('rep.udhari.pendingNow'), key: 'pending_amount' },
+    ...(bottles ? [{ label: t('prod.currentBottlesRow'), key: 'current_bottles' }] : []),
   ];
 
   return (
@@ -73,6 +76,7 @@ export default function UdhariReport() {
                       <SortTh k="udhari" sort={sort} num>{t('rep.udhari.given')}</SortTh>
                       <SortTh k="payments" sort={sort} num>{t('rep.udhari.paidBack')}</SortTh>
                       <SortTh k="pending_amount" sort={sort} num>{t('rep.udhari.pendingNow')}</SortTh>
+                      {bottles && <SortTh k="current_bottles" sort={sort} num>{t('prod.currentBottlesRow')}</SortTh>}
                     </tr>
                   </thead>
                   <tbody>
@@ -82,6 +86,7 @@ export default function UdhariReport() {
                         <td className="num text-amber-700">{money(r.udhari)}</td>
                         <td className="num text-emerald-700">{money(r.payments)}</td>
                         <td className="num"><PendingText amount={r.pending_amount} /></td>
+                        {bottles && <td className="num">{r.current_bottles}</td>}
                       </tr>
                     ))}
                   </tbody>
