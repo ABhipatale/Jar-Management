@@ -61,6 +61,11 @@ const byProduct = (jar, bottle) => ({ [JAR]: jar, [BOTTLE]: bottle });
  * Bottles first (Settings): the bottle is listed above the jar and an entry starts with 1 bottle, 0 jars.
  * The "Give / Return Jar" quick actions pass ?p=jar: jar first, 1 jar, 0 bottles, just for that entry.
  */
+/** Products shown for a customer. With bottle priority every customer gets the bottle row (first), even if they are set up for jars only. */
+const productsFor = (customer, settings, pref) => {
+  const base = customerProducts(customer, settings);
+  return bottleFirst(settings) && pref !== 'jar' && !base.includes(BOTTLE) ? [BOTTLE, ...base] : base;
+};
 const startQty = (settings, pref) => (bottleFirst(settings) && pref !== 'jar' ? byProduct('0', '1') : byProduct('1', '0'));
 
 export default function DailyEntry() {
@@ -164,14 +169,14 @@ export default function DailyEntry() {
     setExtra(bookingId && bookingBottles > 0 ? [BOTTLE] : []);
     if (!c) return;
     setRates(byProduct(rateFor(c, settings, JAR), rateFor(c, settings, BOTTLE)));
-    const theirs = customerProducts(c, settings);
+    const theirs = productsFor(c, settings, params.get('p'));
     // Booking deliveries keep the booked quantities.
     if (theirs.length === 1 && !bookingId) setQty((q) => ({ ...q, [theirs[0]]: q[theirs[0]] && q[theirs[0]] !== '0' ? q[theirs[0]] : '1' }));
     else if (theirs.length > 1 && !bookingId && bottleFirst(settings)) setQty(startQty(settings, params.get('p')));
   };
 
   const isGive = type === 'given';
-  const theirs = customerProducts(customer, settings);
+  const theirs = productsFor(customer, settings, params.get('p'));
   const sold = bottleFirst(settings) && params.get('p') !== 'jar' ? [BOTTLE, JAR] : companyProducts(settings);
   const items = sold.filter((p) => theirs.includes(p) || extra.includes(p));
   // Items the company sells that this customer doesn't usually take: offered as "+ Bottle".
@@ -292,7 +297,7 @@ export default function DailyEntry() {
     // Leaving route mode: a new entry is an ordinary one again.
     if (routeStop) navigate(keepCustomer && customerId ? `/entry?customer=${customerId}` : '/entry', { replace: true });
     setResult(null);
-    const theirs = customerProducts(keepCustomer ? customer : null, settings);
+    const theirs = productsFor(keepCustomer ? customer : null, settings, params.get('p'));
     setQty(theirs.length === 1 ? { ...byProduct('0', '0'), [theirs[0]]: '1' } : startQty(settings, params.get('p')));
     setPaidInput('');
     setAdvance('');
