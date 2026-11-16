@@ -26,6 +26,8 @@ class SettingService
         'jar_deposit' => '0',
         'bottle_deposit' => '0',
         'jar_tracking' => '0',
+        // Bottles first: the entry screen lists the bottle above the jar and starts with 1 bottle, 0 jars (only when bottles are on).
+        'bottle_priority' => '0',
         'expense_types' => 'डिझेल,पगार,वीज बिल,जार खरेदी,दुरुस्ती,इतर',
         'wa_delivery' => '',
         'wa_return' => '',

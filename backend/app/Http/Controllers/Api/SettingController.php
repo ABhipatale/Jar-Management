@@ -68,6 +68,9 @@ class SettingController extends Controller
                 }
                 unset($data['total_bottles']);
             }
+            if (array_key_exists('bottle_priority', $data)) {
+                $data['bottle_priority'] = $data['bottle_priority'] ? '1' : '0';
+            }
             if (array_key_exists('jar_tracking', $data)) {
                 $data['jar_tracking'] = $data['jar_tracking'] ? '1' : '0';
             }

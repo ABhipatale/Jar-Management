@@ -2,6 +2,8 @@
 // daily entry, customer form, stock, settings, ledger and the super-admin company screen.
 export default {
   mr: {
+    'prod.bottlePriority': 'बाटली प्राधान्य (बाटली आधी)',
+    'prod.bottlePriorityHint': 'जार दे/घ्या स्क्रीनवर बाटली वर दिसेल आणि सुरुवातीला 1 बाटली, 0 जार असेल.',
     'prod.jar': 'जार (30 लि.)',
     'prod.bottle': 'बाटली (20 लि.)',
     'prod.bottlesN': '{n} बाटल्या',
@@ -68,6 +70,8 @@ export default {
     'prod.off': 'बंद',
   },
   en: {
+    'prod.bottlePriority': 'Bottle priority (bottle first)',
+    'prod.bottlePriorityHint': 'On the give / return screen the bottle is shown above the jar and an entry starts with 1 bottle, 0 jars.',
     'prod.jar': 'Jar (30 L)',
     'prod.bottle': 'Bottle (20 L)',
     'prod.bottlesN': '{n} bottles',

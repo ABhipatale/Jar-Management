@@ -230,4 +230,11 @@ class BottleDepositTest extends TestCase
         // Switching off never deletes data.
         CurrentCompany::run($companyId, fn () => $this->assertSame(1, JarTransaction::where('product', 'bottle')->count()));
     }
+
+    public function test_bottle_priority_is_a_setting_off_by_default(): void
+    {
+        $this->getJson('/api/settings')->assertJsonPath('bottle_priority', '0');
+        $this->putJson('/api/settings', ['bottle_priority' => true])->assertOk()->assertJsonPath('bottle_priority', '1');
+        $this->putJson('/api/settings', ['bottle_priority' => false])->assertOk()->assertJsonPath('bottle_priority', '0');
+    }
 }
