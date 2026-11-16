@@ -66,7 +66,7 @@ class BalanceService
             ->leftJoinSub($this->txTotals(), 't', 't.customer_id', '=', 'c.id')
             ->leftJoinSub($this->paymentTotals(), 'p', 'p.customer_id', '=', 'c.id')
             ->whereNull('c.deleted_at')
-            ->select('c.id', 'c.name', 'c.mobile', 'c.address', 'c.status', 'c.created_at', 'p.last_payment_date')
+            ->select('c.id', 'c.name', 'c.mobile', 'c.address', 'c.status', 'c.is_temporary', 'c.created_at', 'p.last_payment_date')
             ->addSelect('c.takes_jar', 'c.takes_bottle', 'c.jar_rate', 'c.bottle_rate', 'c.no_deposit', 'c.opening_balance', 'c.opening_jars', 'c.opening_bottles')
             ->addSelect('c.route_morning', 'c.route_evening', 'c.morning_qty', 'c.evening_qty', 'c.schedule_type', 'c.schedule_every', 'c.schedule_days', 'c.morning_order', 'c.evening_order', 'c.delivery_note')
             ->selectRaw('COALESCE(c.opening_jars, 0) + COALESCE(t.jars, 0) AS current_jars')

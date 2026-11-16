@@ -46,7 +46,7 @@ export default function Ledger() {
         { label: t('ledger.balance'), key: 'balance' },
         { label: t('ledger.jarsWithCustomer'), key: 'jar_balance' },
         ...(feat.bottles ? [{ label: t('prod.ledgerBottles'), key: 'bottle_balance' }] : []),
-        ...(feat.deposit ? [{ label: t('prod.ledgerDeposit'), value: (r) => (r.entry_type === 'returned' ? -r.deposit : r.deposit) }, { label: t('prod.depositHeld'), key: 'deposit_balance' }] : []),
+        ...(feat.deposit ? [{ label: t('prod.ledgerDeposit'), type: 'money', value: (r) => (r.entry_type === 'returned' ? -r.deposit : r.deposit) }, { label: t('prod.depositHeld'), key: 'deposit_balance' }] : []),
       ],
       rows,
       [businessName(settings), t('ledger.excelTitle', { name: c.name, mobile: c.mobile }), period, t('ledger.excelSummary', { jars: c.current_jars, pending: c.pending_amount })]
@@ -96,6 +96,7 @@ export default function Ledger() {
       </section>
 
       <ExportBar
+        landscape
         onExcel={excel}
         extra={
           <>

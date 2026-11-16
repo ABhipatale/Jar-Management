@@ -12,13 +12,13 @@ class Customer extends Model
     use BelongsToCompany, SoftDeletes;
 
     /** Same defaults as the database, so a freshly created model has them too. */
-    protected $attributes = ['takes_jar' => true, 'takes_bottle' => false, 'no_deposit' => false, 'opening_balance' => 0, 'opening_jars' => 0, 'opening_bottles' => 0,
+    protected $attributes = ['is_temporary' => false, 'takes_jar' => true, 'takes_bottle' => false, 'no_deposit' => false, 'opening_balance' => 0, 'opening_jars' => 0, 'opening_bottles' => 0,
         'route_morning' => false, 'route_evening' => false, 'morning_qty' => 1, 'evening_qty' => 1,
         'schedule_type' => 'daily', 'schedule_every' => 2,
     ];
 
     protected $fillable = [
-        'name', 'mobile', 'address', 'status',
+        'name', 'mobile', 'address', 'status', 'is_temporary',
         'takes_jar', 'takes_bottle', 'jar_rate', 'bottle_rate', 'no_deposit', 'opening_balance', 'opening_jars', 'opening_bottles',
         // Daily delivery route (only used when the company has routes switched on).
         'route_morning', 'route_evening', 'morning_qty', 'evening_qty', 'schedule_type', 'schedule_every',
@@ -28,6 +28,7 @@ class Customer extends Model
     protected function casts(): array
     {
         return [
+            'is_temporary' => 'boolean',
             'takes_jar' => 'boolean',
             'takes_bottle' => 'boolean',
             'jar_rate' => 'float',

@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { CalendarPlus, Droplets, ImagePlus, KeyRound, Landmark, LogIn, Mail, Pause, Pencil, Phone, Play, Trash2, Truck, Users } from 'lucide-react';
+import { CalendarPlus, Clock, Droplets, ImagePlus, KeyRound, Landmark, LogIn, Mail, Pause, Pencil, Phone, Play, Trash2, Truck, Users } from 'lucide-react';
 import api, { errorMessage } from '../../api/client';
 import defaultLogo from '../../assets/logo.png';
 import { ErrorBox, Field, Loader, MiniSpin, Modal, PageHeader, StatCard, UploadOverlay } from '../../components/ui';
@@ -222,6 +222,7 @@ export default function CompanyDetail() {
             ['bottles_enabled', Droplets, t('prod.adminBottles'), t('prod.adminBottlesHint')],
             ['deposit_enabled', Landmark, t('prod.adminDeposit'), t('prod.adminDepositHint')],
             ['routes_enabled', Truck, t('route.adminFeature'), t('route.adminFeatureHint')],
+            ['temporary_enabled', Clock, t('cust.adminTemp'), t('cust.adminTempHint')],
           ].map(([key, Icon, label, hint]) => (
             <label key={key} className="flex cursor-pointer items-start gap-3 rounded-lg bg-surface-2 px-3.5 py-3 ring-1 ring-line">
               <input type="checkbox" className="mt-0.5 h-5 w-5 shrink-0 accent-brand-700" checked={Boolean(c[key])} disabled={busy} onChange={(e) => setFeature(key, e.target.checked)} />
@@ -269,9 +270,14 @@ export default function CompanyDetail() {
             {c.payments.map((p) => (
               <li key={p.id} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
                 <div className="min-w-0">
-                  <div className="font-medium text-ink">{p.plan}</div>
+                  <div className="font-medium text-ink">
+                    {p.plan}{' '}
+                    <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${p.mode === 'offline' ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'}`}>
+                      {p.mode === 'offline' ? t('adm.off.badge') : t('adm.on.badge')}
+                    </span>
+                  </div>
                   <div className="truncate text-xs text-muted">
-                    {fmtDate(p.date)} · {t('bill.validTill', { date: fmtDate(p.period_end) })} · {p.razorpay_payment_id}
+                    {fmtDate(p.date)} · {t('bill.validTill', { date: fmtDate(p.period_end) })} · {p.mode === 'offline' ? [t(`adm.off.m.${p.method}`), p.note].filter(Boolean).join(' · ') : p.razorpay_payment_id}
                   </div>
                 </div>
                 <div className="font-semibold tabular-nums text-ink">₹{p.amount}</div>

@@ -63,6 +63,8 @@ export default {
     'common.uploading': 'अपलोड होत आहे…',
     'common.today': 'आज',
     'common.yesterday': 'काल',
+    'common.giveBottle': 'बाटली द्या',
+    'common.returnBottle': 'बाटली परत घ्या',
     'common.giveJar': 'जार द्या',
     'common.returnJar': 'जार परत घ्या',
     'common.receivePayment': 'पेमेंट घ्या',
@@ -132,6 +134,7 @@ export default {
     // ExportBar
     'export.pdfHint': 'प्रिंट विंडोमध्ये “Save as PDF” निवडा.',
     'export.print': 'प्रिंट',
+    'export.generated': 'तयार केले',
 
     // api errors
     'err.generic': 'काहीतरी चूक झाली. कृपया पुन्हा प्रयत्न करा.',
@@ -188,6 +191,14 @@ export default {
     'cust.filter.pending': 'उधारी',
     'cust.filter.jars': 'जार असलेले',
     'cust.filter.inactive': 'निष्क्रिय',
+    'cust.filter.temporary': 'तात्पुरते',
+    'cust.adminTemp': 'तात्पुरते (वॉक-इन) ग्राहक',
+    'cust.adminTempHint': 'एकदाच घेणाऱ्या ग्राहकासाठी "तात्पुरता" पर्याय. हिशोब पूर्ण झाल्यावर असा ग्राहक आपोआप काढला जातो.',
+    'cust.type': 'ग्राहक प्रकार',
+    'cust.typePerm': 'कायमचा',
+    'cust.typeTemp': 'तात्पुरता',
+    'cust.typePermHint': 'नियमित ग्राहक. रोजच्या फेरीत जोडता येतो.',
+    'cust.typeTempHint': 'एकदाच/कधीतरी घेणारा ग्राहक. रोजच्या फेरीत येणार नाही.',
     'cust.none': 'ग्राहक सापडले नाहीत.',
     'cust.add': 'ग्राहक जोडा',
     'cust.editTitle': 'ग्राहक बदला',
@@ -351,6 +362,8 @@ export default {
     'common.uploading': 'Uploading…',
     'common.today': 'Today',
     'common.yesterday': 'Yesterday',
+    'common.giveBottle': 'Give Bottle',
+    'common.returnBottle': 'Return Bottle',
     'common.giveJar': 'Give Jar',
     'common.returnJar': 'Return Jar',
     'common.receivePayment': 'Receive Payment',
@@ -420,6 +433,7 @@ export default {
     // ExportBar
     'export.pdfHint': 'Choose “Save as PDF” in the print window.',
     'export.print': 'Print',
+    'export.generated': 'Generated',
 
     // api errors
     'err.generic': 'Something went wrong. Please try again.',
@@ -476,6 +490,14 @@ export default {
     'cust.filter.pending': 'Udhari',
     'cust.filter.jars': 'Has Jars',
     'cust.filter.inactive': 'Inactive',
+    'cust.filter.temporary': 'Temporary',
+    'cust.adminTemp': 'Temporary (walk-in) customers',
+    'cust.adminTempHint': 'A "Temporary" option for one-time customers. Such a customer is removed automatically once fully settled.',
+    'cust.type': 'Customer type',
+    'cust.typePerm': 'Permanent',
+    'cust.typeTemp': 'Temporary',
+    'cust.typePermHint': 'Regular customer. Can be added to the daily route.',
+    'cust.typeTempHint': 'One-time / occasional customer. Not on the daily route.',
     'cust.none': 'No customers found.',
     'cust.add': 'Add Customer',
     'cust.editTitle': 'Edit Customer',

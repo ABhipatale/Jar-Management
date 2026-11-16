@@ -24,7 +24,6 @@
   "prod.removeFromEntry": "हटाएं",
   "prod.collectToday": "आज लेनी कुल रकम",
   "prod.collectTodayHint": "बिल का {paid} + डिपॉज़िट {deposit}",
-
   "prod.depositSec": "डिपॉज़िट",
   "prod.depositTaken": "लिया गया डिपॉज़िट (₹)",
   "prod.depositRefund": "लौटाया गया डिपॉज़िट (₹)",
@@ -33,24 +32,20 @@
   "prod.depositHeld": "जमा डिपॉज़िट",
   "prod.depositTooMuch": "लौटाया जाने वाला डिपॉज़िट जमा डिपॉज़िट (₹{n}) से ज़्यादा नहीं हो सकता.",
   "prod.noDepositCustomer": "इस ग्राहक से डिपॉज़िट नहीं लिया जाता.",
-
   "prod.custSection": "चीज़ें और रेट",
   "prod.custSectionSub": "यह ग्राहक क्या लेता है और उसका खास रेट (खाली = सामान्य रेट)",
   "prod.ratePh": "सामान्य ₹{r}",
   "prod.specialRate": "खास रेट (₹)",
   "prod.noDeposit": "इस ग्राहक से डिपॉज़िट न लें",
   "prod.pickOne": "कम से कम एक चीज़ (जार या बोतल) चुनें.",
-
   "prod.settingsSec": "बोतल और डिपॉज़िट",
   "prod.settingsHint": "ये सुविधाएं आपके खाते के लिए चालू हैं.",
   "prod.bottleDefaultRate": "बोतल का सामान्य रेट (₹)",
   "prod.totalBottles": "कुल बोतलें",
   "prod.jarDeposit": "प्रति जार डिपॉज़िट (₹)",
   "prod.bottleDeposit": "प्रति बोतल डिपॉज़िट (₹)",
-
   "prod.ledgerBottles": "बोतलें",
   "prod.ledgerDeposit": "डिपॉज़िट",
-
   "prod.adminFeatures": "सुविधाएं",
   "prod.adminFeaturesHint": "सिर्फ़ आप (सुपर एडमिन) इन्हें चालू/बंद कर सकते हैं. रेट और डिपॉज़िट की रकम मालिक सेटिंग्स में तय करता है.",
   "prod.adminBottles": "बोतल बिक्री",
@@ -62,5 +57,13 @@
   "prod.adminOffYes": "हाँ, बंद करें",
   "prod.adminSaved": "सुविधाएं सेव हो गईं.",
   "prod.on": "चालू",
-  "prod.off": "बंद"
+  "prod.off": "बंद",
+  "prod.bottlePriority": "बोतल प्राथमिकता (बोतल पहले)",
+  "prod.bottlePriorityHint": "जार दें/लें स्क्रीन पर बोतल ऊपर दिखेगी और शुरुआत में 1 बोतल, 0 जार होगा.",
+  "prod.repBottlesGiven": "दी गई बोतलें",
+  "prod.repBottlesReturned": "वापस आई बोतलें",
+  "prod.repDamagedBottles": "खराब बोतलें",
+  "prod.repLostBottles": "खोई हुई बोतलें",
+  "prod.repJarSales": "जार बिक्री",
+  "prod.repBottleSales": "बोतल बिक्री"
 }

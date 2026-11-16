@@ -16,11 +16,53 @@ export default function LedgerTable({ rows, onEdit, flush = false }) {
   const { settings } = useSettings();
   const feat = features(settings);
   return (
+    <>
+      {/* Phone: one card per entry (the 9-column table needs sideways scrolling) */}
+      <ul className="divide-y divide-line md:hidden print:hidden">
+        {rows.map((r) => (
+          <li key={r.id} className={`px-4 py-3 ${r.entry_type === 'payment' ? 'bg-emerald-50/40' : ''}`}>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold tabular-nums text-ink">{fmtDate(r.entry_date)}</span>
+              {r.entry_type === 'payment' && <Badge kind="cash">{t('ledger.payment')}</Badge>}
+              {r.product === BOTTLE && r.entry_type !== 'payment' && (
+                <span className="rounded-full bg-sky-50 px-2 py-0.5 text-[11px] font-semibold text-sky-700 ring-1 ring-inset ring-sky-600/20">{t('prod.bottle')}</span>
+              )}
+              <span className={`ml-auto text-base font-semibold tabular-nums ${r.balance > 0 ? 'text-red-600' : 'text-emerald-700'}`}>{money(r.balance)}</span>
+              {onEdit && (
+                <button
+                  type="button"
+                  className="icon-btn no-print -my-1 h-8 w-8"
+                  onClick={() => onEdit(r.payment_id ? { kind: 'payment', id: r.payment_id } : { kind: 'jar', id: r.jar_transaction_id })}
+                  aria-label={t('edit.button')}
+                >
+                  <Pencil size={15} />
+                </button>
+              )}
+            </div>
+            <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
+              {r.entry_type !== 'payment' && (
+                <span>
+                  {t('ledger.given')} <b className="font-semibold tabular-nums text-ink">{r.jars_given || 0}</b> · {t('ledger.returned')} <b className="font-semibold tabular-nums text-ink">{r.jars_returned || 0}</b>
+                </span>
+              )}
+              {r.amount ? <span>{t('ledger.amount')} <b className="font-semibold tabular-nums text-ink">{money(r.amount)}</b></span> : null}
+              {r.paid ? <span className="text-emerald-700">{t('ledger.paid')} <b className="font-semibold tabular-nums">{money(r.paid)}</b></span> : null}
+              {r.udhari ? <span className="text-amber-700">{t('ledger.udhari')} <b className="font-semibold tabular-nums">{money(r.udhari)}</b></span> : null}
+            </div>
+            <div className="mt-1 text-xs text-muted">
+              {t('ledger.jars')}: <b className="tabular-nums text-ink">{r.jar_balance}</b>
+              {feat.bottles && <> · {t('prod.ledgerBottles')}: <b className="tabular-nums text-ink">{r.bottle_balance ?? 0}</b></>}
+              {feat.deposit && r.deposit ? <> · {t('prod.ledgerDeposit')}: <b className="tabular-nums text-ink">{r.entry_type === 'returned' ? '−' : '+'}{money(r.deposit)}</b></> : null}
+            </div>
+          </li>
+        ))}
+      </ul>
     <div
       className={
-        flush
+        'hidden md:block print:block ' +
+        (flush
           ? 'overflow-x-auto [&_tbody_tr:last-child_td]:border-b-0 [&_td:first-child]:pl-4 [&_td:last-child]:pr-4 [&_th]:rounded-none [&_th:first-child]:pl-4 [&_th:last-child]:pr-4'
-          : 'table-wrap'
+          : 'table-wrap')
       }
     >
       <table className="tbl">
@@ -82,5 +124,6 @@ export default function LedgerTable({ rows, onEdit, flush = false }) {
         </tbody>
       </table>
     </div>
+    </>
   );
 }

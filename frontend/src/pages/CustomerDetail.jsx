@@ -11,7 +11,7 @@ import { useSettings } from '../context/SettingsContext';
 import { useUi } from '../context/UiContext';
 import { t } from '../i18n';
 import { fmtDate, money } from '../lib/format';
-import { BOTTLE, JAR, features, productName } from '../lib/products';
+import { BOTTLE, JAR, bottleFirst, features, productName } from '../lib/products';
 import { useApi } from '../lib/useApi';
 import { messages, openWhatsApp } from '../lib/whatsapp';
 
@@ -41,9 +41,19 @@ export default function CustomerDetail() {
     }
   };
 
-  const actions = [
+  const jarActions = [
     { label: t('common.giveJar'), icon: Plus, to: `/entry?type=given&customer=${c.id}`, cls: 'bg-brand-600 text-white shadow-soft hover:bg-brand-700', iconCls: 'bg-white/15' },
     { label: t('common.returnJar'), icon: RotateCcw, to: `/entry?type=returned&customer=${c.id}`, cls: 'card card-hover text-ink', iconCls: 'bg-sky-50 text-sky-700' },
+  ];
+  // Bottle priority: bottle give / return first, the jar ones after them.
+  const bottleActions = [
+    { label: t('common.giveBottle'), icon: Plus, to: `/entry?type=given&p=bottle&customer=${c.id}`, cls: 'bg-brand-600 text-white shadow-soft hover:bg-brand-700', iconCls: 'bg-white/15' },
+    { label: t('common.returnBottle'), icon: RotateCcw, to: `/entry?type=returned&p=bottle&customer=${c.id}`, cls: 'card card-hover text-ink', iconCls: 'bg-sky-50 text-sky-700' },
+    { label: t('common.giveJar'), icon: Plus, to: `/entry?type=given&p=jar&customer=${c.id}`, cls: 'card card-hover text-ink', iconCls: 'bg-brand-50 text-brand-700' },
+    { label: t('common.returnJar'), icon: RotateCcw, to: `/entry?type=returned&p=jar&customer=${c.id}`, cls: 'card card-hover text-ink', iconCls: 'bg-sky-50 text-sky-700' },
+  ];
+  const actions = [
+    ...(bottleFirst(settings) ? bottleActions : jarActions),
     { label: t('common.receivePayment'), icon: Wallet, to: `/payments/new?customer=${c.id}`, cls: 'card card-hover text-ink', iconCls: 'bg-emerald-50 text-emerald-700' },
     { label: t('cust.viewLedger'), icon: BookOpen, to: `/customers/${c.id}/ledger`, cls: 'card card-hover text-ink', iconCls: 'bg-slate-100 text-slate-700' },
     { label: t('bill.title'), icon: FileText, to: `/customers/${c.id}/bill`, cls: 'card card-hover col-span-2 text-ink', iconCls: 'bg-violet-50 text-violet-700' },

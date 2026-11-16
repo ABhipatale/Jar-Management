@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AlertTriangle, ArrowDownRight, ArrowUpRight, ChevronLeft, Inbox, Minus, Phone, Plus, RotateCw, X } from 'lucide-react';
-import { t } from '../i18n';
+import { LOCALE, t } from '../i18n';
 import { businessName, businessPlace, money } from '../lib/format';
 import { SUPPORT_PHONE, SUPPORT_PHONE_DISPLAY, SUPPORT_WEBSITE } from '../lib/support';
 import { Sparkline } from './charts';
@@ -54,6 +54,7 @@ export function Delta({ value, inverse = false, className = '' }) {
   if (value === null || value === undefined || !Number.isFinite(value)) return null;
   const up = value > 0;
   const flat = Math.abs(value) < 0.05;
+  if (flat) return null; // "0%" says nothing
   const good = flat ? null : inverse ? !up : up;
   const cls = flat ? 'bg-slate-100 text-slate-600' : good ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600';
   const Arrow = up ? ArrowUpRight : ArrowDownRight;
@@ -72,18 +73,19 @@ export function Delta({ value, inverse = false, className = '' }) {
 export function StatCard({ label, value, icon, tone = 'slate', sub, to, delta, deltaInverse, deltaLabel, spark }) {
   const tn = TONES[tone] || TONES.slate;
   const body = (
-    <div className={`card flex h-full flex-col gap-2 !p-3.5 ${to ? 'card-hover' : ''}`}>
-      <div className="flex items-center gap-2.5">
+    <div className={`card flex h-full flex-col gap-2.5 !p-3.5 ${to ? 'card-hover' : ''}`}>
+      <div className="flex items-start gap-2.5">
         {icon && (
-          <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg ${tn.icon}`}>
-            <Icon icon={icon} size={17} />
+          <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${tn.icon}`}>
+            <Icon icon={icon} size={18} />
           </span>
         )}
-        <span className="min-w-0 truncate text-[13px] font-medium text-muted">{label}</span>
+        {/* The label wraps (two lines at most) instead of being cut off with "…" */}
+        <span className="line-clamp-2 min-w-0 flex-1 pt-0.5 text-[13px] font-medium leading-snug text-muted">{label}</span>
       </div>
       <div className="flex items-end justify-between gap-2">
         <div className="min-w-0">
-          <div className="truncate text-[22px] font-semibold leading-none tracking-tight text-ink tabular-nums">{value}</div>
+          <div className="truncate text-2xl font-semibold leading-none tracking-tight text-ink tabular-nums">{value}</div>
           {(delta !== undefined || sub) && (
             <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs text-muted">
               <Delta value={delta} inverse={deltaInverse} />
@@ -341,15 +343,27 @@ export function Modal({ title, description, onClose, children, size = 'md' }) {
 
 /** Header printed on paper / PDF only. */
 export function PrintHeader({ settings, title, subtitle }) {
+  const logo = settings?.branding?.logo_url;
+  const sub = [businessPlace(settings), settings?.business_mobile].filter(Boolean).join(' · ');
+  const when = new Date().toLocaleString(LOCALE, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
   return (
-    <div className="print-only mb-4 border-b pb-3">
-      <div className="text-lg font-bold">{businessName(settings)}</div>
-      <div className="text-sm text-slate-600">
-        {[businessPlace(settings), settings?.business_mobile].filter(Boolean).join(' · ')}
+    <header className="print-only report-head">
+      <div className="report-head-top">
+        {logo && <img src={logo} alt="" className="report-logo" />}
+        <div className="report-shop">
+          <div className="report-shop-name">{businessName(settings)}</div>
+          {sub && <div className="report-shop-sub">{sub}</div>}
+        </div>
+        <div className="report-meta">
+          <div>{t('export.generated')}</div>
+          <b>{when}</b>
+        </div>
       </div>
-      <div className="mt-2 font-semibold">{title}</div>
-      {subtitle && <div className="text-sm text-slate-600">{subtitle}</div>}
-    </div>
+      <div className="report-title-band">
+        <div className="report-title">{title}</div>
+        {subtitle && <div className="report-subtitle">{subtitle}</div>}
+      </div>
+    </header>
   );
 }
 

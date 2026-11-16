@@ -35,7 +35,7 @@ import { t } from '../i18n';
 import { addDays, fmtDate, money, num, round2, today, uuid } from '../lib/format';
 import { submit } from '../lib/outbox';
 import {
-  BOTTLE, JAR, companyProducts, countText, customerProducts, depositHeldOf, depositRate, features, heldOf, productName, rateFor, suggestedDeposit, usesDeposit,
+  BOTTLE, JAR, bottleFirst, companyProducts, countText, customerProducts, depositHeldOf, depositRate, features, heldOf, productName, rateFor, suggestedDeposit, usesDeposit,
 } from '../lib/products';
 import { messages, openWhatsApp } from '../lib/whatsapp';
 
@@ -56,6 +56,17 @@ const TXT = {
 };
 const tx = (p, key, vars) => t(TXT[p][key], vars);
 const byProduct = (jar, bottle) => ({ [JAR]: jar, [BOTTLE]: bottle });
+
+/**
+ * Bottles first (Settings): the bottle is listed above the jar and an entry starts with 1 bottle, 0 jars.
+ * The "Give / Return Jar" quick actions pass ?p=jar: jar first, 1 jar, 0 bottles, just for that entry.
+ */
+/** Products shown for a customer. With bottle priority every customer gets the bottle row (first), even if they are set up for jars only. */
+const productsFor = (customer, settings, pref) => {
+  const base = customerProducts(customer, settings);
+  return bottleFirst(settings) && pref !== 'jar' && !base.includes(BOTTLE) ? [BOTTLE, ...base] : base;
+};
+const startQty = (settings, pref) => (bottleFirst(settings) && pref !== 'jar' ? byProduct('0', '1') : byProduct('1', '0'));
 
 export default function DailyEntry() {
   const [params] = useSearchParams();
@@ -81,7 +92,7 @@ export default function DailyEntry() {
   const [customer, setCustomer] = useState(null);
   const [type, setType] = useState(params.get('type') === 'returned' ? 'returned' : 'given');
   // Per product (jar / bottle). With bottles off only the jar values are used.
-  const [qty, setQty] = useState(() => byProduct(params.get('qty') || '1', params.get('bqty') || '0'));
+  const [qty, setQty] = useState(() => byProduct(params.get('qty') || startQty(settings, params.get('p'))[JAR], params.get('bqty') || startQty(settings, params.get('p'))[BOTTLE]));
   // Delivery of an advance booking (closes the booking when saved).
   const [bookingId, setBookingId] = useState(params.get('booking') || null);
   // Delivering a stop of today's route (from Daily delivery): saved with the entry, then
@@ -128,6 +139,7 @@ export default function DailyEntry() {
     const ty = params.get('type');
     if (ty === 'given' || ty === 'returned') setType(ty);
     if (params.get('customer')) setCustomerId(params.get('customer'));
+    if (bottleFirst(settings) && !params.get('qty') && !params.get('bqty') && !params.get('booking')) setQty(startQty(settings, params.get('p')));
     if (params.get('qty')) setQty((q) => ({ ...q, [JAR]: params.get('qty') }));
     if (params.get('bqty')) {
       setQty((q) => ({ ...q, [BOTTLE]: params.get('bqty') }));
@@ -157,14 +169,15 @@ export default function DailyEntry() {
     setExtra(bookingId && bookingBottles > 0 ? [BOTTLE] : []);
     if (!c) return;
     setRates(byProduct(rateFor(c, settings, JAR), rateFor(c, settings, BOTTLE)));
-    const theirs = customerProducts(c, settings);
+    const theirs = productsFor(c, settings, params.get('p'));
     // Booking deliveries keep the booked quantities.
     if (theirs.length === 1 && !bookingId) setQty((q) => ({ ...q, [theirs[0]]: q[theirs[0]] && q[theirs[0]] !== '0' ? q[theirs[0]] : '1' }));
+    else if (theirs.length > 1 && !bookingId && bottleFirst(settings)) setQty(startQty(settings, params.get('p')));
   };
 
   const isGive = type === 'given';
-  const theirs = customerProducts(customer, settings);
-  const sold = companyProducts(settings);
+  const theirs = productsFor(customer, settings, params.get('p'));
+  const sold = bottleFirst(settings) && params.get('p') !== 'jar' ? [BOTTLE, JAR] : companyProducts(settings);
   const items = sold.filter((p) => theirs.includes(p) || extra.includes(p));
   // Items the company sells that this customer doesn't usually take: offered as "+ Bottle".
   const addable = customer ? sold.filter((p) => !items.includes(p)) : [];
@@ -284,8 +297,8 @@ export default function DailyEntry() {
     // Leaving route mode: a new entry is an ordinary one again.
     if (routeStop) navigate(keepCustomer && customerId ? `/entry?customer=${customerId}` : '/entry', { replace: true });
     setResult(null);
-    const theirs = customerProducts(keepCustomer ? customer : null, settings);
-    setQty(theirs.length === 1 ? { ...byProduct('0', '0'), [theirs[0]]: '1' } : byProduct('1', '0'));
+    const theirs = productsFor(keepCustomer ? customer : null, settings, params.get('p'));
+    setQty(theirs.length === 1 ? { ...byProduct('0', '0'), [theirs[0]]: '1' } : startQty(settings, params.get('p')));
     setPaidInput('');
     setAdvance('');
     setNotes('');

@@ -12,6 +12,7 @@ use App\Services\BalanceService;
 use App\Services\JarService;
 use App\Services\LedgerService;
 use App\Services\ReportService;
+use App\Support\CurrentCompany;
 use App\Support\Products;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -21,7 +22,7 @@ class CustomerController extends Controller
 {
     public function __construct(private BalanceService $balances) {}
 
-    /** ?search= name/mobile, ?status=active|inactive, ?filter=pending|jars */
+    /** ?search= name/mobile, ?status=active|inactive, ?filter=pending|jars|temporary */
     public function index(Request $request, ReportService $reports)
     {
         $q = $this->balances->balancesTable()->orderBy('name');
@@ -29,7 +30,9 @@ class CustomerController extends Controller
         if (in_array($request->input('status'), ['active', 'inactive'], true)) {
             $q->where('status', $request->input('status'));
         }
-        if ($request->input('filter') === 'pending') {
+        if ($request->input('filter') === 'temporary') {
+            $q->where('is_temporary', true);
+        } elseif ($request->input('filter') === 'pending') {
             $q->where('pending_amount', '>', 0);
         } elseif ($request->input('filter') === 'jars') {
             $q->where(fn ($w) => $w->where('current_jars', '>', 0)->orWhere('current_bottles', '>', 0));
@@ -41,7 +44,7 @@ class CustomerController extends Controller
 
     public function store(CustomerRequest $request, JarService $jars)
     {
-        $data = $this->oldJars($request->validated());
+        $data = $this->temporaryAllowed($this->oldJars($request->validated()));
         $data['opening_balance'] = (float) ($data['opening_balance'] ?? 0);
         $data += ['opening_jars' => 0, 'opening_bottles' => 0];
         $customer = DB::transaction(function () use ($data, $jars) {
@@ -62,7 +65,7 @@ class CustomerController extends Controller
 
     public function update(CustomerRequest $request, Customer $customer, LedgerService $ledger, JarService $jars)
     {
-        $data = $this->oldJars($request->validated());
+        $data = $this->temporaryAllowed($this->oldJars($request->validated()));
         if (array_key_exists('opening_balance', $data)) {
             $data['opening_balance'] = (float) ($data['opening_balance'] ?? 0);
         }
@@ -82,6 +85,16 @@ class CustomerController extends Controller
 
         return (new CustomerResource($this->row($customer->id)))
             ->additional(['message' => __('ग्राहक यशस्वीरित्या अपडेट झाला.')]);
+    }
+
+    /** Temporary customers only exist when the super admin switched the feature on for the company. */
+    private function temporaryAllowed(array $data): array
+    {
+        if (! CurrentCompany::get()?->temporary_enabled) {
+            unset($data['is_temporary']);
+        }
+
+        return $data;
     }
 
     /** Old jars: empty means 0; old bottles only when the company has bottles switched on. */

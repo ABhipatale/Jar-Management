@@ -263,5 +263,16 @@
   "ledger.entriesCount": "एंट्री",
   "ledger.period": "अवधि",
   "ledger.clearDates": "तारीख हटाएँ",
-  "ledger.entries": "एंट्री"
+  "ledger.entries": "एंट्री",
+  "cust.filter.temporary": "अस्थायी",
+  "cust.type": "ग्राहक प्रकार",
+  "cust.typePerm": "स्थायी",
+  "cust.typeTemp": "अस्थायी",
+  "cust.typePermHint": "नियमित ग्राहक. रोज़ की फेरी में जोड़ सकते हैं.",
+  "cust.typeTempHint": "एक बार/कभी-कभी लेने वाला ग्राहक. रोज़ की फेरी में नहीं आएगा.",
+  "cust.adminTemp": "अस्थायी (वॉक-इन) ग्राहक",
+  "cust.adminTempHint": "एक बार लेने वाले ग्राहक के लिए \"अस्थायी\" विकल्प. हिसाब पूरा होने पर ऐसा ग्राहक अपने-आप हट जाता है.",
+  "common.giveBottle": "बोतल दें",
+  "common.returnBottle": "बोतल वापस लें",
+  "export.generated": "तैयार किया"
 }

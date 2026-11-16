@@ -19,6 +19,8 @@ class CustomerRequest extends ApiRequest
             'mobile' => ['required', 'regex:/^[6-9][0-9]{9}$/'],
             'address' => ['nullable', 'string', 'max:500'],
             'status' => ['nullable', 'in:active,inactive'],
+            // Temporary = walk-in / one-time customer (kept off daily routes).
+            'is_temporary' => ['sometimes', 'boolean'],
             // Bottles / deposit (only used when the company has them switched on).
             'takes_jar' => ['sometimes', 'boolean'],
             'takes_bottle' => ['sometimes', 'boolean'],

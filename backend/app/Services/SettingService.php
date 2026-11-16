@@ -19,11 +19,15 @@ class SettingService
         'owner_name_mr' => '',
         'contact_numbers' => '',
         'default_rate' => '30',
+        // What the "+" (add customer) form starts as: permanent (default) or temporary (walk-in).
+        'new_customer_type' => 'permanent',
         // Used only when the super admin switches bottles / deposits on for the company.
         'bottle_rate' => '20',
         'jar_deposit' => '0',
         'bottle_deposit' => '0',
         'jar_tracking' => '0',
+        // Bottles first: the entry screen lists the bottle above the jar and starts with 1 bottle, 0 jars (only when bottles are on).
+        'bottle_priority' => '0',
         'expense_types' => 'डिझेल,पगार,वीज बिल,जार खरेदी,दुरुस्ती,इतर',
         'wa_delivery' => '',
         'wa_return' => '',

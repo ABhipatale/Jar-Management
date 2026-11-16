@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import api, { errorMessage } from '../api/client';
-import { AlertTriangle, ArrowRight, Droplets, IndianRupee, MapPin, Phone, Save, User, UserPlus, Users } from 'lucide-react';
+import { AlertTriangle, ArrowRight, Clock, Droplets, IndianRupee, MapPin, Phone, Save, User, UserCheck, UserPlus, Users } from 'lucide-react';
 import ContactButton from '../components/ContactButton';
 import DeliveryScheduleFields, { ROUTE_DEFAULTS, routeFromCustomer, routeProblem, routeToApi } from '../components/DeliveryScheduleFields';
 import { Field, Loader, PageHeader, Segmented } from '../components/ui';
@@ -58,6 +58,19 @@ export default function CustomerForm() {
   const [items, setItems] = useState({ takes_jar: true, takes_bottle: false, jar_rate: '', bottle_rate: '', no_deposit: false });
   // Daily delivery route (only when routes are switched on for the company).
   const [route, setRoute] = useState(ROUTE_DEFAULTS);
+  // Permanent (regular) or temporary (walk-in / one-time). A new customer starts as the owner's Settings choice.
+  // The choice is offered only when the super admin switched the feature on, and only when adding from the
+  // "+" next to the customer search (?quick=1). The "Add customer" button always adds a permanent customer.
+  const quick = Boolean(params.get('quick'));
+  const startsTemporary = !editing && feat.temporary && quick && settings?.new_customer_type === 'temporary';
+  const [temporary, setTemporary] = useState(startsTemporary);
+  const [temporaryOrig, setTemporaryOrig] = useState(false);
+  const typeTouched = useRef(false);
+  useEffect(() => {
+    if (!editing && !typeTouched.current) setTemporary(startsTemporary);
+  }, [editing, startsTemporary]);
+  // Editing: shown for a temporary customer (so it can be made permanent).
+  const showType = feat.temporary && (editing ? temporaryOrig : quick);
   const [dup, setDup] = useState(null); // existing customer with the same mobile
   const [mismatch, setMismatch] = useState(false); // picked contact doesn't have the typed number
   const [loading, setLoading] = useState(editing);
@@ -83,6 +96,8 @@ export default function CustomerForm() {
           no_deposit: Boolean(c.no_deposit),
         });
         setRoute(routeFromCustomer(c));
+        setTemporary(Boolean(c.is_temporary));
+        setTemporaryOrig(Boolean(c.is_temporary));
       })
       .catch((e) => setError(errorMessage(e)))
       .finally(() => setLoading(false));
@@ -115,13 +130,15 @@ export default function CustomerForm() {
     if (!form.name.trim()) return setError(t('cust.enterName'));
     const digits = normalizeMobile(form.mobile);
     if (!digits) return setError(t('cust.enterMobile'));
-    if (feat.bottles && !items.takes_jar && !items.takes_bottle) return setError(t('prod.pickOne'));
-    if (feat.routes && routeProblem(route)) return setError(routeProblem(route));
+    if (!temporary && feat.bottles && !items.takes_jar && !items.takes_bottle) return setError(t('prod.pickOne'));
+    if (feat.routes && !temporary && routeProblem(route)) return setError(routeProblem(route));
     const extra = {
       ...(feat.bottles && { takes_jar: items.takes_jar, takes_bottle: items.takes_bottle, bottle_rate: items.bottle_rate === '' ? null : num(items.bottle_rate) }),
       jar_rate: items.jar_rate === '' ? null : num(items.jar_rate),
       ...(feat.deposit && { no_deposit: items.no_deposit }),
-      ...(feat.routes && routeToApi(route)),
+      ...(feat.temporary && { is_temporary: temporary }),
+      // A temporary customer is never on a daily route.
+      ...(feat.routes && (temporary ? { route_morning: false, route_evening: false } : routeToApi(route))),
     };
     setBusy(true);
     setError('');
@@ -163,8 +180,23 @@ export default function CustomerForm() {
           </span>
           <div className="min-w-0">
             <h2 className="font-semibold text-ink">{t('cust.detailsTitle')}</h2>
-            <p className="text-xs text-muted">{t('cust.requiredNote')}</p>
+            <p className="text-xs text-muted">{temporary ? t('cust.typeTempHint') : t('cust.requiredNote')}</p>
           </div>
+          {/* Tiny Permanent / Temporary radio circles, on the same line as the heading */}
+          {showType && <div className="ml-auto flex shrink-0 flex-col gap-1 text-xs" role="radiogroup" aria-label={t('cust.type')}>
+            {[['permanent', t('cust.typePerm')], ['temporary', t('cust.typeTemp')]].map(([v, label]) => (
+              <label key={v} className="flex cursor-pointer items-center gap-1.5 text-ink">
+                <input
+                  type="radio"
+                  name="cust_type"
+                  className="h-3.5 w-3.5 accent-brand-700"
+                  checked={(v === 'temporary') === temporary}
+                  onChange={() => { typeTouched.current = true; setTemporary(v === 'temporary'); }}
+                />
+                {label}
+              </label>
+            ))}
+          </div>}
         </div>
 
         <Field label={req('cust.name')} hint={t('cust.nameHint')}>
@@ -197,6 +229,7 @@ export default function CustomerForm() {
             </Link>
           </div>
         )}
+        {!temporary && (<>
         <Field label={t('cust.address')} hint={t('cust.addressHint')}>
           <WithIcon icon={MapPin}>
             <textarea className="input pl-10" rows={2} value={form.address} onChange={set('address')} maxLength={500} />
@@ -253,8 +286,10 @@ export default function CustomerForm() {
             />
           </Field>
         )}
+        </>)}
       </section>
 
+      {!temporary && (
       <section className="card space-y-4 sm:!p-6">
         <div className="flex items-center gap-3 border-b border-line pb-4">
           <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-sky-50 text-sky-700">
@@ -305,8 +340,9 @@ export default function CustomerForm() {
           </label>
         )}
       </section>
+      )}
 
-      {feat.routes && <DeliveryScheduleFields value={route} onChange={setRoute} />}
+      {feat.routes && !temporary && <DeliveryScheduleFields value={route} onChange={setRoute} />}
 
       {error && (
         <div className="flex animate-fade-in items-start gap-2.5 rounded-lg bg-red-50 p-3 text-sm font-medium text-red-700 ring-1 ring-red-200" role="alert">

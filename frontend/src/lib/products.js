@@ -13,8 +13,12 @@ export function features(settings) {
     bottles: Boolean(settings?.features?.bottles),
     deposit: Boolean(settings?.features?.deposit),
     routes: Boolean(settings?.features?.routes), // daily delivery routes (morning / evening)
+    temporary: Boolean(settings?.features?.temporary), // temporary (walk-in) customers
   };
 }
+
+/** Bottle priority (Settings): bottles come first on entry screens and quick actions. Only when bottles are on. */
+export const bottleFirst = (settings) => features(settings).bottles && String(settings?.bottle_priority) === '1';
 
 /** Products the company sells. */
 export function companyProducts(settings) {

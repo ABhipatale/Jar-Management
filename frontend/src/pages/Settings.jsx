@@ -141,11 +141,14 @@ export default function Settings() {
     e.preventDefault();
     setBusy(true);
     try {
-      const payload = { ...form, jar_tracking: form.jar_tracking === '1' || form.jar_tracking === true, total_jars: parseInt(form.total_jars, 10) || 0 };
+      const payload = { ...form, jar_tracking: form.jar_tracking === '1' || form.jar_tracking === true, bottle_priority: form.bottle_priority === '1' || form.bottle_priority === true, total_jars: parseInt(form.total_jars, 10) || 0 };
       // Bottle / deposit fields only when the super admin switched them on (else not sent).
       if (feat.bottles) payload.total_bottles = parseInt(form.total_bottles, 10) || 0;
       else delete payload.total_bottles;
-      if (!feat.bottles) delete payload.bottle_rate;
+      if (!feat.bottles) {
+        delete payload.bottle_rate;
+        delete payload.bottle_priority;
+      }
       if (!feat.deposit) {
         delete payload.jar_deposit;
         delete payload.bottle_deposit;
@@ -475,6 +478,17 @@ export default function Settings() {
               <input className="input" inputMode="decimal" value={form.default_rate} onChange={set('default_rate')} />
             </Field>
           </div>
+          {feat.temporary && <Field group label={t('set.newCustType')} hint={t('set.newCustTypeHint')}>
+            <Segmented
+              size="sm"
+              value={form.new_customer_type === 'temporary' ? 'temporary' : 'permanent'}
+              onChange={(v) => setForm({ ...form, new_customer_type: v })}
+              options={[
+                { value: 'permanent', label: t('cust.typePerm') },
+                { value: 'temporary', label: t('cust.typeTemp'), activeClass: 'bg-amber-500 text-white ring-amber-500' },
+              ]}
+            />
+          </Field>}
           <label className="flex cursor-pointer items-center gap-3 rounded-lg bg-surface-2 px-3.5 py-3 ring-1 ring-line">
             <input
               type="checkbox"
@@ -500,6 +514,20 @@ export default function Settings() {
                   <input className="input" inputMode="decimal" value={form.bottle_rate ?? ''} onChange={set('bottle_rate')} />
                 </Field>
               </div>
+            )}
+            {feat.bottles && (
+              <label className="flex cursor-pointer items-start gap-3 rounded-lg bg-surface-2 px-3.5 py-3 ring-1 ring-line">
+                <input
+                  type="checkbox"
+                  className="mt-0.5 h-5 w-5 shrink-0 accent-brand-700"
+                  checked={form.bottle_priority === '1' || form.bottle_priority === true}
+                  onChange={(e) => setForm({ ...form, bottle_priority: e.target.checked ? '1' : '0' })}
+                />
+                <span className="min-w-0">
+                  <span className="block text-sm font-medium text-ink">{t('prod.bottlePriority')}</span>
+                  <span className="block text-xs text-muted">{t('prod.bottlePriorityHint')}</span>
+                </span>
+              </label>
             )}
             {feat.deposit && (
               <div className="grid grid-cols-2 gap-3">

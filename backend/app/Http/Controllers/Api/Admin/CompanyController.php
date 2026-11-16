@@ -95,6 +95,7 @@ class CompanyController extends Controller
                     'date' => $p->created_at->toDateString(),
                     'amount' => $p->amount,
                     'plan' => $p->plan?->name,
+                    'mode' => $p->mode,
                     'company' => $p->company ? ['id' => $p->company->id, 'name' => $p->company->name_mr ?: $p->company->name] : null,
                 ]),
         ]);
@@ -128,9 +129,11 @@ class CompanyController extends Controller
             $plan = Plan::findOrFail($data['plan_id']);
             $data['expires_at'] = $plan->interval === 'year' ? now()->startOfDay()->addYear() : now()->startOfDay()->addMonth();
         }
-        unset($data['payment']);
+        $offline = ($data['payment'] ?? 'paid') === 'paid' ? ($data['offline_payment'] ?? null) : null;
+        unset($data['payment'], $data['offline_payment']);
 
         $company = $this->companies->create($this->withPlanName($data));
+        $this->recordOffline($company->refresh(), $offline);
         $this->audit($request, $company, 'company.created');
 
         return response()->json(['message' => __('कंपनी नोंदवली.'), 'data' => $this->detail($company)], 201);
@@ -157,11 +160,21 @@ class CompanyController extends Controller
             }
         }
 
+        $offline = $data['offline_payment'] ?? null;
+        unset($data['offline_payment']);
+        // Editing with an offline payment and no new end date: extend the plan by one period.
+        if ($offline && ! empty($data['plan_id']) && empty($data['expires_at'])) {
+            $plan = Plan::findOrFail($data['plan_id']);
+            $from = $company->expires_at && $company->expires_at->isFuture() ? $company->expires_at->copy()->startOfDay() : now()->startOfDay();
+            $data['expires_at'] = $plan->interval === 'year' ? $from->addYear() : $from->addMonth();
+        }
+
         if (array_key_exists('slug', $data)) {
             $data['slug'] = $this->companies->uniqueSlug($data['slug'] ?: $data['name'] ?? $company->name, $company->id);
         }
         $company->update($this->withPlanName($data));
-        $this->audit($request, $company, 'company.updated', array_keys($data));
+        $this->recordOffline($company->refresh(), $offline);
+        $this->audit($request, $company, 'company.updated', array_keys($data) + ($offline ? ['offline_payment' => true] : []));
 
         $owner->fill($ownerData);
         if ($owner->isDirty()) {
@@ -298,7 +311,30 @@ class CompanyController extends Controller
             'bottles_enabled' => ['sometimes', 'boolean'],
             'deposit_enabled' => ['sometimes', 'boolean'],
             'routes_enabled' => ['sometimes', 'boolean'],
+            'temporary_enabled' => ['sometimes', 'boolean'],
+            // Money collected outside Razorpay; recorded as an offline payment for the chosen plan.
+            'offline_payment' => ['sometimes', 'nullable', 'array'],
+            'offline_payment.amount' => ['required_with:offline_payment', 'numeric', 'min:0', 'max:10000000'],
+            'offline_payment.method' => ['required_with:offline_payment', Rule::in(['cash', 'upi', 'bank', 'cheque', 'other'])],
+            'offline_payment.note' => ['nullable', 'string', 'max:255'],
         ];
+    }
+
+    /** Store an offline payment for the company's plan; its end date is the company's expires_at. */
+    private function recordOffline(Company $company, ?array $offline): void
+    {
+        if (! $offline || ! $company->plan_id) {
+            return;
+        }
+        BillingPayment::create([
+            'company_id' => $company->id,
+            'plan_id' => $company->plan_id,
+            'amount' => $offline['amount'],
+            'mode' => 'offline',
+            'method' => $offline['method'],
+            'note' => $offline['note'] ?? null,
+            'period_end' => $company->expires_at,
+        ]);
     }
 
     private function messages(): array
@@ -322,6 +358,7 @@ class CompanyController extends Controller
             'bottles_enabled' => (bool) $c->bottles_enabled,
             'deposit_enabled' => (bool) $c->deposit_enabled,
             'routes_enabled' => (bool) $c->routes_enabled,
+            'temporary_enabled' => (bool) $c->temporary_enabled,
         ] + $extra;
     }
 
@@ -349,6 +386,9 @@ class CompanyController extends Controller
                     'plan' => $p->plan?->name,
                     'amount' => $p->amount,
                     'razorpay_payment_id' => $p->razorpay_payment_id,
+                    'mode' => $p->mode,
+                    'method' => $p->method,
+                    'note' => $p->note,
                     'period_end' => $p->period_end?->toDateString(),
                 ]),
         ]);

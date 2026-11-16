@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Check, ChevronDown, Droplets, Pencil, Phone, Search, UserPlus, X } from 'lucide-react';
+import { Check, ChevronDown, Droplets, Pencil, Phone, Plus, Search, UserPlus, X } from 'lucide-react';
 import api from '../api/client';
 import { t } from '../i18n';
 import { normalizeMobile } from '../lib/contacts';
@@ -113,12 +113,19 @@ export default function CustomerPicker({ value, onChange, placeholder = t('cust.
   }
 
   const addUrl = notFound
-    ? `/customers/new?${new URLSearchParams({ name: notFound.name, mobile: notFound.mobile, return: location.pathname + location.search })}`
+    ? `/customers/new?${new URLSearchParams({ quick: '1', name: notFound.name, mobile: notFound.mobile, return: location.pathname + location.search })}`
     : '';
+
+  // "+" next to the search: add a new customer; what was typed becomes the name or the mobile number.
+  const typed = q.trim();
+  const plusParams = new URLSearchParams({ quick: '1', return: location.pathname + location.search });
+  if (/^[0-9+\s-]{6,}$/.test(typed)) plusParams.set('mobile', typed.replace(/\D/g, '').slice(-10));
+  else if (typed) plusParams.set('name', typed);
 
   return (
     <div>
-      <div className="relative" ref={box}>
+      <div className="flex items-center gap-2">
+      <div className="relative min-w-0 flex-1" ref={box}>
         <Search size={18} className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-slate-400" aria-hidden="true" />
         <input
           className="input pl-10 pr-20"
@@ -175,6 +182,15 @@ export default function CustomerPicker({ value, onChange, placeholder = t('cust.
             })}
           </div>
         )}
+      </div>
+      <Link
+        to={`/customers/new?${plusParams}`}
+        className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-brand-600 text-white shadow-soft transition hover:bg-brand-700 active:scale-95"
+        aria-label={t('contact.addNew')}
+        title={t('contact.addNew')}
+      >
+        <Plus size={22} aria-hidden="true" />
+      </Link>
       </div>
       {notFound && (
         <div className="mt-2 flex animate-fade-in flex-wrap items-center gap-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-900 ring-1 ring-amber-200" role="status">

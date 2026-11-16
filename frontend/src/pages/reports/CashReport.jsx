@@ -10,11 +10,13 @@ import { t } from '../../i18n';
 import { exportExcel } from '../../lib/export';
 import { businessName, fmtDate, money } from '../../lib/format';
 import { useApi } from '../../lib/useApi';
+import { features } from '../../lib/products';
 
 const short = (v) => (v >= 1000 ? `₹${(v / 1000).toFixed(v >= 10000 ? 0 : 1)}k` : `₹${Math.round(v)}`);
 
 export default function CashReport() {
   const { settings } = useSettings();
+  const bottles = features(settings).bottles;
   const [range, setRange] = useState(initialRange('month'));
   const { data, loading, error, reload } = useApi('/reports/cash', { from: range.from, to: range.to });
   const s = data?.summary;
@@ -52,12 +54,14 @@ export default function CashReport() {
       )}
       {s && (
         <>
-          <ExportBar onExcel={() => exportExcel(`${t('rep.cash.file')}-${range.from}`, t('rep.cash.sheet'), cols, data.days, [businessName(settings), t('rep.cash.titleLine', { period })])} />
+          <ExportBar landscape onExcel={() => exportExcel(`${t('rep.cash.file')}-${range.from}`, t('rep.cash.sheet'), cols, data.days, [businessName(settings), t('rep.cash.titleLine', { period })], { totals: true })} />
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <StatCard icon={Banknote} label={t('rep.cash.cashCollection')} value={money(s.cash)} tone="green" />
             <StatCard icon={Smartphone} label={t('rep.cash.upiBank')} value={money(s.payments_upi + s.payments_bank)} tone="purple" />
             <StatCard icon={Receipt} label={t('rep.cash.expenses')} value={money(s.expenses)} tone="red" />
             <StatCard icon={PiggyBank} label={t('rep.cash.netCash')} value={money(s.net_cash)} tone="blue" />
+            {bottles && <StatCard icon={Receipt} label={t('prod.repJarSales')} value={money(s.jar_sales)} tone="slate" />}
+            {bottles && <StatCard icon={Receipt} label={t('prod.repBottleSales')} value={money(s.bottle_sales)} tone="slate" />}
           </div>
 
           {chartDays.length > 1 && (

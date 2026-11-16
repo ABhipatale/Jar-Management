@@ -68,6 +68,9 @@ class SettingController extends Controller
                 }
                 unset($data['total_bottles']);
             }
+            if (array_key_exists('bottle_priority', $data)) {
+                $data['bottle_priority'] = $data['bottle_priority'] ? '1' : '0';
+            }
             if (array_key_exists('jar_tracking', $data)) {
                 $data['jar_tracking'] = $data['jar_tracking'] ? '1' : '0';
             }
@@ -165,6 +168,7 @@ class SettingController extends Controller
                 'bottles' => (bool) $company->bottles_enabled,
                 'deposit' => (bool) $company->deposit_enabled,
                 'routes' => (bool) $company->routes_enabled,
+                'temporary' => (bool) $company->temporary_enabled,
             ],
             'branding' => $this->branding->forCompany($company),
         ];
