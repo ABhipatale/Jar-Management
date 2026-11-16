@@ -165,6 +165,7 @@ class SettingController extends Controller
                 'bottles' => (bool) $company->bottles_enabled,
                 'deposit' => (bool) $company->deposit_enabled,
                 'routes' => (bool) $company->routes_enabled,
+                'temporary' => (bool) $company->temporary_enabled,
             ],
             'branding' => $this->branding->forCompany($company),
         ];

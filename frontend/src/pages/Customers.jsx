@@ -4,6 +4,7 @@ import { ChevronRight, Droplets, Phone, Search, UserPlus, Users, X } from 'lucid
 import { Badge, Empty, ErrorBox, Fab, Loader, PageHeader, PendingText } from '../components/ui';
 import { t } from '../i18n';
 import { useApi, useDebounced } from '../lib/useApi';
+import { useSettings } from '../context/SettingsContext';
 
 const FILTERS = [
   { key: '', label: t('cust.filter.all') },
@@ -11,12 +12,12 @@ const FILTERS = [
   { key: 'pending', label: t('cust.filter.pending') },
   { key: 'jars', label: t('cust.filter.jars') },
   { key: 'inactive', label: t('cust.filter.inactive') },
-  { key: 'temporary', label: t('cust.filter.temporary') },
 ];
 
 const COLS = 'lg:grid lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_7rem_9rem_1.5rem] lg:items-center lg:gap-4';
 
 export default function Customers() {
+  const { settings } = useSettings();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('');
   const q = useDebounced(search);
@@ -53,7 +54,7 @@ export default function Customers() {
           )}
         </div>
         <div className="no-scrollbar -mx-4 mt-2.5 flex gap-2 overflow-x-auto px-4 lg:m-0 lg:p-0">
-          {FILTERS.map((f) => (
+          {FILTERS.concat(settings?.features?.temporary ? [{ key: 'temporary', label: t('cust.filter.temporary') }] : []).map((f) => (
             <button key={f.key} type="button" className={`chip ${filter === f.key ? 'chip-active' : ''}`} onClick={() => setFilter(f.key)} aria-pressed={filter === f.key}>
               {f.label}
             </button>

@@ -311,6 +311,7 @@ class CompanyController extends Controller
             'bottles_enabled' => ['sometimes', 'boolean'],
             'deposit_enabled' => ['sometimes', 'boolean'],
             'routes_enabled' => ['sometimes', 'boolean'],
+            'temporary_enabled' => ['sometimes', 'boolean'],
             // Money collected outside Razorpay; recorded as an offline payment for the chosen plan.
             'offline_payment' => ['sometimes', 'nullable', 'array'],
             'offline_payment.amount' => ['required_with:offline_payment', 'numeric', 'min:0', 'max:10000000'],
@@ -357,6 +358,7 @@ class CompanyController extends Controller
             'bottles_enabled' => (bool) $c->bottles_enabled,
             'deposit_enabled' => (bool) $c->deposit_enabled,
             'routes_enabled' => (bool) $c->routes_enabled,
+            'temporary_enabled' => (bool) $c->temporary_enabled,
         ] + $extra;
     }
 

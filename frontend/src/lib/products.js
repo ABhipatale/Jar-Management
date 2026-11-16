@@ -13,6 +13,7 @@ export function features(settings) {
     bottles: Boolean(settings?.features?.bottles),
     deposit: Boolean(settings?.features?.deposit),
     routes: Boolean(settings?.features?.routes), // daily delivery routes (morning / evening)
+    temporary: Boolean(settings?.features?.temporary), // temporary (walk-in) customers
   };
 }
 

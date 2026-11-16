@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Booking;
 use App\Models\Customer;
+use App\Support\CurrentCompany;
 
 /**
  * A temporary (walk-in / one-time) customer is removed automatically once everything is settled:
@@ -17,6 +18,9 @@ class TemporaryCustomerService
     /** Call after an entry/payment is saved. Returns true when the customer was removed. */
     public function removeIfSettled(int $customerId): bool
     {
+        if (! CurrentCompany::get()?->temporary_enabled) {
+            return false;
+        }
         $customer = Customer::whereKey($customerId)->where('is_temporary', true)->first();
         if (! $customer) {
             return false;

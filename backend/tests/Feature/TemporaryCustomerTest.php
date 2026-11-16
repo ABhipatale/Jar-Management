@@ -14,7 +14,9 @@ class TemporaryCustomerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        Sanctum::actingAs(User::factory()->create());
+        $user = User::factory()->create();
+        $user->company->update(['temporary_enabled' => true]);
+        Sanctum::actingAs($user);
         $this->postJson('/api/jars', ['quantity' => 20])->assertCreated();
     }
 
@@ -87,5 +89,16 @@ class TemporaryCustomerTest extends TestCase
 
         $this->postJson('/api/payments', ['customer_id' => $id, 'payment_date' => now()->toDateString(), 'amount' => 60, 'payment_mode' => 'cash'])->assertCreated();
         $this->assertCount(0, $this->getJson('/api/customers')->json('data'));
+    }
+
+    public function test_feature_is_off_until_the_super_admin_enables_it(): void
+    {
+        $this->getJson('/api/settings')->assertJsonPath('features.temporary', true);
+        $user = User::factory()->create();
+        Sanctum::actingAs($user); // a company with the feature off (default)
+        $this->getJson('/api/settings')->assertJsonPath('features.temporary', false);
+        $this->postJson('/api/jars', ['quantity' => 5])->assertCreated();
+        $this->postJson('/api/customers', ['name' => 'Walk-in', 'mobile' => '9876543212', 'is_temporary' => true])
+            ->assertCreated()->assertJsonPath('data.is_temporary', false);
     }
 }

@@ -12,6 +12,7 @@ use App\Services\BalanceService;
 use App\Services\JarService;
 use App\Services\LedgerService;
 use App\Services\ReportService;
+use App\Support\CurrentCompany;
 use App\Support\Products;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -43,7 +44,7 @@ class CustomerController extends Controller
 
     public function store(CustomerRequest $request, JarService $jars)
     {
-        $data = $this->oldJars($request->validated());
+        $data = $this->temporaryAllowed($this->oldJars($request->validated()));
         $data['opening_balance'] = (float) ($data['opening_balance'] ?? 0);
         $data += ['opening_jars' => 0, 'opening_bottles' => 0];
         $customer = DB::transaction(function () use ($data, $jars) {
@@ -64,7 +65,7 @@ class CustomerController extends Controller
 
     public function update(CustomerRequest $request, Customer $customer, LedgerService $ledger, JarService $jars)
     {
-        $data = $this->oldJars($request->validated());
+        $data = $this->temporaryAllowed($this->oldJars($request->validated()));
         if (array_key_exists('opening_balance', $data)) {
             $data['opening_balance'] = (float) ($data['opening_balance'] ?? 0);
         }
@@ -84,6 +85,16 @@ class CustomerController extends Controller
 
         return (new CustomerResource($this->row($customer->id)))
             ->additional(['message' => __('ग्राहक यशस्वीरित्या अपडेट झाला.')]);
+    }
+
+    /** Temporary customers only exist when the super admin switched the feature on for the company. */
+    private function temporaryAllowed(array $data): array
+    {
+        if (! CurrentCompany::get()?->temporary_enabled) {
+            unset($data['is_temporary']);
+        }
+
+        return $data;
     }
 
     /** Old jars: empty means 0; old bottles only when the company has bottles switched on. */

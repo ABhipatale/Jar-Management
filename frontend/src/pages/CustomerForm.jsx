@@ -59,11 +59,18 @@ export default function CustomerForm() {
   // Daily delivery route (only when routes are switched on for the company).
   const [route, setRoute] = useState(ROUTE_DEFAULTS);
   // Permanent (regular) or temporary (walk-in / one-time). A new customer starts as the owner's Settings choice.
-  const [temporary, setTemporary] = useState(!editing && settings?.new_customer_type === 'temporary');
+  // The choice is offered only when the super admin switched the feature on, and only when adding from the
+  // "+" next to the customer search (?quick=1). The "Add customer" button always adds a permanent customer.
+  const quick = Boolean(params.get('quick'));
+  const startsTemporary = !editing && feat.temporary && quick && settings?.new_customer_type === 'temporary';
+  const [temporary, setTemporary] = useState(startsTemporary);
+  const [temporaryOrig, setTemporaryOrig] = useState(false);
   const typeTouched = useRef(false);
   useEffect(() => {
-    if (!editing && !typeTouched.current) setTemporary(settings?.new_customer_type === 'temporary');
-  }, [editing, settings?.new_customer_type]);
+    if (!editing && !typeTouched.current) setTemporary(startsTemporary);
+  }, [editing, startsTemporary]);
+  // Editing: shown for a temporary customer (so it can be made permanent).
+  const showType = feat.temporary && (editing ? temporaryOrig : quick);
   const [dup, setDup] = useState(null); // existing customer with the same mobile
   const [mismatch, setMismatch] = useState(false); // picked contact doesn't have the typed number
   const [loading, setLoading] = useState(editing);
@@ -90,6 +97,7 @@ export default function CustomerForm() {
         });
         setRoute(routeFromCustomer(c));
         setTemporary(Boolean(c.is_temporary));
+        setTemporaryOrig(Boolean(c.is_temporary));
       })
       .catch((e) => setError(errorMessage(e)))
       .finally(() => setLoading(false));
@@ -128,7 +136,7 @@ export default function CustomerForm() {
       ...(feat.bottles && { takes_jar: items.takes_jar, takes_bottle: items.takes_bottle, bottle_rate: items.bottle_rate === '' ? null : num(items.bottle_rate) }),
       jar_rate: items.jar_rate === '' ? null : num(items.jar_rate),
       ...(feat.deposit && { no_deposit: items.no_deposit }),
-      is_temporary: temporary,
+      ...(feat.temporary && { is_temporary: temporary }),
       // A temporary customer is never on a daily route.
       ...(feat.routes && (temporary ? { route_morning: false, route_evening: false } : routeToApi(route))),
     };
@@ -175,7 +183,7 @@ export default function CustomerForm() {
             <p className="text-xs text-muted">{temporary ? t('cust.typeTempHint') : t('cust.requiredNote')}</p>
           </div>
           {/* Tiny Permanent / Temporary radio circles, on the same line as the heading */}
-          <div className="ml-auto flex shrink-0 flex-col gap-1 text-xs" role="radiogroup" aria-label={t('cust.type')}>
+          {showType && <div className="ml-auto flex shrink-0 flex-col gap-1 text-xs" role="radiogroup" aria-label={t('cust.type')}>
             {[['permanent', t('cust.typePerm')], ['temporary', t('cust.typeTemp')]].map(([v, label]) => (
               <label key={v} className="flex cursor-pointer items-center gap-1.5 text-ink">
                 <input
@@ -188,7 +196,7 @@ export default function CustomerForm() {
                 {label}
               </label>
             ))}
-          </div>
+          </div>}
         </div>
 
         <Field label={req('cust.name')} hint={t('cust.nameHint')}>

@@ -475,7 +475,7 @@ export default function Settings() {
               <input className="input" inputMode="decimal" value={form.default_rate} onChange={set('default_rate')} />
             </Field>
           </div>
-          <Field group label={t('set.newCustType')} hint={t('set.newCustTypeHint')}>
+          {feat.temporary && <Field group label={t('set.newCustType')} hint={t('set.newCustTypeHint')}>
             <Segmented
               size="sm"
               value={form.new_customer_type === 'temporary' ? 'temporary' : 'permanent'}
@@ -485,7 +485,7 @@ export default function Settings() {
                 { value: 'temporary', label: t('cust.typeTemp'), activeClass: 'bg-amber-500 text-white ring-amber-500' },
               ]}
             />
-          </Field>
+          </Field>}
           <label className="flex cursor-pointer items-center gap-3 rounded-lg bg-surface-2 px-3.5 py-3 ring-1 ring-line">
             <input
               type="checkbox"

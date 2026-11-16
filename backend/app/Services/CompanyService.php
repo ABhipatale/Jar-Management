@@ -34,6 +34,7 @@ class CompanyService
                 'bottles_enabled' => (bool) ($data['bottles_enabled'] ?? false),
                 'deposit_enabled' => (bool) ($data['deposit_enabled'] ?? false),
                 'routes_enabled' => (bool) ($data['routes_enabled'] ?? false),
+                'temporary_enabled' => (bool) ($data['temporary_enabled'] ?? false),
             ]);
 
             User::create([

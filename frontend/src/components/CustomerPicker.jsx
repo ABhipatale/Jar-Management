@@ -113,12 +113,12 @@ export default function CustomerPicker({ value, onChange, placeholder = t('cust.
   }
 
   const addUrl = notFound
-    ? `/customers/new?${new URLSearchParams({ name: notFound.name, mobile: notFound.mobile, return: location.pathname + location.search })}`
+    ? `/customers/new?${new URLSearchParams({ quick: '1', name: notFound.name, mobile: notFound.mobile, return: location.pathname + location.search })}`
     : '';
 
   // "+" next to the search: add a new customer; what was typed becomes the name or the mobile number.
   const typed = q.trim();
-  const plusParams = new URLSearchParams({ return: location.pathname + location.search });
+  const plusParams = new URLSearchParams({ quick: '1', return: location.pathname + location.search });
   if (/^[0-9+\s-]{6,}$/.test(typed)) plusParams.set('mobile', typed.replace(/\D/g, '').slice(-10));
   else if (typed) plusParams.set('name', typed);
 
