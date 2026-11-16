@@ -7,6 +7,7 @@ use App\Http\Requests\PaymentRequest;
 use App\Http\Requests\UpdatePaymentRequest;
 use App\Models\Payment;
 use App\Services\PaymentService;
+use App\Services\TemporaryCustomerService;
 use Illuminate\Http\Request;
 
 class PaymentController extends Controller
@@ -44,6 +45,7 @@ class PaymentController extends Controller
     {
         [$payment, $created] = $this->service->create($request->validated(), $request->user()?->id);
         $payment->load('customer:id,name,mobile');
+        app(TemporaryCustomerService::class)->removeIfSettled($payment->customer_id);
 
         return response()->json([
             'message' => __('पेमेंट यशस्वीरित्या मिळाले.'),

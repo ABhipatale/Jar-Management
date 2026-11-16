@@ -7,6 +7,7 @@ use App\Http\Requests\JarTransactionRequest;
 use App\Http\Requests\UpdateJarTransactionRequest;
 use App\Models\JarTransaction;
 use App\Services\JarTransactionService;
+use App\Services\TemporaryCustomerService;
 use App\Support\Products;
 use Illuminate\Http\Request;
 
@@ -48,6 +49,8 @@ class JarTransactionController extends Controller
     {
         [$tx, $created, $balance, $returned, $rows] = $this->service->create($request->validated(), $request->user()?->id);
         $tx->load('customer:id,name,mobile');
+        // Loaded above, so the receipt still shows the name even if a settled temporary customer is removed now.
+        app(TemporaryCustomerService::class)->removeIfSettled($tx->customer_id);
 
         return response()->json([
             'message' => __('जार नोंद यशस्वीरित्या जतन झाली.'),

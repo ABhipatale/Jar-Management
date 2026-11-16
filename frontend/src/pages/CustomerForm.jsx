@@ -122,7 +122,7 @@ export default function CustomerForm() {
     if (!form.name.trim()) return setError(t('cust.enterName'));
     const digits = normalizeMobile(form.mobile);
     if (!digits) return setError(t('cust.enterMobile'));
-    if (feat.bottles && !items.takes_jar && !items.takes_bottle) return setError(t('prod.pickOne'));
+    if (!temporary && feat.bottles && !items.takes_jar && !items.takes_bottle) return setError(t('prod.pickOne'));
     if (feat.routes && !temporary && routeProblem(route)) return setError(routeProblem(route));
     const extra = {
       ...(feat.bottles && { takes_jar: items.takes_jar, takes_bottle: items.takes_bottle, bottle_rate: items.bottle_rate === '' ? null : num(items.bottle_rate) }),
@@ -172,21 +172,25 @@ export default function CustomerForm() {
           </span>
           <div className="min-w-0">
             <h2 className="font-semibold text-ink">{t('cust.detailsTitle')}</h2>
-            <p className="text-xs text-muted">{t('cust.requiredNote')}</p>
+            <p className="text-xs text-muted">{temporary ? t('cust.typeTempHint') : t('cust.requiredNote')}</p>
+          </div>
+          {/* Tiny Permanent / Temporary radio circles, on the same line as the heading */}
+          <div className="ml-auto flex shrink-0 flex-col gap-1 text-xs" role="radiogroup" aria-label={t('cust.type')}>
+            {[['permanent', t('cust.typePerm')], ['temporary', t('cust.typeTemp')]].map(([v, label]) => (
+              <label key={v} className="flex cursor-pointer items-center gap-1.5 text-ink">
+                <input
+                  type="radio"
+                  name="cust_type"
+                  className="h-3.5 w-3.5 accent-brand-700"
+                  checked={(v === 'temporary') === temporary}
+                  onChange={() => { typeTouched.current = true; setTemporary(v === 'temporary'); }}
+                />
+                {label}
+              </label>
+            ))}
           </div>
         </div>
 
-        <Field group label={t('cust.type')} hint={temporary ? t('cust.typeTempHint') : t('cust.typePermHint')}>
-          <Segmented
-            size="sm"
-            value={temporary ? 'temporary' : 'permanent'}
-            onChange={(v) => { typeTouched.current = true; setTemporary(v === 'temporary'); }}
-            options={[
-              { value: 'permanent', label: t('cust.typePerm'), icon: UserCheck },
-              { value: 'temporary', label: t('cust.typeTemp'), icon: Clock, activeClass: 'bg-amber-500 text-white ring-amber-500' },
-            ]}
-          />
-        </Field>
         <Field label={req('cust.name')} hint={t('cust.nameHint')}>
           <WithIcon icon={User}>
             <input className="input pl-10" value={form.name} onChange={set('name')} autoFocus={!editing} maxLength={120} aria-required="true" />
@@ -217,6 +221,7 @@ export default function CustomerForm() {
             </Link>
           </div>
         )}
+        {!temporary && (<>
         <Field label={t('cust.address')} hint={t('cust.addressHint')}>
           <WithIcon icon={MapPin}>
             <textarea className="input pl-10" rows={2} value={form.address} onChange={set('address')} maxLength={500} />
@@ -273,8 +278,10 @@ export default function CustomerForm() {
             />
           </Field>
         )}
+        </>)}
       </section>
 
+      {!temporary && (
       <section className="card space-y-4 sm:!p-6">
         <div className="flex items-center gap-3 border-b border-line pb-4">
           <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-sky-50 text-sky-700">
@@ -325,6 +332,7 @@ export default function CustomerForm() {
           </label>
         )}
       </section>
+      )}
 
       {feat.routes && !temporary && <DeliveryScheduleFields value={route} onChange={setRoute} />}
 
