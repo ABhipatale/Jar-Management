@@ -18,6 +18,7 @@ class CustomerResource extends JsonResource
             'mobile' => $r->mobile,
             'address' => $r->address,
             'status' => $r->status,
+            'is_temporary' => (bool) ($r->is_temporary ?? false),
             'current_jars' => (int) ($r->current_jars ?? 0),
             'current_bottles' => (int) ($r->current_bottles ?? 0),
             'pending_amount' => round((float) ($r->pending_amount ?? 0), 2),

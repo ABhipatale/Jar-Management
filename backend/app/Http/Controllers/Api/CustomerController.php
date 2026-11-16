@@ -21,7 +21,7 @@ class CustomerController extends Controller
 {
     public function __construct(private BalanceService $balances) {}
 
-    /** ?search= name/mobile, ?status=active|inactive, ?filter=pending|jars */
+    /** ?search= name/mobile, ?status=active|inactive, ?filter=pending|jars|temporary */
     public function index(Request $request, ReportService $reports)
     {
         $q = $this->balances->balancesTable()->orderBy('name');
@@ -29,7 +29,9 @@ class CustomerController extends Controller
         if (in_array($request->input('status'), ['active', 'inactive'], true)) {
             $q->where('status', $request->input('status'));
         }
-        if ($request->input('filter') === 'pending') {
+        if ($request->input('filter') === 'temporary') {
+            $q->where('is_temporary', true);
+        } elseif ($request->input('filter') === 'pending') {
             $q->where('pending_amount', '>', 0);
         } elseif ($request->input('filter') === 'jars') {
             $q->where(fn ($w) => $w->where('current_jars', '>', 0)->orWhere('current_bottles', '>', 0));

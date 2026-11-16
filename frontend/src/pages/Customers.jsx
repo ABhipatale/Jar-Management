@@ -11,6 +11,7 @@ const FILTERS = [
   { key: 'pending', label: t('cust.filter.pending') },
   { key: 'jars', label: t('cust.filter.jars') },
   { key: 'inactive', label: t('cust.filter.inactive') },
+  { key: 'temporary', label: t('cust.filter.temporary') },
 ];
 
 const COLS = 'lg:grid lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_7rem_9rem_1.5rem] lg:items-center lg:gap-4';
@@ -21,7 +22,7 @@ export default function Customers() {
   const q = useDebounced(search);
   const params = { search: q };
   if (filter === 'active' || filter === 'inactive') params.status = filter;
-  if (filter === 'pending' || filter === 'jars') params.filter = filter;
+  if (filter === 'pending' || filter === 'jars' || filter === 'temporary') params.filter = filter;
   const { data, loading, error, reload } = useApi('/customers', params);
   const list = data?.data || [];
   const narrowed = Boolean(search.trim() || filter);
@@ -113,6 +114,7 @@ export default function Customers() {
                     <div className="flex items-center gap-2">
                       <span className="truncate font-medium text-ink">{c.name}</span>
                       {c.status === 'inactive' && <Badge kind="inactive" />}
+                      {c.is_temporary && <span className="inline-flex items-center rounded-md bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-800 ring-1 ring-inset ring-amber-200">{t('cust.typeTemp')}</span>}
                     </div>
                     <div className="flex items-center gap-1 text-sm text-muted lg:hidden">
                       <Phone size={12} aria-hidden="true" /> <span className="tabular-nums">{c.mobile}</span>
