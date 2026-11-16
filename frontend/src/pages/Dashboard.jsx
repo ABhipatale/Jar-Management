@@ -89,23 +89,31 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Quick actions — one tap each */}
-      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-5">
-        {[...(bottleFirst(settings) ? QUICK_BOTTLE : QUICK_JAR), ...QUICK_REST].map((q) => (
-          <Link
-            key={q.to}
-            to={q.to}
-            className={`flex items-center gap-3 rounded-xl px-3.5 py-3 text-[15px] font-semibold transition active:scale-[.98] ${
-              q.primary ? 'col-span-2 bg-brand-600 text-white shadow-soft hover:bg-brand-700 sm:col-span-1' : 'card card-hover !py-3 text-ink'
-            }`}
-          >
-            <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg ${q.primary ? 'bg-white/15' : q.tone}`}>
-              <q.icon size={19} />
-            </span>
-            <span className="leading-tight">{q.label}</span>
-          </Link>
-        ))}
-      </div>
+      {/* Quick actions — one tap each: a big primary button, then icon tiles */}
+      {(() => {
+        const list = [...(bottleFirst(settings) ? QUICK_BOTTLE : QUICK_JAR), ...QUICK_REST];
+        const [main, ...rest] = list;
+        return (
+          <div className="grid gap-2.5 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,2.4fr)]">
+            <Link to={main.to} className="group flex items-center gap-3 rounded-2xl bg-gradient-to-br from-brand-600 to-brand-800 px-4 py-4 text-[17px] font-semibold text-white shadow-pop transition active:scale-[.98] hover:brightness-110">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white/15 ring-1 ring-white/25">
+                <main.icon size={22} />
+              </span>
+              <span className="leading-tight">{main.label}</span>
+            </Link>
+            <div className={`grid gap-2.5 ${rest.length > 4 ? 'grid-cols-3 sm:grid-cols-5' : 'grid-cols-4'}`}>
+              {rest.map((q) => (
+                <Link key={q.to} to={q.to} className="card card-hover flex flex-col items-center justify-center gap-1.5 !px-1.5 !py-3 text-center text-[12.5px] font-semibold leading-tight text-ink active:scale-[.98]">
+                  <span className={`grid h-10 w-10 place-items-center rounded-xl ${q.tone || 'bg-slate-100 text-slate-700'}`}>
+                    <q.icon size={20} />
+                  </span>
+                  <span className="line-clamp-2">{q.label}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
 
       {features(settings).routes && <DeliveryToday />}
 
@@ -161,6 +169,42 @@ export default function Dashboard() {
 
       {data && (
         <>
+          {/* Hero: the numbers an owner looks at first */}
+          <section className="hero-card" aria-label={t('dash.cash', { p: label }).trim()}>
+            <span className="hero-bubble -right-6 -top-8 h-36 w-36" />
+            <span className="hero-bubble bottom-6 right-24 h-10 w-10" />
+            <div className="relative">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-white/80">{t('dash.cash', { p: label }).trim()}</p>
+                  <p className="mt-1 text-[34px] font-semibold leading-none tracking-tight tabular-nums">{money(p.cash)}</p>
+                </div>
+                {pct(p.cash, prev.cash) !== null && Math.abs(pct(p.cash, prev.cash)) >= 0.05 && (
+                  <span className="shrink-0 rounded-full bg-white/15 px-2.5 py-1 text-xs font-semibold ring-1 ring-white/25">
+                    {pct(p.cash, prev.cash) > 0 ? '↑' : '↓'} {Math.abs(pct(p.cash, prev.cash)) >= 100 ? Math.round(Math.abs(pct(p.cash, prev.cash))) : Math.abs(pct(p.cash, prev.cash)).toFixed(1)}% {vs}
+                  </span>
+                )}
+              </div>
+              <div className="mt-5 grid grid-cols-3 gap-2.5">
+                <Link to="/transactions" className="hero-chip">
+                  <div className="text-xs text-white/75">{t('dash.jarsGiven', { p: label }).trim()}</div>
+                  <div className="mt-0.5 text-xl font-semibold tabular-nums">{p.given}</div>
+                  {data.bottle_stock && <div className="text-[11px] text-white/70">+ {t('prod.bottlesN', { n: p.bottles_given ?? 0 })}</div>}
+                </Link>
+                <Link to="/transactions" className="hero-chip">
+                  <div className="text-xs text-white/75">{t('dash.jarsReturned', { p: label }).trim()}</div>
+                  <div className="mt-0.5 text-xl font-semibold tabular-nums">{p.returned}</div>
+                  {data.bottle_stock && <div className="text-[11px] text-white/70">+ {t('prod.bottlesN', { n: p.bottles_returned ?? 0 })}</div>}
+                </Link>
+                <Link to="/reports/pending" className="hero-chip">
+                  <div className="text-xs text-white/75">{t('common.totalPending')}</div>
+                  <div className="mt-0.5 text-xl font-semibold tabular-nums">{money(p.pending)}</div>
+                  <div className="text-[11px] text-white/70">{t('dash.pendingSub')}</div>
+                </Link>
+              </div>
+            </div>
+          </section>
+
           {/* KPIs */}
           <section className="space-y-3">
             <h2 className="section-title">
@@ -173,14 +217,10 @@ export default function Dashboard() {
               )}
             </h2>
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-              <StatCard label={t('dash.jarsGiven', { p: label }).trim()} value={p.given} icon={ArrowUpRight} tone="blue" delta={pct(p.given, prev.given)} deltaLabel={vs} spark={spark.given} to="/transactions" sub={data.bottle_stock ? `+ ${t('prod.bottlesN', { n: p.bottles_given ?? 0 })}` : undefined} />
-              <StatCard label={t('dash.jarsReturned', { p: label }).trim()} value={p.returned} icon={ArrowDownLeft} tone="purple" delta={pct(p.returned, prev.returned)} deltaLabel={vs} spark={spark.returned} to="/transactions" sub={data.bottle_stock ? `+ ${t('prod.bottlesN', { n: p.bottles_returned ?? 0 })}` : undefined} />
-              <StatCard label={t('dash.cash', { p: label }).trim()} value={money(p.cash)} icon={Banknote} tone="green" delta={pct(p.cash, prev.cash)} deltaLabel={vs} spark={spark.cash} to="/reports/cash" />
               <StatCard label={t('dash.udhari', { p: label }).trim()} value={money(p.udhari)} icon={BookOpen} tone="amber" delta={pct(p.udhari, prev.udhari)} deltaInverse deltaLabel={vs} spark={spark.udhari} to="/reports/udhari" />
               <StatCard label={t('dash.paymentsReceived')} value={money(p.payments)} icon={Wallet} tone="green" delta={pct(p.payments, prev.payments)} deltaLabel={vs} spark={spark.payments} to="/payments" />
               <StatCard label={t('dash.netCash')} value={money(p.net_cash)} icon={TrendingUp} tone={p.net_cash >= 0 ? 'blue' : 'red'} delta={pct(p.net_cash, prev.net_cash)} deltaLabel={vs} sub={t('dash.netCashSub')} />
               <StatCard label={t('dash.expenses', { p: label }).trim()} value={money(p.expenses)} icon={Receipt} tone="slate" delta={pct(p.expenses, prev.expenses)} deltaInverse deltaLabel={vs} sub={t('dash.thisMonth', { amount: money(data.month_expenses) })} to="/expenses" />
-              <StatCard label={t('common.totalPending')} value={money(p.pending)} icon={Clock} tone="red" sub={t('dash.pendingSub')} to="/reports/pending" />
               {(p.deposit_in > 0 || p.deposit_out > 0) && (
                 <StatCard label={t('prod.depositSec')} value={money(p.deposit_in)} icon={Wallet} tone="slate" sub={`${t('prod.depositRefund')}: ${money(p.deposit_out)}`} />
               )}

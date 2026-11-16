@@ -11,14 +11,14 @@
    every brand-* shade below is mixed from --brand. */
 :root {
   --brand: #1d45d8;
-  --app-bg: #f5f6f8;
+  --app-bg: #f3f5fa;
   --app-surface: #ffffff;
   --app-surface-2: #f7f8fa;
   --app-line: #e5e7eb;
   --app-line-strong: #d4d7dd;
   --app-ink: #0f172a;
   --app-muted: #64748b;
-  --app-shadow: 0 1px 2px rgb(15 23 42 / 0.04), 0 1px 1px rgb(15 23 42 / 0.03);
+  --app-shadow: 0 1px 2px rgb(15 23 42 / 0.04), 0 6px 16px -8px rgb(15 23 42 / 0.10);
   --app-shadow-lg: 0 12px 32px -8px rgb(15 23 42 / 0.18), 0 2px 6px rgb(15 23 42 / 0.06);
   color-scheme: light;
 }
@@ -126,6 +126,12 @@
 }
 
 html, body { background: var(--app-bg); -webkit-tap-highlight-color: transparent; }
+/* A soft brand-tinted glow behind the pages (light mode only) */
+html:not(.dark) body {
+  background-image: radial-gradient(70rem 26rem at 100% -8%, color-mix(in oklab, var(--brand) 9%, transparent), transparent 62%),
+                    radial-gradient(50rem 22rem at -10% 0%, color-mix(in oklab, #0ea5e9 7%, transparent), transparent 60%);
+  background-attachment: fixed;
+}
 body {
   color: var(--app-ink);
   overscroll-behavior-y: none;
@@ -154,8 +160,13 @@ input[type="date"]::-webkit-calendar-picker-indicator { opacity: 0.6; cursor: po
 
 @layer components {
   /* Surfaces */
-  .card { @apply rounded-xl bg-surface p-4 shadow-soft ring-1 ring-line; }
-  .card-hover { @apply transition hover:ring-line-strong hover:shadow-pop; }
+  .card { @apply rounded-2xl bg-surface p-4 shadow-soft ring-1 ring-line; }
+  .card-hover { @apply transition duration-200 hover:-translate-y-px hover:ring-line-strong hover:shadow-pop; }
+
+  /* Dashboard hero: the app's brand gradient (same family as the login screen) */
+  .hero-card { @apply relative overflow-hidden rounded-3xl p-5 text-white shadow-pop; background: radial-gradient(90% 90% at 100% 0%, color-mix(in oklab, #38bdf8 50%, transparent) 0%, transparent 62%), radial-gradient(70% 80% at 0% 100%, color-mix(in oklab, #22d3ee 25%, transparent) 0%, transparent 70%), linear-gradient(150deg, color-mix(in oklab, var(--brand) 82%, black) 0%, var(--brand) 55%, color-mix(in oklab, var(--brand) 60%, #0ea5e9) 100%); }
+  .hero-bubble { @apply pointer-events-none absolute rounded-full; background: radial-gradient(circle at 30% 30%, rgb(255 255 255 / 0.30), rgb(255 255 255 / 0.05) 62%); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.18); }
+  .hero-chip { @apply rounded-2xl bg-white/12 px-3 py-2.5 ring-1 ring-white/20 backdrop-blur-sm transition hover:bg-white/18; }
   .section-title { @apply text-[13px] font-semibold uppercase tracking-wide text-muted; }
 
   /* Form controls */
@@ -249,7 +260,7 @@ input[type="date"]::-webkit-calendar-picker-indicator { opacity: 0.6; cursor: po
   .grid.grid-cols-2.gap-3 { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; gap: 8px !important; }
   .grid.grid-cols-2 > .col-span-2 { grid-column: span 1 / span 1 !important; }
   .grid .card { padding: 8px 10px !important; }
-  .grid .card .text-\[22px\] { font-size: 17px !important; }
+  .grid .card .text-2xl { font-size: 17px !important; }
   /* A card holding a long table may continue on the next page (rows still never split) */
   section.card:has(.tbl) { break-inside: auto !important; }
 

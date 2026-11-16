@@ -133,12 +133,12 @@ export function StackBar({ segments, total }) {
           s.value > 0 ? <div key={s.label} className="h-full transition-all duration-500" style={{ width: `${(s.value / sum) * 100}%`, background: s.color }} title={`${s.label}: ${s.value}`} /> : null
         )}
       </div>
-      <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 sm:grid-cols-4">
+      <div className="mt-3 grid grid-cols-2 gap-x-5 gap-y-2">
         {segments.map((s) => (
           <div key={s.label} className="flex items-center justify-between gap-2 text-sm">
             <span className="flex min-w-0 items-center gap-2 text-muted">
               <span className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ background: s.color }} />
-              <span className="truncate">{s.label}</span>
+              <span className="leading-tight">{s.label}</span>
             </span>
             <span className="font-semibold tabular-nums text-ink">{s.value}</span>
           </div>
