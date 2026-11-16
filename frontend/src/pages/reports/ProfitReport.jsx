@@ -60,7 +60,7 @@ export default function ProfitReport() {
 
       {tot && (
         <>
-          <ExportBar onExcel={() => exportExcel(`${t('rep.profit.file')}-${year}`, t('rep.profit.sheet'), cols, months, [businessName(settings), t('rep.profit.titleLine', { year })])} />
+          <ExportBar onExcel={() => exportExcel(`${t('rep.profit.file')}-${year}`, t('rep.profit.sheet'), cols, months, [businessName(settings), t('rep.profit.titleLine', { year })], { totals: true })} />
 
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <StatCard icon={ShoppingBag} label={t('rep.profit.sales')} value={money(tot.sales)} tone="blue" />

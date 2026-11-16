@@ -50,7 +50,7 @@ export default function UdhariReport() {
       )}
       {s && (
         <>
-          <ExportBar onExcel={() => exportExcel(`${t('rep.udhari.file')}-${range.from}`, t('rep.udhari.sheet'), cols, rows, [businessName(settings), t('rep.udhari.titleLine', { period })])} />
+          <ExportBar onExcel={() => exportExcel(`${t('rep.udhari.file')}-${range.from}`, t('rep.udhari.sheet'), cols, rows, [businessName(settings), t('rep.udhari.titleLine', { period })], { totals: true })} />
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
             <StatCard icon={HandCoins} label={t('rep.udhari.given')} value={money(s.udhari)} tone="amber" />
             <StatCard icon={CircleCheck} label={t('rep.udhari.recovered')} value={money(s.payments)} tone="green" />

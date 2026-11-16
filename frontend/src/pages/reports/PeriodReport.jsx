@@ -74,7 +74,8 @@ export default function PeriodReport({ kind }) {
         `${TITLES[kind]}: ${period}`,
         t('rep.period.excelSummary', { given: s.given, returned: s.returned, sales: s.sales, cash: s.cash, udhari: s.udhari, payments: s.payments, pending: s.pending }),
         ...(bottles ? [`${t('prod.repBottlesGiven')}: ${s.bottles_given} | ${t('prod.repBottlesReturned')}: ${s.bottles_returned} | ${t('prod.repJarSales')}: ${s.jar_sales} | ${t('prod.repBottleSales')}: ${s.bottle_sales}`] : []),
-      ]
+      ],
+      { totals: true }
     );
 
   const step = (dir) => setDate(addDays(date, dir * (kind === 'weekly' ? 7 : 1)));
@@ -111,6 +112,7 @@ export default function PeriodReport({ kind }) {
       {s && (
         <>
           <ExportBar
+            landscape
             onExcel={excel}
             extra={
               kind === 'daily' && !customerId ? (

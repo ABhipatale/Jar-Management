@@ -212,15 +212,60 @@ input[type="date"]::-webkit-calendar-picker-indicator { opacity: 0.6; cursor: po
 
 .print-only { display: none; }
 
+/* ───────────── Print / "Save as PDF" ─────────────
+   Reports, statements and the customer bill. Always light and in colour, A4, with a letterhead
+   (<PrintHeader>), a blue table header that repeats on every page, banded rows, a bold totals row
+   and "Page X of Y" in the footer. */
 @media print {
-  @page { margin: 12mm; }
-  html, body { background: #fff !important; color: #000 !important; }
+  /* Customer bills print with these; reports add a footer with page numbers (see printPage in lib/export.js). */
+  @page { size: A4; margin: 12mm; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  html, body { background: #fff !important; color: #0f172a !important; font-size: 11px; line-height: 1.4; }
   .no-print { display: none !important; }
   .print-only { display: block !important; }
-  .card { box-shadow: none !important; border: 1px solid #e2e8f0; break-inside: avoid; }
-  .table-wrap { overflow: visible !important; margin: 0 !important; padding: 0 !important; }
-  .tbl { min-width: 0 !important; font-size: 11px; }
   main { padding: 0 !important; }
+  .space-y-5 > * + * { margin-top: 14px !important; }
+  .space-y-4 > * + * { margin-top: 12px !important; }
+
+  /* Letterhead */
+  .report-head { margin: 0 0 14px; border-top: 5px solid #1d3fbf; padding-top: 10px; }
+  .report-head-top { display: flex !important; align-items: center; gap: 12px; }
+  .report-logo { height: 46px; width: 46px; border-radius: 8px; object-fit: contain; flex: none; }
+  .report-shop { flex: 1; min-width: 0; }
+  .report-shop-name { font-size: 20px; font-weight: 800; line-height: 1.15; color: #1d3fbf; }
+  .report-shop-sub { margin-top: 2px; font-size: 10.5px; color: #475569; }
+  .report-meta { text-align: right; font-size: 9.5px; color: #64748b; line-height: 1.35; }
+  .report-meta b { display: block; color: #0f172a; font-weight: 600; }
+  .report-title-band { margin-top: 10px; display: flex; align-items: baseline; justify-content: space-between; gap: 12px; border-radius: 6px; background: #e8eeff !important; padding: 7px 12px; }
+  .report-title { font-size: 15px; font-weight: 700; color: #0f172a; }
+  .report-subtitle { font-size: 11px; font-weight: 600; color: #1d3fbf; white-space: nowrap; }
+
+  /* Cards: plain bordered tiles; summary tiles keep their numbers big and drop the decoration */
+  .card { box-shadow: none !important; background: #fff !important; border: 1px solid #dbe3ef !important; border-radius: 8px !important; break-inside: avoid; }
+  .card .truncate { overflow: visible !important; white-space: normal !important; text-overflow: clip !important; }
+  .card svg.lucide, .card canvas { break-inside: avoid; }
+  section.card > h2 { font-size: 12px; font-weight: 700; color: #1d3fbf; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 8px; }
+  /* Summary tiles: four across on paper, whatever the screen breakpoint was */
+  .grid.grid-cols-2.gap-3 { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; gap: 8px !important; }
+  .grid.grid-cols-2 > .col-span-2 { grid-column: span 1 / span 1 !important; }
+  .grid .card { padding: 8px 10px !important; }
+  .grid .card .text-\[22px\] { font-size: 17px !important; }
+  /* A card holding a long table may continue on the next page (rows still never split) */
+  section.card:has(.tbl) { break-inside: auto !important; }
+
+  /* Tables */
+  .table-wrap { overflow: visible !important; margin: 0 !important; padding: 0 !important; }
+  .tbl { min-width: 0 !important; width: 100%; font-size: 10.5px; border-collapse: collapse; }
+  .tbl thead { display: table-header-group; }
+  .tbl tfoot { display: table-row-group; }
+  .tbl tr { break-inside: avoid; }
+  .tbl th { background: #1d3fbf !important; color: #fff !important; font-size: 9.5px; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; white-space: normal !important; padding: 6px 8px !important; border: 0 !important; }
+  .tbl th button, .tbl th svg { color: #fff !important; }
+  .tbl td { white-space: normal !important; padding: 5px 8px !important; border-bottom: 1px solid #e5eaf3 !important; color: #0f172a; }
+  .tbl tbody tr:nth-child(even) td { background: #f6f8fc !important; }
+  .tbl tfoot td { background: #e8eeff !important; font-weight: 700; border-top: 2px solid #1d3fbf !important; border-bottom: 0 !important; }
+  .tbl .num { text-align: right !important; font-variant-numeric: tabular-nums; }
+
   /* Customer bill: full size (not the phone preview scale), fitted to the A4 page width. */
   .bill-box { height: auto !important; overflow: visible !important; box-shadow: none !important; border: 0 !important; }
   .bill-sheet { transform: none !important; zoom: 0.88; }

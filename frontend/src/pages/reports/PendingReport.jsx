@@ -40,7 +40,7 @@ export default function PendingReport() {
       {loading && !data && <Loader />}
       {data && (
         <>
-          <ExportBar onExcel={() => exportExcel(`${t('rep.pending.file')}-${today()}`, t('rep.pending.sheet'), cols, rows, [businessName(settings), t('rep.pending.titleLine', { date: fmtDate(today()) }), t('rep.pending.totalLine', { total: data.total })])} />
+          <ExportBar onExcel={() => exportExcel(`${t('rep.pending.file')}-${today()}`, t('rep.pending.sheet'), cols, rows, [businessName(settings), t('rep.pending.titleLine', { date: fmtDate(today()) }), t('rep.pending.totalLine', { total: data.total })], { totals: true })} />
 
           <div className="card flex items-center gap-3 !bg-red-50 !ring-red-200">
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-red-100 text-red-600">

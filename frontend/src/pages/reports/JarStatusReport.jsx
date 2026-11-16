@@ -54,7 +54,8 @@ export default function JarStatusReport() {
                   businessName(settings),
                   t('rep.jarStatus.titleLine', { date: fmtDate(today()) }),
                   t('rep.jarStatus.summaryLine', { total: s.total_jars, available: s.available_jars, customers: s.customer_jars, damaged: s.damaged_jars, lost: s.lost_jars }),
-                ]
+                ],
+                { totals: true }
               )
             }
           />

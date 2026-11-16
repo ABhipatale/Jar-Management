@@ -134,6 +134,7 @@ export default {
     // ExportBar
     'export.pdfHint': 'प्रिंट विंडोमध्ये “Save as PDF” निवडा.',
     'export.print': 'प्रिंट',
+    'export.generated': 'तयार केले',
 
     // api errors
     'err.generic': 'काहीतरी चूक झाली. कृपया पुन्हा प्रयत्न करा.',
@@ -432,6 +433,7 @@ export default {
     // ExportBar
     'export.pdfHint': 'Choose “Save as PDF” in the print window.',
     'export.print': 'Print',
+    'export.generated': 'Generated',
 
     // api errors
     'err.generic': 'Something went wrong. Please try again.',

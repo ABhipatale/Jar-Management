@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AlertTriangle, ArrowDownRight, ArrowUpRight, ChevronLeft, Inbox, Minus, Phone, Plus, RotateCw, X } from 'lucide-react';
-import { t } from '../i18n';
+import { LOCALE, t } from '../i18n';
 import { businessName, businessPlace, money } from '../lib/format';
 import { SUPPORT_PHONE, SUPPORT_PHONE_DISPLAY, SUPPORT_WEBSITE } from '../lib/support';
 import { Sparkline } from './charts';
@@ -341,15 +341,27 @@ export function Modal({ title, description, onClose, children, size = 'md' }) {
 
 /** Header printed on paper / PDF only. */
 export function PrintHeader({ settings, title, subtitle }) {
+  const logo = settings?.branding?.logo_url;
+  const sub = [businessPlace(settings), settings?.business_mobile].filter(Boolean).join(' · ');
+  const when = new Date().toLocaleString(LOCALE, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
   return (
-    <div className="print-only mb-4 border-b pb-3">
-      <div className="text-lg font-bold">{businessName(settings)}</div>
-      <div className="text-sm text-slate-600">
-        {[businessPlace(settings), settings?.business_mobile].filter(Boolean).join(' · ')}
+    <header className="print-only report-head">
+      <div className="report-head-top">
+        {logo && <img src={logo} alt="" className="report-logo" />}
+        <div className="report-shop">
+          <div className="report-shop-name">{businessName(settings)}</div>
+          {sub && <div className="report-shop-sub">{sub}</div>}
+        </div>
+        <div className="report-meta">
+          <div>{t('export.generated')}</div>
+          <b>{when}</b>
+        </div>
       </div>
-      <div className="mt-2 font-semibold">{title}</div>
-      {subtitle && <div className="text-sm text-slate-600">{subtitle}</div>}
-    </div>
+      <div className="report-title-band">
+        <div className="report-title">{title}</div>
+        {subtitle && <div className="report-subtitle">{subtitle}</div>}
+      </div>
+    </header>
   );
 }
 

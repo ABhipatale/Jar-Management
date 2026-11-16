@@ -11,6 +11,12 @@ export default defineConfig(({ mode }) => ({
       '/api': { target: loadEnv(mode, process.cwd(), '').VITE_API_URL || 'http://127.0.0.1:8000', changeOrigin: true },
     },
   },
+  build: {
+    rollupOptions: {
+      // The Excel writer is big and only used when someone taps "Excel": its own file, kept out of the offline precache.
+      output: { manualChunks: (id) => (id.includes('node_modules/exceljs') ? 'exceljs' : undefined) },
+    },
+  },
   plugins: [
     react(),
     tailwindcss(),
@@ -28,8 +34,14 @@ export default defineConfig(({ mode }) => ({
         navigateFallbackDenylist: [/^\/api\//, /^\/up$/],
         globPatterns: ['**/*.{js,css,html,png,jpg,svg,woff2}'],
         // The full-size logo source is not needed offline.
-        globIgnores: ['**/EasyJar Water Delivery Logo.png'],
+        globIgnores: ['**/EasyJar Water Delivery Logo.png', '**/exceljs-*.js'],
         runtimeCaching: [
+          {
+            // Loaded on first Excel export, then kept for offline use.
+            urlPattern: ({ url }) => /\/assets\/exceljs-.*\.js$/.test(url.pathname),
+            handler: 'CacheFirst',
+            options: { cacheName: 'excel-lib', expiration: { maxEntries: 2 }, cacheableResponse: { statuses: [200] } },
+          },
           {
             // Last-seen API data is shown when offline. Writes (POST/PUT/DELETE) are never cached;
             // offline saves go through the app's outbox (src/lib/outbox.js).

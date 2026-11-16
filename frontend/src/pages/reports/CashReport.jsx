@@ -54,7 +54,7 @@ export default function CashReport() {
       )}
       {s && (
         <>
-          <ExportBar onExcel={() => exportExcel(`${t('rep.cash.file')}-${range.from}`, t('rep.cash.sheet'), cols, data.days, [businessName(settings), t('rep.cash.titleLine', { period })])} />
+          <ExportBar landscape onExcel={() => exportExcel(`${t('rep.cash.file')}-${range.from}`, t('rep.cash.sheet'), cols, data.days, [businessName(settings), t('rep.cash.titleLine', { period })], { totals: true })} />
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <StatCard icon={Banknote} label={t('rep.cash.cashCollection')} value={money(s.cash)} tone="green" />
             <StatCard icon={Smartphone} label={t('rep.cash.upiBank')} value={money(s.payments_upi + s.payments_bank)} tone="purple" />
