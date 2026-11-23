@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { Download, MessageCircle, Printer } from 'lucide-react';
 import BillOptions from '../components/bill/BillOptions';
@@ -7,7 +7,7 @@ import { ErrorBox, Loader, PageHeader } from '../components/ui';
 import { useSettings } from '../context/SettingsContext';
 import { useUi } from '../context/UiContext';
 import { lang as appLang, t } from '../i18n';
-import { BILL_DESIGNS, billPdf, buildBill, downloadBlob, shareBillFile } from '../lib/bill';
+import { BILL_DESIGNS, billFileName, billPdf, buildBill, downloadBlob, issueInvoice, nextPaint, peekInvoice, shareBillFile } from '../lib/bill';
 import { addDays, monthStart, today } from '../lib/format';
 import { useApi } from '../lib/useApi';
 import { openWhatsApp } from '../lib/whatsapp';
@@ -25,8 +25,8 @@ function rangeOf(p) {
 /** Business name in the bill's language (also the PDF's file name). */
 const shopName = (b, lang) => (lang === 'en' ? b.shop.nameEn || b.shop.name : b.shop.name);
 
-/** The text sent with the PDF: business name and its mobile number(s) from Settings. */
-const shareText = (b, lang) => [shopName(b, lang), ...b.shop.contacts.map((n) => `📞 ${n}`)].join('\n');
+/** The text sent with the PDF: business name, the invoice number and its mobile number(s) from Settings. */
+const shareText = (b, lang, no) => [shopName(b, lang), no && `🧾 ${no}`, ...b.shop.contacts.map((n) => `📞 ${n}`)].filter(Boolean).join('\n');
 
 export default function CustomerBill() {
   const { id } = useParams();
@@ -45,6 +45,31 @@ export default function CustomerBill() {
   const { data, loading, error, reload } = useApi(`/customers/${id}/ledger`, range);
   const bill = data ? buildBill(data, settings, range) : null;
 
+  // Invoice number: shown while previewing (the next one, nothing reserved); reserved when sent / saved / printed.
+  const invKey = `${id}|${range.from}|${range.to}`;
+  const [inv, setInv] = useState({ key: '', number: null });
+  const invoiceNo = inv.key === invKey ? inv.number : null;
+  useEffect(() => {
+    let live = true;
+    peekInvoice({ customer_id: Number(id), from: range.from, to: range.to })
+      .then((number) => live && setInv({ key: invKey, number }))
+      .catch(() => {});
+    return () => { live = false; };
+  }, [id, range.from, range.to, invKey]);
+
+  /** Reserves the number and lets the bill redraw with it. null (with a message) when it can't be had, e.g. offline. */
+  const ensureInvoice = async () => {
+    try {
+      const number = await issueInvoice({ customer_id: Number(id), from: range.from, to: range.to });
+      setInv({ key: invKey, number });
+      await nextPaint();
+      return number;
+    } catch {
+      toast(t('bill.noInvoice'), 'error');
+      return null;
+    }
+  };
+
   // Logo inside the PDF.
   const logo = useBillLogo(bill?.shop.logo);
   const sheet = useRef(null);
@@ -54,14 +79,16 @@ export default function CustomerBill() {
     if (p !== 'custom') setRange(rangeOf(p));
   };
 
-  const fileName = bill ? `${shopName(bill, lang).replace(/[\\/:*?"<>|]+/g, ' ').trim() || 'bill'}.pdf` : 'bill.pdf';
 
   const send = async () => {
     if (!sheet.current || !bill) return;
     setBusy(true);
     try {
+      const no = await ensureInvoice();
+      if (!no) return;
+      const fileName = billFileName(shopName(bill, lang), no);
       const pdf = await billPdf(sheet.current);
-      const text = shareText(bill, lang);
+      const text = shareText(bill, lang, no);
       const res = await shareBillFile(pdf, fileName, text);
       if (res === 'unsupported') {
         // Computer / phone without file sharing: save the PDF, open the chat with the text.
@@ -77,10 +104,12 @@ export default function CustomerBill() {
   };
 
   const download = async () => {
-    if (!sheet.current) return;
+    if (!sheet.current || !bill) return;
     setBusy(true);
     try {
-      downloadBlob(await billPdf(sheet.current), fileName);
+      const no = await ensureInvoice();
+      if (!no) return;
+      downloadBlob(await billPdf(sheet.current), billFileName(shopName(bill, lang), no));
     } catch {
       toast(t('bill.imageFail'), 'error');
     } finally {
@@ -88,7 +117,11 @@ export default function CustomerBill() {
     }
   };
 
-  const shown = bill && { ...bill, shop: { ...bill.shop, logo: logo || bill.shop.logo } }; // inlined copy once ready, else the plain URL
+  const print = async () => {
+    if (await ensureInvoice()) window.print();
+  };
+
+  const shown = bill && { ...bill, invoiceNo, shop: { ...bill.shop, logo: logo || bill.shop.logo } }; // inlined copy once ready, else the plain URL
 
   return (
     <div className="mx-auto max-w-4xl space-y-4">
@@ -128,7 +161,7 @@ export default function CustomerBill() {
             <button type="button" className="btn-light" disabled={busy} onClick={download}>
               <Download size={17} /> {t('bill.pdf')}
             </button>
-            <button type="button" className="btn-light" onClick={() => window.print()}>
+            <button type="button" className="btn-light" onClick={print}>
               <Printer size={17} /> {t('bill.printOnly')}
             </button>
           </div>

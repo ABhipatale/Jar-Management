@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { CalendarPlus, Clock, Droplets, ImagePlus, KeyRound, Landmark, LogIn, Mail, Pause, Pencil, Phone, Play, Trash2, Truck, Users } from 'lucide-react';
 import api, { errorMessage } from '../../api/client';
 import defaultLogo from '../../assets/logo.png';
-import { ErrorBox, Field, Loader, MiniSpin, Modal, PageHeader, StatCard, UploadOverlay } from '../../components/ui';
+import { ErrorBox, Field, Loader, MiniSpin, Modal, PageHeader, Segmented, StatCard, UploadOverlay } from '../../components/ui';
 import { useAuth } from '../../context/AuthContext';
 import { useUi } from '../../context/UiContext';
 import { t } from '../../i18n';
@@ -236,6 +236,19 @@ export default function CompanyDetail() {
               </span>
             </label>
           ))}
+          <div className="border-t border-line pt-3">
+            <Field group label={t('adm.defaultPay')} hint={t('adm.defaultPayHint')}>
+              <Segmented
+                size="sm"
+                value={c.default_payment === 'udhari' ? 'udhari' : 'cash'}
+                onChange={(v) => v !== c.default_payment && !busy && run(() => api.put(`/admin/companies/${id}`, { default_payment: v }))}
+                options={[
+                  { value: 'cash', label: t('entry.payCash') },
+                  { value: 'udhari', label: t('entry.payUdhari'), activeClass: 'bg-amber-500 text-white shadow-soft' },
+                ]}
+              />
+            </Field>
+          </div>
         </section>
 
         <section className="card space-y-3">

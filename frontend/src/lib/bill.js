@@ -1,9 +1,24 @@
 // Customer bills: the numbers (from the customer's statement), amount in words, and turning
 // the rendered bill into a PDF for WhatsApp. The three designs live in
 // components/bill/BillDesigns.jsx; the bill text is always mr or en (customer-facing).
+import api from '../api/client';
 import { brandName, getBranding, logoSrc } from './branding';
 
 export const BILL_DESIGNS = ['classic', 'modern', 'simple'];
+
+/**
+ * Invoice numbers (B-2026-00094), made by the server: one running number per shop per year.
+ * peek: the number this bill has or will get (nothing is reserved), shown while previewing.
+ * issue: reserves it (or returns the one it already has): called when the bill is sent / saved / printed.
+ */
+export const peekInvoice = (params) => api.get('/invoices/peek', { params }).then((r) => r.data.number);
+export const issueInvoice = (params) => api.post('/invoices', params).then((r) => r.data.number);
+
+/** "Shop name B-2026-00094.pdf" */
+export const billFileName = (shop, invoiceNo) => `${[shop, invoiceNo].filter(Boolean).join(' ').replace(/[\\/:*?"<>|]+/g, ' ').trim() || 'bill'}.pdf`;
+
+/** Lets the bill redraw with its new number before it is turned into a PDF / printed. */
+export const nextPaint = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
 
 const r2 = (v) => Math.round((Number(v) || 0) * 100) / 100;
 

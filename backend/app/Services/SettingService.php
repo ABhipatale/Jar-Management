@@ -19,6 +19,8 @@ class SettingService
         'owner_name_mr' => '',
         'contact_numbers' => '',
         'default_rate' => '30',
+        // How a new "give jars" entry starts: cash (paid now) or udhari. Set per company by the super admin.
+        'default_payment' => 'cash',
         // What the "+" (add customer) form starts as: permanent (default) or temporary (walk-in).
         'new_customer_type' => 'permanent',
         // Used only when the super admin switches bottles / deposits on for the company.

@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\BrandingController;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\ExpenseController;
+use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\JarController;
 use App\Http\Controllers\Api\JarTransactionController;
 use App\Http\Controllers\Api\NotificationController;
@@ -70,6 +71,10 @@ Route::middleware(['auth:sanctum', 'company'])->group(function () {
 
     Route::get('/customers/{customer}/ledger', [CustomerController::class, 'ledger']);
     Route::apiResource('customers', CustomerController::class);
+
+    // Invoice numbers on customer bills and manual bills.
+    Route::get('/invoices/peek', [InvoiceController::class, 'peek']);
+    Route::post('/invoices', [InvoiceController::class, 'store']);
 
     Route::get('/jars', [JarController::class, 'index']);
     Route::get('/jars/summary', [JarController::class, 'summary']);
