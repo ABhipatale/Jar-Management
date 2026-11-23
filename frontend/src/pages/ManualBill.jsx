@@ -6,7 +6,7 @@ import { Field, PageHeader } from '../components/ui';
 import { useSettings } from '../context/SettingsContext';
 import { useUi } from '../context/UiContext';
 import { lang as appLang, t } from '../i18n';
-import { BILL_DESIGNS, billPdf, buildManualBill, downloadBlob, shareBillFile } from '../lib/bill';
+import { BILL_DESIGNS, billFileName, billPdf, buildManualBill, downloadBlob, issueInvoice, nextPaint, peekInvoice, shareBillFile } from '../lib/bill';
 import { addDays, monthStart, today } from '../lib/format';
 import { openWhatsApp } from '../lib/whatsapp';
 
@@ -15,6 +15,8 @@ const DRAFT_KEY = 'rws_manual_bill';
 let seq = 0;
 const newRow = (rate) => ({ id: ++seq, date: today(), text: '', qty: '', ret: '', rate });
 const rupees = (v) => `₹${(Math.round((Number(v) || 0) * 100) / 100).toLocaleString('en-IN')}`;
+
+const newDraftId = () => (globalThis.crypto?.randomUUID ? crypto.randomUUID() : `d${Date.now()}${Math.random().toString(36).slice(2, 10)}`);
 
 const emptyForm = () => ({ name: '', mobile: '', address: '', billDate: today(), from: monthStart(today()), to: today(), prev: '', paid: '', jars: '' });
 
@@ -48,15 +50,17 @@ export default function ManualBill() {
   const [design, setDesign] = useState(draft?.design || (BILL_DESIGNS.includes(settings?.bill_design) ? settings.bill_design : 'classic'));
   const [lang, setLang] = useState(draft?.lang || (appLang === 'en' ? 'en' : 'mr'));
   const [busy, setBusy] = useState(false);
+  // One invoice number per draft and customer: sending / printing the same bill again keeps it.
+  const [draftId, setDraftId] = useState(() => draft?.draftId || newDraftId());
   const sheet = useRef(null);
 
   useEffect(() => {
     try {
-      localStorage.setItem(DRAFT_KEY, JSON.stringify({ form, rows, design, lang }));
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({ form, rows, design, lang, draftId }));
     } catch {
       /* private mode / storage full: the bill still works, it just isn't remembered */
     }
-  }, [form, rows, design, lang]);
+  }, [form, rows, design, lang, draftId]);
 
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
   const money = (k) => (e) => setForm({ ...form, [k]: e.target.value.replace(/[^\d.]/g, '') });
@@ -67,12 +71,40 @@ export default function ManualBill() {
 
   const rawBill = buildManualBill({ ...form, rows }, settings);
   const logo = useBillLogo(rawBill.shop.logo);
-  const bill = { ...rawBill, shop: { ...rawBill.shop, logo: logo || rawBill.shop.logo } };
   const ready = rawBill.customer.name !== '' && rawBill.days.length > 0;
 
+  // Invoice number: shown once the bill has a customer (the next number, nothing reserved); reserved when sent / saved / printed.
+  const invParams = { draft_id: draftId, name: rawBill.customer.name, mobile: rawBill.customer.mobile };
+  const invKey = `${draftId}|${rawBill.customer.name}|${rawBill.customer.mobile}`;
+  const [inv, setInv] = useState({ key: '', number: null });
+  const invoiceNo = ready && inv.key === invKey ? inv.number : null;
+  useEffect(() => {
+    if (!rawBill.customer.name) return undefined;
+    let live = true;
+    const timer = setTimeout(() => {
+      peekInvoice({ draft_id: draftId, name: rawBill.customer.name, mobile: rawBill.customer.mobile })
+        .then((number) => live && setInv({ key: invKey, number }))
+        .catch(() => {});
+    }, 500); // not on every keystroke
+    return () => { live = false; clearTimeout(timer); };
+  }, [draftId, rawBill.customer.name, rawBill.customer.mobile, invKey]);
+
+  const ensureInvoice = async () => {
+    try {
+      const number = await issueInvoice(invParams);
+      setInv({ key: invKey, number });
+      await nextPaint();
+      return number;
+    } catch {
+      toast(t('bill.noInvoice'), 'error');
+      return null;
+    }
+  };
+
+  const bill = { ...rawBill, invoiceNo, shop: { ...rawBill.shop, logo: logo || rawBill.shop.logo } };
+
   const shopName = lang === 'en' ? bill.shop.nameEn || bill.shop.name : bill.shop.name;
-  const fileName = `${shopName.replace(/[\\/:*?"<>|]+/g, ' ').trim() || 'bill'}.pdf`;
-  const shareText = [shopName, ...bill.shop.contacts.map((n) => `📞 ${n}`)].join('\n');
+  const shareText = (no) => [shopName, no && `🧾 ${no}`, ...bill.shop.contacts.map((n) => `📞 ${n}`)].filter(Boolean).join('\n');
 
   const guard = () => {
     if (ready && sheet.current) return true;
@@ -84,12 +116,15 @@ export default function ManualBill() {
     if (!guard()) return;
     setBusy(true);
     try {
+      const no = await ensureInvoice();
+      if (!no) return;
+      const fileName = billFileName(shopName, no);
       const pdf = await billPdf(sheet.current);
-      const res = await shareBillFile(pdf, fileName, shareText);
+      const res = await shareBillFile(pdf, fileName, shareText(no));
       if (res === 'unsupported') {
         downloadBlob(pdf, fileName);
         toast(t('bill.attachHint'), 'info');
-        openWhatsApp(bill.customer.mobile, shareText);
+        openWhatsApp(bill.customer.mobile, shareText(no));
       }
     } catch {
       toast(t('bill.imageFail'), 'error');
@@ -102,7 +137,9 @@ export default function ManualBill() {
     if (!guard()) return;
     setBusy(true);
     try {
-      downloadBlob(await billPdf(sheet.current), fileName);
+      const no = await ensureInvoice();
+      if (!no) return;
+      downloadBlob(await billPdf(sheet.current), billFileName(shopName, no));
     } catch {
       toast(t('bill.imageFail'), 'error');
     } finally {
@@ -114,6 +151,11 @@ export default function ManualBill() {
     if (!(await confirm({ message: t('mb.clearConfirm'), confirmText: t('mb.clear'), danger: true }))) return;
     setForm(emptyForm());
     setRows([newRow(defaultRate)]);
+    setDraftId(newDraftId()); // a new bill gets a new number
+  };
+
+  const print = async () => {
+    if (guard() && (await ensureInvoice())) window.print();
   };
 
   const pickMonth = (last) => {
@@ -251,7 +293,7 @@ export default function ManualBill() {
         <button type="button" className="btn-light" disabled={busy} onClick={download}>
           <Download size={17} /> {t('bill.pdf')}
         </button>
-        <button type="button" className="btn-light" onClick={() => (guard() ? window.print() : null)}>
+        <button type="button" className="btn-light" onClick={print}>
           <Printer size={17} /> {t('bill.printOnly')}
         </button>
       </div>

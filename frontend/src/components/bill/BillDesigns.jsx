@@ -6,7 +6,7 @@ import { amountInWords } from '../../lib/bill';
 
 const L = {
   mr: {
-    bill: 'बिल', date: 'दिनांक', period: 'कालावधी', billTo: 'ग्राहक', mobile: 'मोबाईल', address: 'पत्ता',
+    bill: 'बिल', invNo: 'बिल क्र.', date: 'दिनांक', period: 'कालावधी', billTo: 'ग्राहक', mobile: 'मोबाईल', address: 'पत्ता',
     sr: 'क्र.', desc: 'तपशील', qty: 'नग', rate: 'दर', amount: 'रक्कम',
     jarGiven: 'पाण्याचे जार दिले', bottleGiven: 'बाटल्या दिल्या', jarReturned: 'रिकामे जार परत', bottleReturned: 'रिकाम्या बाटल्या परत',
     deposit: 'डिपॉझिट', noItems: 'या कालावधीत डिलिव्हरी नाही', payments: 'मिळालेले पेमेंट', payment: 'पेमेंट',
@@ -17,7 +17,7 @@ const L = {
     jarName: 'पाण्याचा जार', bottleName: 'बाटली', scanPay: 'QR स्कॅन करून पैसे भरा', totalRow: 'एकूण', returnedTotal: 'परत आलेले रिकामे जार', monthBill: 'या महिन्याचे बिल',
   },
   en: {
-    bill: 'INVOICE', date: 'Date', period: 'Period', billTo: 'Bill To', mobile: 'Mobile', address: 'Address',
+    bill: 'INVOICE', invNo: 'Invoice No.', date: 'Date', period: 'Period', billTo: 'Bill To', mobile: 'Mobile', address: 'Address',
     sr: '#', desc: 'Description', qty: 'Qty', rate: 'Rate', amount: 'Amount',
     jarGiven: 'Water jars delivered', bottleGiven: 'Bottles delivered', jarReturned: 'Empty jars returned', bottleReturned: 'Empty bottles returned',
     deposit: 'Deposit', noItems: 'No deliveries in this period', payments: 'Payments received', payment: 'Payment',
@@ -125,7 +125,8 @@ const ModernBill = forwardRef(function ModernBill({ bill: b, lang }, ref) {
           </div>
           <div style={{ textAlign: 'right', flexShrink: 0, whiteSpace: 'nowrap' }}>
             <div style={{ display: 'inline-block', background: 'rgb(255 255 255 / .18)', border: '1px solid rgb(255 255 255 / .4)', borderRadius: 999, padding: '4px 18px', fontWeight: 700, fontSize: 18, letterSpacing: 1 }}>{l.bill}</div>
-            <div style={{ marginTop: 8, fontSize: 13, opacity: 0.95 }}>{l.date} <b>{dmy(b.billDate || b.to)}</b></div>
+            {b.invoiceNo && <div style={{ marginTop: 8, fontSize: 13, opacity: 0.95 }}>{l.invNo} <b>{b.invoiceNo}</b></div>}
+            <div style={{ marginTop: b.invoiceNo ? 2 : 8, fontSize: 13, opacity: 0.95 }}>{l.date} <b>{dmy(b.billDate || b.to)}</b></div>
           </div>
         </div>
         <svg viewBox="0 0 794 40" preserveAspectRatio="none" style={{ position: 'absolute', left: 0, bottom: -1, width: '100%', height: 40, display: 'block' }}>
@@ -279,6 +280,7 @@ const ClassicBill = forwardRef(function ClassicBill({ bill: b, lang }, ref) {
           <Line k={l.mobile} v={b.customer.mobile} />
         </div>
         <div style={{ width: 250 }}>
+          {b.invoiceNo && <Line k={l.invNo} v={b.invoiceNo} bold line={line} />}
           <Line k={l.date} v={dmy(b.billDate || b.to)} bold line={line} />
           <Line k={l.period} v={period(b)} />
         </div>
@@ -386,6 +388,7 @@ const SimpleBill = forwardRef(function SimpleBill({ bill: b, lang }, ref) {
         <div style={{ marginTop: 6, fontWeight: 700, letterSpacing: 2 }}>— {l.bill} —</div>
       </div>
       <div style={dash} />
+      {b.invoiceNo && <div style={kv}><span>{l.invNo}</span><b>{b.invoiceNo}</b></div>}
       <div style={kv}><span>{l.date}</span><span>{dmy(b.billDate || b.to)}</span></div>
       {!b.oneDay && <div style={kv}><span>{l.period}</span><span>{period(b)}</span></div>}
       <div style={kv}><span>{l.billTo}</span><b style={{ textAlign: 'right' }}>{b.customer.name}</b></div>

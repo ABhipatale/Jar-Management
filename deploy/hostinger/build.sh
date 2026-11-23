@@ -100,8 +100,13 @@ EOF
 
 echo "==> 4/4 Zips"
 rm -f "$OUT"/*.zip
-(cd "$OUT/public_html" && "$WINTAR" -a -cf ../public_html.zip *  .htaccess)
-(cd "$OUT/laravel" && "$WINTAR" -a -cf ../laravel.zip * .htaccess)
+# Windows: tar.exe. Mac/Linux: zip (forward slashes too; dotfiles like .htaccess included, .DS_Store left out).
+mkzip() {
+  if [ -x "$WINTAR" ]; then (cd "$OUT/$1" && "$WINTAR" -a -cf "../$1.zip" * .htaccess)
+  else (cd "$OUT/$1" && zip -qr "../$1.zip" . -x '.DS_Store' -x '*/.DS_Store'); fi
+}
+mkzip public_html
+mkzip laravel
 
 echo
 echo "Done:"

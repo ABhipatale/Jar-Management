@@ -9,6 +9,7 @@ import { useApi } from '../../lib/useApi';
 const ACTIONS = {
   'company.created': [Building2, 'bg-emerald-50 text-emerald-700'],
   'company.updated': [Pencil, 'bg-brand-50 text-brand-700'],
+  'company.default_payment': [Pencil, 'bg-amber-50 text-amber-700'],
   'company.suspended': [Pause, 'bg-amber-50 text-amber-700'],
   'company.activated': [Play, 'bg-emerald-50 text-emerald-700'],
   'company.deleted': [Trash2, 'bg-red-50 text-red-600'],

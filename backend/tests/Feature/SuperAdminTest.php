@@ -193,4 +193,25 @@ class SuperAdminTest extends TestCase
             ->assertJsonPath('user.role', 'super_admin')
             ->assertJsonPath('user.company', null);
     }
+
+    public function test_super_admin_sets_each_companys_default_payment_for_giving_jars(): void
+    {
+        $a = $this->createCompany()->assertCreated()->assertJsonPath('data.default_payment', 'cash')->json('data.id');
+        $b = $this->createCompany(['name' => 'Om Water', 'owner_email' => 'om@water.in', 'owner_mobile' => '9822003344'])->assertCreated()->json('data.id');
+
+        $this->putJson("/api/admin/companies/{$a}", ['default_payment' => 'udhari'])->assertOk()->assertJsonPath('data.default_payment', 'udhari');
+        $this->putJson("/api/admin/companies/{$a}", ['default_payment' => 'bogus'])->assertUnprocessable();
+
+        // Only that company changed, and the audit log has it.
+        $this->getJson("/api/admin/companies/{$b}")->assertJsonPath('data.default_payment', 'cash');
+        $this->assertSame(1, AdminAuditLog::where('action', 'company.default_payment')->where('company_id', $a)->count());
+
+        // The owner's app receives it with the settings, and cannot change it from Settings.
+        $this->app['auth']->forgetGuards();
+        $this->postJson('/api/login', ['login' => '9822001122', 'password' => 'raj12345'])->assertOk();
+        $owner = User::where('email', 'raj@water.in')->first();
+        Sanctum::actingAs($owner);
+        $this->getJson('/api/settings')->assertJsonPath('default_payment', 'udhari');
+        $this->putJson('/api/settings', ['default_payment' => 'cash', 'default_rate' => 35])->assertOk()->assertJsonPath('default_payment', 'udhari')->assertJsonPath('default_rate', '35');
+    }
 }

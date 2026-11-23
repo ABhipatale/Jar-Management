@@ -16,6 +16,7 @@ use App\Services\BalanceService;
 use App\Services\BrandingService;
 use App\Services\CompanyService;
 use App\Services\IconService;
+use App\Services\SettingService;
 use App\Support\CurrentCompany;
 use App\Support\Products;
 use Illuminate\Http\Request;
@@ -162,6 +163,12 @@ class CompanyController extends Controller
 
         $offline = $data['offline_payment'] ?? null;
         unset($data['offline_payment']);
+        if (array_key_exists('default_payment', $data)) {
+            $payment = $data['default_payment'];
+            unset($data['default_payment']);
+            CurrentCompany::run($company, fn () => app(SettingService::class)->save(['default_payment' => $payment]));
+            $this->audit($request, $company, 'company.default_payment', ['default_payment' => $payment]);
+        }
         // Editing with an offline payment and no new end date: extend the plan by one period.
         if ($offline && ! empty($data['plan_id']) && empty($data['expires_at'])) {
             $plan = Plan::findOrFail($data['plan_id']);
@@ -305,6 +312,8 @@ class CompanyController extends Controller
             'short_name' => ['sometimes', 'nullable', 'string', 'max:40'],
             'slug' => ['sometimes', 'nullable', 'alpha_dash:ascii', 'max:60'],
             'locale' => ['sometimes', Rule::in(['mr', 'en'])],
+            // How giving jars starts for this company: cash or udhari (a company setting, not a column).
+            'default_payment' => ['sometimes', Rule::in(['cash', 'udhari'])],
             'plan_id' => ['sometimes', 'nullable', 'integer', Rule::exists('plans', 'id')->whereNull('deleted_at')],
             'expires_at' => ['sometimes', 'nullable', 'date'],
             // Optional features of the business app (off for every company until switched on here).
@@ -368,6 +377,7 @@ class CompanyController extends Controller
 
         return $this->present($company, [
             'owner' => User::where('company_id', $company->id)->where('role', User::OWNER)->orderBy('id')->first()?->only('id', 'name', 'email', 'mobile'),
+            'default_payment' => CurrentCompany::run($company, fn () => app(SettingService::class)->get('default_payment') ?: 'cash'),
             'users' => User::where('company_id', $company->id)->count(),
             'customers' => Customer::withoutGlobalScope('company')->where('company_id', $company->id)->whereNull('deleted_at')->count(),
             'jar_entries' => JarTransaction::withoutGlobalScope('company')->where('company_id', $company->id)->count(),

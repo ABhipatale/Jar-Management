@@ -100,7 +100,9 @@ export default function DailyEntry() {
   const routeStop = params.get('stop');
   const routeBack = routeStop && /^\/delivery\/(morning|evening)$/.test(params.get('back') || '') ? params.get('back') : null;
   const [rates, setRates] = useState(() => byProduct(String(settings.default_rate || ''), String(settings.bottle_rate || '')));
-  const [payType, setPayType] = useState('cash');
+  // Cash or udhari: how a "give jars" entry starts. The super admin sets it for each company.
+  const defaultPay = settings?.default_payment === 'udhari' ? 'udhari' : 'cash';
+  const [payType, setPayType] = useState(defaultPay);
   const [paidInput, setPaidInput] = useState('');
   const [advance, setAdvance] = useState('');
   const [notes, setNotes] = useState('');
@@ -302,7 +304,7 @@ export default function DailyEntry() {
     setPaidInput('');
     setAdvance('');
     setNotes('');
-    setPayType('cash');
+    setPayType(defaultPay);
     setTakeBack(byProduct(false, false));
     setRet(byProduct('', ''));
     setDep(byProduct(null, null));
